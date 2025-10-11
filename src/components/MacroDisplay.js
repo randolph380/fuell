@@ -1,14 +1,23 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
 
 const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   const formatNumber = (num) => {
     return num ? num.toLocaleString() : '0';
   };
 
+  const hasExtendedMetrics = processedPercent != null || ultraProcessedPercent != null || (fiber != null && fiber > 0);
+
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={styles.container} 
+      onPress={() => hasExtendedMetrics && setIsExpanded(!isExpanded)}
+      activeOpacity={hasExtendedMetrics ? 0.7 : 1}
+    >
       <View style={styles.macroGrid}>
         <View style={[styles.macroItem, styles.calorieItem]}>
           <Text style={[styles.macroValue, styles.calorieValue]}>{formatNumber(macros.calories)}</Text>
@@ -33,27 +42,45 @@ const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber }
         </View>
       </View>
       
-      {/* Extended Metrics */}
-      {(processedPercent != null || ultraProcessedPercent != null || (fiber != null && fiber > 0)) && (
+      {/* Expand/Collapse Indicator */}
+      {hasExtendedMetrics && (
+        <View style={styles.expandIndicator}>
+          <Ionicons 
+            name={isExpanded ? "chevron-up" : "chevron-down"} 
+            size={20} 
+            color={Colors.textTertiary} 
+          />
+        </View>
+      )}
+      
+      {/* Extended Metrics - Collapsible */}
+      {isExpanded && hasExtendedMetrics && (
         <View style={styles.extendedMetricsContainer}>
+          <Text style={styles.extendedMetricsTitle}>Additional Metrics</Text>
+          
           {processedPercent != null && (
-            <Text style={styles.extendedMetricText}>
-              {processedPercent}% processed
-            </Text>
+            <View style={styles.metricRow}>
+              <Text style={styles.metricLabel}>Processed calories</Text>
+              <Text style={styles.metricValue}>{processedPercent}%</Text>
+            </View>
           )}
+          
           {ultraProcessedPercent != null && (
-            <Text style={styles.extendedMetricText}>
-              {ultraProcessedPercent}% ultra-processed
-            </Text>
+            <View style={styles.metricRow}>
+              <Text style={styles.metricLabel}>Ultra-processed calories</Text>
+              <Text style={styles.metricValue}>{ultraProcessedPercent}%</Text>
+            </View>
           )}
+          
           {fiber != null && fiber > 0 && (
-            <Text style={styles.extendedMetricText}>
-              {formatNumber(fiber)}g fiber
-            </Text>
+            <View style={styles.metricRow}>
+              <Text style={styles.metricLabel}>Fiber</Text>
+              <Text style={styles.metricValue}>{formatNumber(fiber)}g</Text>
+            </View>
           )}
         </View>
       )}
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -129,19 +156,42 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     marginTop: 1,
   },
+  expandIndicator: {
+    marginTop: Spacing.sm,
+    alignItems: 'center',
+    paddingTop: Spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+  },
   extendedMetricsContainer: {
     marginTop: Spacing.md,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.base,
-    borderRadius: BorderRadius.base,
-    backgroundColor: Colors.backgroundSecondary,
-    gap: Spacing.xs,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
   },
-  extendedMetricText: {
+  extendedMetricsTitle: {
     fontSize: Typography.xs,
-    fontWeight: '600',
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    letterSpacing: Typography.letterSpacingWide,
+    marginBottom: Spacing.sm,
+    textTransform: 'uppercase',
+  },
+  metricRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.xs,
+  },
+  metricLabel: {
+    fontSize: Typography.sm,
     color: Colors.textSecondary,
-    letterSpacing: Typography.letterSpacingNormal,
+    fontWeight: '500',
+  },
+  metricValue: {
+    fontSize: Typography.sm,
+    color: Colors.textPrimary,
+    fontWeight: '600',
   },
 });
 

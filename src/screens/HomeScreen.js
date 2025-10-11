@@ -1,0 +1,754 @@
+import { useAuth, useUser } from '@clerk/clerk-expo';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+    Alert,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
+import DateNavigator from '../components/DateNavigator';
+import MacroDisplay from '../components/MacroDisplay';
+import MealCard from '../components/MealCard';
+import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
+import StorageService from '../services/storage';
+import DateHelpers from '../utils/dateHelpers';
+
+const HomeScreen = ({ navigation }) => {
+  const { signOut } = useAuth();
+  const { user } = useUser();
+  
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [meals, setMeals] = useState([]);
+  const [dailyMacros, setDailyMacros] = useState({
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0
+  });
+  const [refreshing, setRefreshing] = useState(false);
+  const [editingMealId, setEditingMealId] = useState(null);
+  const [editedValues, setEditedValues] = useState({});
+  const [portionSize, setPortionSize] = useState('1');
+
+  useEffect(() => {
+    // Wait for user to be loaded before loading meals
+    if (user?.id) {
+      loadMeals();
+    }
+  }, [currentDate, user?.id]);
+
+  // Reload meals when screen comes into focus (e.g., after logging a meal)
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.id) {
+        loadMeals();
+      }
+    }, [currentDate, user?.id])
+  );
+
+  const loadMeals = async () => {
+    try {
+      // Ensure user ID is set in storage before loading meals
+      if (user?.id) {
+        await StorageService.setUserId(user.id);
+      }
+      
+      const dateMeals = await StorageService.getMealsByDate(currentDate);
+      
+      // Sort meals by timestamp - most recent first
+      const sortedMeals = dateMeals.sort((a, b) => b.timestamp - a.timestamp);
+      setMeals(sortedMeals);
+      
+      // Calculate daily totals
+      const totals = dateMeals.reduce((acc, meal) => ({
+        calories: acc.calories + (meal.calories || 0),
+        protein: acc.protein + (meal.protein || 0),
+        carbs: acc.carbs + (meal.carbs || 0),
+        fat: acc.fat + (meal.fat || 0)
+      }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+      
+      setDailyMacros(totals);
+    } catch (error) {
+      console.error('Error loading meals:', error);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadMeals();
+    setRefreshing(false);
+  };
+
+  const handleDateChange = (newDate) => {
+    setCurrentDate(newDate);
+  };
+
+  const deleteMeal = async (meal) => {
+    Alert.alert(
+      'Delete Meal',
+      'Are you sure you want to delete this meal?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: async () => {
+            await StorageService.deleteMeal(meal.id);
+            await loadMeals();
+          }
+        }
+      ]
+    );
+  };
+
+  const saveMealAsTemplate = async (meal) => {
+    try {
+      const template = {
+        id: Date.now().toString(),
+        name: meal.name,
+        calories: meal.baseMacros?.calories || meal.calories,
+        protein: meal.baseMacros?.protein || meal.protein,
+        carbs: meal.baseMacros?.carbs || meal.carbs,
+        fat: meal.baseMacros?.fat || meal.fat
+      };
+      await StorageService.saveMealTemplate(template);
+      Alert.alert('Success', 'Meal saved as template!');
+    } catch (error) {
+      console.error('Error saving meal template:', error);
+      Alert.alert('Error', 'Failed to save meal template');
+    }
+  };
+
+  const startEditingMeal = (meal) => {
+    // Store base values (before portion multiplication)
+    const baseMeal = meal.baseMacros || {
+      calories: meal.calories,
+      protein: meal.protein,
+      carbs: meal.carbs,
+      fat: meal.fat
+    };
+    
+    setEditingMealId(meal.id);
+    setEditedValues({
+      calories: baseMeal.calories.toString(),
+      protein: baseMeal.protein.toString(),
+      carbs: baseMeal.carbs.toString(),
+      fat: baseMeal.fat.toString()
+    });
+    setPortionSize(meal.portionSize?.toString() || '1');
+  };
+
+  const cancelEditing = () => {
+    setEditingMealId(null);
+    setEditedValues({});
+    setPortionSize('1');
+  };
+
+  const saveEditedMeal = async (meal) => {
+    try {
+      const portion = parseFloat(portionSize) || 1;
+      const baseCalories = parseInt(editedValues.calories) || meal.calories;
+      const baseProtein = parseInt(editedValues.protein) || meal.protein;
+      const baseCarbs = parseInt(editedValues.carbs) || meal.carbs;
+      const baseFat = parseInt(editedValues.fat) || meal.fat;
+      
+      const updatedMeal = {
+        ...meal,
+        calories: Math.round(baseCalories * portion),
+        protein: Math.round(baseProtein * portion),
+        carbs: Math.round(baseCarbs * portion),
+        fat: Math.round(baseFat * portion),
+        portionSize: portion,
+        baseMacros: {
+          calories: baseCalories,
+          protein: baseProtein,
+          carbs: baseCarbs,
+          fat: baseFat
+        }
+      };
+      
+      // Update the meal in storage
+      const allMeals = await StorageService.getMeals();
+      const updatedMeals = allMeals.map(m => m.id === meal.id ? updatedMeal : m);
+      await StorageService.clearAllData();
+      for (const m of updatedMeals) {
+        await StorageService.saveMeal(m);
+      }
+      
+      await loadMeals();
+      setEditingMealId(null);
+      setEditedValues({});
+      setPortionSize('1');
+      Alert.alert('Success', '✅ Meal updated!');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update meal');
+    }
+  };
+
+  const navigateToCamera = () => {
+    navigation.navigate('Camera', { targetDate: currentDate.toISOString() });
+  };
+
+  const handleSignOut = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            await StorageService.clearUserId();
+            await signOut();
+          }
+        }
+      ]
+    );
+  };
+
+  const formatMealTime = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
+  const isToday = DateHelpers.isToday(currentDate);
+
+  return (
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+      <ScrollView 
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+      >
+      {/* User Info Bar */}
+      <View style={styles.userBar}>
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>
+            {user?.firstName || user?.emailAddresses?.[0]?.emailAddress || 'User'}
+          </Text>
+          <Text style={styles.userEmail}>
+            {user?.emailAddresses?.[0]?.emailAddress}
+          </Text>
+        </View>
+        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <Ionicons name="log-out-outline" size={20} color="#ff4444" />
+          <Text style={styles.signOutText}>Sign Out</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Date Navigator */}
+      <DateNavigator 
+        currentDate={currentDate} 
+        onDateChange={handleDateChange} 
+      />
+
+      {/* Daily Totals */}
+      <MacroDisplay macros={dailyMacros} />
+
+      {/* Add Meal Button - Now available for all dates */}
+      <TouchableOpacity style={styles.addMealButton} onPress={navigateToCamera}>
+        <Ionicons name="camera" size={24} color="#fff" />
+        <Text style={styles.addMealText}>
+          {isToday ? 'Add Meal' : `Add Meal to ${DateHelpers.formatDate(currentDate, 'short')}`}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Navigation Buttons */}
+      <View style={styles.navigationButtons}>
+        <TouchableOpacity 
+          style={styles.navButton} 
+          onPress={() => navigation.navigate('Trends')}
+        >
+          <Ionicons name="analytics" size={20} color={Colors.accent} />
+          <Text style={styles.navButtonText}>Trends</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.navButton} 
+          onPress={() => navigation.navigate('SavedMeals')}
+        >
+          <Ionicons name="bookmark" size={20} color={Colors.accent} />
+          <Text style={styles.navButtonText}>Saved Meals</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Meals List */}
+      <View style={styles.mealsSection}>
+        <Text style={styles.sectionTitle}>
+          {isToday ? "Today's Meals" : DateHelpers.formatDate(currentDate, 'short')}
+        </Text>
+        
+        {meals.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="restaurant-outline" size={48} color={Colors.textTertiary} style={{ opacity: 0.3, marginBottom: Spacing.md }} />
+            <Text style={styles.emptyText}>No meals logged yet</Text>
+            <TouchableOpacity style={styles.emptyButton} onPress={navigateToCamera}>
+              <Text style={styles.emptyButtonText}>Add Your First Meal</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          meals.map((meal) => (
+            <View key={meal.id} style={styles.mealContainer}>
+              {editingMealId === meal.id ? (
+                // Edit Mode - Inline editing
+                <View style={styles.editCard}>
+                  <View style={styles.editHeader}>
+                    <Text style={styles.editTitle}>EDITING: {meal.name}</Text>
+                  </View>
+                  
+                  {/* Portion Size */}
+                  <View style={styles.portionRow}>
+                    <Text style={styles.portionLabel}>Portion Size</Text>
+                    <View style={styles.portionInputContainer}>
+                      <TextInput
+                        style={styles.portionInput}
+                        value={portionSize}
+                        onChangeText={setPortionSize}
+                        keyboardType="decimal-pad"
+                        selectTextOnFocus
+                        returnKeyType="done"
+                        blurOnSubmit={true}
+                        onSubmitEditing={() => Keyboard.dismiss()}
+                      />
+                      <Text style={styles.portionX}>x</Text>
+                    </View>
+                  </View>
+                  
+                  {/* Base Macros (per 1x portion) */}
+                  <Text style={styles.baseMacrosLabel}>Base Values (1x portion):</Text>
+                  
+                  <View style={styles.editRow}>
+                    <Text style={styles.editLabel}>Calories (kcal)</Text>
+                    <TextInput
+                      style={styles.editInput}
+                      value={editedValues.calories}
+                      onChangeText={(text) => setEditedValues({...editedValues, calories: text})}
+                      keyboardType="numeric"
+                      selectTextOnFocus
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                      onSubmitEditing={() => Keyboard.dismiss()}
+                    />
+                  </View>
+                  
+                  <View style={styles.editRow}>
+                    <Text style={styles.editLabel}>Protein (g)</Text>
+                    <TextInput
+                      style={styles.editInput}
+                      value={editedValues.protein}
+                      onChangeText={(text) => setEditedValues({...editedValues, protein: text})}
+                      keyboardType="numeric"
+                      selectTextOnFocus
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                      onSubmitEditing={() => Keyboard.dismiss()}
+                    />
+                  </View>
+                  
+                  <View style={styles.editRow}>
+                    <Text style={styles.editLabel}>Carbs (g)</Text>
+                    <TextInput
+                      style={styles.editInput}
+                      value={editedValues.carbs}
+                      onChangeText={(text) => setEditedValues({...editedValues, carbs: text})}
+                      keyboardType="numeric"
+                      selectTextOnFocus
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                      onSubmitEditing={() => Keyboard.dismiss()}
+                    />
+                  </View>
+                  
+                  <View style={styles.editRow}>
+                    <Text style={styles.editLabel}>Fat (g)</Text>
+                    <TextInput
+                      style={styles.editInput}
+                      value={editedValues.fat}
+                      onChangeText={(text) => setEditedValues({...editedValues, fat: text})}
+                      keyboardType="numeric"
+                      selectTextOnFocus
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                      onSubmitEditing={() => Keyboard.dismiss()}
+                    />
+                  </View>
+                  
+                  {/* Preview of final values */}
+                  {portionSize && parseFloat(portionSize) !== 1 && (
+                    <View style={styles.previewContainer}>
+                      <Text style={styles.previewTitle}>Final values ({portionSize}x):</Text>
+                      <Text style={styles.previewText}>
+                        {Math.round((parseInt(editedValues.calories) || 0) * parseFloat(portionSize))} cal | {' '}
+                        {Math.round((parseInt(editedValues.protein) || 0) * parseFloat(portionSize))}g protein | {' '}
+                        {Math.round((parseInt(editedValues.carbs) || 0) * parseFloat(portionSize))}g carbs | {' '}
+                        {Math.round((parseInt(editedValues.fat) || 0) * parseFloat(portionSize))}g fat
+                      </Text>
+                    </View>
+                  )}
+                  
+                  <View style={styles.editActions}>
+                    <TouchableOpacity 
+                      style={[styles.editActionButton, styles.cancelButton]} 
+                      onPress={cancelEditing}
+                    >
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.editActionButton, styles.saveEditButton]} 
+                      onPress={() => saveEditedMeal(meal)}
+                    >
+                      <Text style={styles.saveEditButtonText}>Save Changes</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                // Normal Mode
+                <MealCard
+                  meal={{
+                    id: meal.id,
+                    name: meal.name + (meal.portionSize && meal.portionSize !== 1 ? ` (${meal.portionSize}x)` : ''),
+                    calories: meal.calories,
+                    protein: meal.protein,
+                    carbs: meal.carbs,
+                    fat: meal.fat,
+                    time: formatMealTime(meal.timestamp)
+                  }}
+                  onDelete={deleteMeal}
+                  onSave={saveMealAsTemplate}
+                  onEdit={() => startEditingMeal(meal)}
+                />
+              )}
+            </View>
+          ))
+        )}
+      </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  userBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.backgroundElevated,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: Typography.base,
+    fontWeight: '500',
+    color: Colors.textPrimary,
+    letterSpacing: Typography.letterSpacingTight,
+    marginBottom: 2,
+  },
+  userEmail: {
+    fontSize: Typography.xs,
+    color: Colors.textTertiary,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  signOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: Colors.error,
+    gap: Spacing.xs,
+  },
+  signOutText: {
+    fontSize: Typography.sm,
+    fontWeight: '500',
+    color: Colors.error,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  header: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xl,
+  },
+  headerTitle: {
+    fontSize: Typography.xl,
+    fontWeight: '600',
+    color: Colors.textInverse,
+    letterSpacing: Typography.letterSpacingTight,
+    marginBottom: Spacing.xs,
+  },
+  headerDate: {
+    fontSize: Typography.sm,
+    color: Colors.textInverse,
+    opacity: 0.8,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  addMealButton: {
+    backgroundColor: Colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.base,
+    marginHorizontal: Spacing.base,
+    marginVertical: Spacing.md,
+    borderRadius: BorderRadius.base,
+    ...Shadows.sm,
+  },
+  addMealText: {
+    color: Colors.textInverse,
+    fontSize: Typography.base,
+    fontWeight: '500',
+    letterSpacing: Typography.letterSpacingNormal,
+    marginLeft: Spacing.sm,
+  },
+  mealsSection: {
+    paddingHorizontal: Spacing.base,
+    paddingBottom: Spacing.xl,
+  },
+  sectionTitle: {
+    fontSize: Typography.xs,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.base,
+    marginTop: Spacing.md,
+    textTransform: 'uppercase',
+    letterSpacing: Typography.letterSpacingWide,
+    fontWeight: '600',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xxxl,
+    paddingHorizontal: Spacing.xl,
+    backgroundColor: Colors.backgroundElevated,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  emptyText: {
+    fontSize: Typography.base,
+    color: Colors.textTertiary,
+    marginBottom: Spacing.lg,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  emptyButton: {
+    backgroundColor: Colors.accent,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.base,
+    ...Shadows.sm,
+  },
+  emptyButtonText: {
+    color: Colors.textInverse,
+    fontSize: Typography.sm,
+    fontWeight: '500',
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  navigationButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.base,
+    marginVertical: Spacing.sm,
+    gap: Spacing.md,
+  },
+  navButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.backgroundElevated,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.base,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    flex: 1,
+    justifyContent: 'center',
+    ...Shadows.sm,
+  },
+  navButtonText: {
+    color: Colors.accent,
+    fontSize: Typography.sm,
+    fontWeight: '500',
+    letterSpacing: Typography.letterSpacingNormal,
+    marginLeft: Spacing.sm,
+  },
+  mealContainer: {
+    marginBottom: Spacing.md,
+  },
+  editCard: {
+    backgroundColor: Colors.backgroundElevated,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.base,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    ...Shadows.base,
+  },
+  editHeader: {
+    marginBottom: Spacing.base,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  editTitle: {
+    fontSize: Typography.base,
+    fontWeight: '500',
+    color: Colors.textPrimary,
+    letterSpacing: Typography.letterSpacingTight,
+  },
+  portionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.base,
+    paddingBottom: Spacing.base,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  portionLabel: {
+    fontSize: Typography.base,
+    fontWeight: '500',
+    color: Colors.textPrimary,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  portionInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  portionInput: {
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    borderRadius: BorderRadius.base,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    fontSize: Typography.lg,
+    textAlign: 'center',
+    width: 70,
+    backgroundColor: Colors.backgroundSubtle,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  portionX: {
+    fontSize: Typography.lg,
+    fontWeight: '600',
+    color: Colors.accent,
+    marginLeft: Spacing.sm,
+  },
+  baseMacrosLabel: {
+    fontSize: Typography.xs,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    marginBottom: Spacing.md,
+    marginTop: Spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: Typography.letterSpacingWide,
+  },
+  editRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  editLabel: {
+    fontSize: Typography.sm,
+    fontWeight: '500',
+    color: Colors.textSecondary,
+    flex: 1,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  editInput: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.base,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    fontSize: Typography.base,
+    textAlign: 'center',
+    width: 100,
+    backgroundColor: Colors.backgroundSubtle,
+    color: Colors.textPrimary,
+  },
+  previewContainer: {
+    backgroundColor: Colors.infoLight,
+    borderRadius: BorderRadius.base,
+    padding: Spacing.md,
+    marginTop: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.info,
+  },
+  previewTitle: {
+    fontSize: Typography.xs,
+    fontWeight: '600',
+    color: Colors.info,
+    marginBottom: Spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: Typography.letterSpacingWide,
+  },
+  previewText: {
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  editActions: {
+    flexDirection: 'row',
+    marginTop: Spacing.base,
+    gap: Spacing.md,
+  },
+  editActionButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.base,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: Colors.backgroundSubtle,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  cancelButtonText: {
+    fontSize: Typography.sm,
+    fontWeight: '500',
+    color: Colors.textSecondary,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  saveEditButton: {
+    backgroundColor: Colors.accent,
+    ...Shadows.sm,
+  },
+  saveEditButtonText: {
+    fontSize: Typography.sm,
+    fontWeight: '500',
+    color: Colors.textInverse,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+});
+
+export default HomeScreen;

@@ -80,9 +80,9 @@ Use the NOVA classification system to estimate processed food percentage:
 For each component, assign the appropriate NOVA group and calculate the weighted processed calories.
 
 **CRITICAL FORMATTING REQUIREMENTS:**
-YOU MUST format your response EXACTLY as shown below. Do NOT use markdown headers (##) or any other formatting. Use ONLY the format shown:
+YOU MUST format your response EXACTLY as shown below. Start with the title on the FIRST LINE.
 
-**Title:** [EXACTLY 2 words - e.g. "Chocolate Cookie", "Grilled Chicken"]
+**Title:** [EXACTLY 2 words - e.g. "Chocolate Cookie", "Grilled Chicken", "Yogurt Berries"]
 
 [Your brief analysis here - include breakdown of components by NOVA group when calculating processed calories]
 
@@ -100,7 +100,10 @@ Net carbs: ### g
 Processed calories: ### kcal
 Processed percent: ##%
 
-IMPORTANT: Use exact format with asterisks for "**Macros:**" and "**Processed Food:**" sections, NOT markdown headers (##). This is critical for parsing.`;
+IMPORTANT: 
+- Start your response with "**Title:**" on the FIRST LINE
+- Use exact format with asterisks for all sections, NOT markdown headers (##)
+- This formatting is critical for proper parsing`;
 
       let messageContent = [];
       
@@ -255,7 +258,7 @@ PROCESSED FOOD (NOVA):
 - If user clarifies ingredients/preparation, adjust NOVA groups accordingly
 
 **CRITICAL FORMATTING REQUIREMENTS:**
-YOU MUST format your response EXACTLY as shown below. Use the EXACT format with asterisks for **Title:**, **Macros:**, and **Processed Food:**, NOT markdown headers (##):
+YOU MUST format your response EXACTLY as shown below. Start with the title on the FIRST LINE.
 
 **Title:** [Keep same 2-word title from before]
 
@@ -277,7 +280,10 @@ Net carbs: ### g
 Processed calories: ### kcal
 Processed percent: ##%
 
-IMPORTANT: Use "**Macros:**" and "**Processed Food:**" with asterisks exactly as shown above, NOT "##" or any other format.`
+IMPORTANT: 
+- Start your response with "**Title:**" on the FIRST LINE
+- Use exact format with asterisks for all sections, NOT markdown headers (##)
+- This formatting is critical for proper parsing`
         })
       });
 

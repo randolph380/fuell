@@ -634,6 +634,15 @@ const CameraScreen = ({ navigation, route }) => {
                   <Text style={styles.macroCompactLabel}>fat</Text>
                 </View>
               </View>
+              
+              {/* Extended Metrics Row */}
+              {currentExtendedMetrics?.processedPercent != null && (
+                <View style={styles.extendedMetricsRow}>
+                  <Text style={styles.extendedMetricText}>
+                    {currentExtendedMetrics.processedPercent}% processed
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Input Section */}
@@ -913,6 +922,19 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginTop: 2,
     letterSpacing: Typography.letterSpacingNormal,
+  },
+  extendedMetricsRow: {
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+    alignItems: 'center',
+  },
+  extendedMetricText: {
+    fontSize: Typography.xs,
+    color: Colors.textSecondary,
+    letterSpacing: Typography.letterSpacingNormal,
+    fontWeight: '500',
   },
   conversationContainer: {
     margin: 20,

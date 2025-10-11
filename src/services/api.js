@@ -392,10 +392,25 @@ CRITICAL:
         return this._extractNutritionDataLegacy(text);
       }
       
-      // Extract title if present
-      const title = typeof data.title === 'string' ? data.title.trim() : null;
+      // Extract title if present and validate it
+      let title = typeof data.title === 'string' ? data.title.trim() : null;
+      
+      // Filter out invalid titles (analysis instructions, etc.)
+      const invalidPhrases = [
+        'analyzing', 'images together', 'calculation', 'estimate', 
+        'based on', 'looks like', 'appears to be', 'seems to be'
+      ];
+      
       if (title) {
-        console.log('📝 Extracted title from JSON:', title);
+        const lowerTitle = title.toLowerCase();
+        const isInvalid = invalidPhrases.some(phrase => lowerTitle.includes(phrase));
+        
+        if (isInvalid || title.length > 30) {
+          console.warn('📝 Invalid title detected, ignoring:', title);
+          title = null;
+        } else {
+          console.log('📝 Extracted title from JSON:', title);
+        }
       }
       
       // Build response

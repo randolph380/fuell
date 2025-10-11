@@ -653,36 +653,8 @@ const CameraScreen = ({ navigation, route }) => {
                 </View>
               </View>
               
-              {/* Extended Metrics Row */}
-              {(currentExtendedMetrics?.processedPercent != null || currentExtendedMetrics?.ultraProcessedPercent != null || currentExtendedMetrics?.fiber != null || currentExtendedMetrics?.caffeine != null || currentExtendedMetrics?.freshProduce != null) && (
-                <View style={styles.extendedMetricsRow}>
-                  {currentExtendedMetrics?.processedPercent != null && (
-                    <Text style={styles.extendedMetricText}>
-                      {currentExtendedMetrics.processedPercent}% processed
-                    </Text>
-                  )}
-                  {currentExtendedMetrics?.ultraProcessedPercent != null && (
-                    <Text style={[styles.extendedMetricText, currentExtendedMetrics?.processedPercent != null && { marginLeft: Spacing.base }]}>
-                      {currentExtendedMetrics.ultraProcessedPercent}% ultra
-                    </Text>
-                  )}
-                  {currentExtendedMetrics?.fiber != null && (
-                    <Text style={[styles.extendedMetricText, (currentExtendedMetrics?.processedPercent != null || currentExtendedMetrics?.ultraProcessedPercent != null) && { marginLeft: Spacing.base }]}>
-                      {currentExtendedMetrics.fiber}g fiber
-                    </Text>
-                  )}
-                  {currentExtendedMetrics?.caffeine != null && (
-                    <Text style={[styles.extendedMetricText, (currentExtendedMetrics?.processedPercent != null || currentExtendedMetrics?.ultraProcessedPercent != null || currentExtendedMetrics?.fiber != null) && { marginLeft: Spacing.base }]}>
-                      {currentExtendedMetrics.caffeine}mg caffeine
-                    </Text>
-                  )}
-                  {currentExtendedMetrics?.freshProduce != null && (
-                    <Text style={[styles.extendedMetricText, (currentExtendedMetrics?.processedPercent != null || currentExtendedMetrics?.ultraProcessedPercent != null || currentExtendedMetrics?.fiber != null || currentExtendedMetrics?.caffeine != null) && { marginLeft: Spacing.base }]}>
-                      {currentExtendedMetrics.freshProduce}g fruits & veg
-                    </Text>
-                  )}
-                </View>
-              )}
+              {/* Extended Metrics Row - Hidden to save space */}
+              {/* Secondary metrics are visible in expanded meal cards on home screen */}
             </View>
 
             {/* Input Section */}

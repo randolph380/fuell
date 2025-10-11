@@ -447,6 +447,15 @@ CRITICAL:
 
   // Legacy fallback for backwards compatibility
   _extractNutritionDataLegacy(text) {
+    // Try to extract title from the beginning of the text
+    const firstPart = text.slice(0, 500);
+    let title = null;
+    const titleMatch = firstPart.match(/\*\*Title:\*\*\s*([^\n]+)/i);
+    if (titleMatch) {
+      title = titleMatch[1].trim().replace(/\*\*/g, '').replace(/\*/g, '').replace(/\[|\]/g, '').trim();
+      console.log('📝 Legacy: Extracted title from text:', title);
+    }
+    
     // Get the last 1500 characters where the final values should be
     const endOfText = text.slice(-1500);
     
@@ -479,12 +488,13 @@ CRITICAL:
     
     if (calories === null || protein === null || fat === null || carbs === null) {
       console.warn('⚠️ Failed to parse macros from text');
-      return { macros: null, extendedMetrics: null };
+      return { macros: null, extendedMetrics: null, title: null };
     }
     
     return {
       macros: { calories, protein, carbs, fat },
-      extendedMetrics
+      extendedMetrics,
+      title
     };
   }
 

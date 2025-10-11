@@ -240,13 +240,14 @@ ${initialPrompt}`;
       const data = await response.json();
       const assistantMessage = data.content[0].text;
       
-      // Parse nutrition data (macros + extended metrics) from response
+      // Parse nutrition data (macros + extended metrics + title) from response
       const nutritionData = this.extractNutritionData(assistantMessage);
       
       return {
         response: assistantMessage,
         macros: nutritionData.macros,
-        extendedMetrics: nutritionData.extendedMetrics
+        extendedMetrics: nutritionData.extendedMetrics,
+        title: nutritionData.title
       };
     } catch (error) {
       console.error('Error analyzing meal image:', error);
@@ -349,13 +350,14 @@ CRITICAL:
       const data = await response.json();
       const assistantMessage = data.content[0].text;
       
-      // Parse nutrition data (macros + extended metrics) from response
+      // Parse nutrition data (macros + extended metrics + title) from response
       const nutritionData = this.extractNutritionData(assistantMessage);
       
       return {
         response: assistantMessage,
         macros: nutritionData.macros,
-        extendedMetrics: nutritionData.extendedMetrics
+        extendedMetrics: nutritionData.extendedMetrics,
+        title: nutritionData.title
       };
     } catch (error) {
       console.error('Error refining analysis:', error);

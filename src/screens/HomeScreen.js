@@ -16,6 +16,7 @@ import {
     View
 } from 'react-native';
 import DateNavigator from '../components/DateNavigator';
+import HamburgerMenu from '../components/HamburgerMenu';
 import MacroDisplay from '../components/MacroDisplay';
 import MealCard from '../components/MealCard';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
@@ -275,6 +276,7 @@ const HomeScreen = ({ navigation }) => {
       >
       {/* User Info Bar */}
       <View style={styles.userBar}>
+        <HamburgerMenu navigation={navigation} />
         <View style={styles.userInfo}>
           <Text style={styles.userName}>
             {user?.firstName || user?.emailAddresses?.[0]?.emailAddress || 'User'}

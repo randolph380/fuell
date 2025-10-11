@@ -432,11 +432,26 @@ CRITICAL:
       const hasFreshProduce = typeof data.freshProduce === 'number';
       
       if (hasProcessed || hasUltraProcessed || hasFiber || hasCaffeine || hasFreshProduce) {
+        let processedCalories = data.processed?.calories ?? null;
+        let processedPercent = data.processed?.percent ?? null;
+        const ultraProcessedCalories = data.ultraProcessed?.calories ?? null;
+        const ultraProcessedPercent = data.ultraProcessed?.percent ?? null;
+        
+        // Ensure processed is always >= ultra-processed (since ultra-processed is a subset)
+        if (processedPercent !== null && ultraProcessedPercent !== null && processedPercent < ultraProcessedPercent) {
+          console.warn(`⚠️ Fixing processed percent: was ${processedPercent}%, should be >= ${ultraProcessedPercent}%`);
+          processedPercent = ultraProcessedPercent;
+        }
+        if (processedCalories !== null && ultraProcessedCalories !== null && processedCalories < ultraProcessedCalories) {
+          console.warn(`⚠️ Fixing processed calories: was ${processedCalories}, should be >= ${ultraProcessedCalories}`);
+          processedCalories = ultraProcessedCalories;
+        }
+        
         extendedMetrics = {
-          processedCalories: data.processed?.calories ?? null,
-          processedPercent: data.processed?.percent ?? null,
-          ultraProcessedCalories: data.ultraProcessed?.calories ?? null,
-          ultraProcessedPercent: data.ultraProcessed?.percent ?? null,
+          processedCalories,
+          processedPercent,
+          ultraProcessedCalories,
+          ultraProcessedPercent,
           fiber: hasFiber ? data.fiber : null,
           caffeine: hasCaffeine ? data.caffeine : null,
           freshProduce: hasFreshProduce ? data.freshProduce : null

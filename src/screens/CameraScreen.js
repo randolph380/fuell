@@ -14,6 +14,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
+    TouchableWithoutFeedback,
     View
 } from 'react-native';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
@@ -34,6 +35,9 @@ const CameraScreen = ({ navigation, route }) => {
   const [mealTitle, setMealTitle] = useState('');
   const [isMultipleDishes, setIsMultipleDishes] = useState(false);
   const [showExtendedOutput, setShowExtendedOutput] = useState(false);
+  const [showMacroEditor, setShowMacroEditor] = useState(false);
+  const [editedMacros, setEditedMacros] = useState(null);
+  const [portionSize, setPortionSize] = useState('1');
   const scrollViewRef = React.useRef(null);
   
   // Get the target date from navigation params (defaults to today)
@@ -53,18 +57,25 @@ const CameraScreen = ({ navigation, route }) => {
     try {
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
+        allowsEditing: false, // No crop, use original photo
         quality: 0.7, // Reduced quality to help with file size
       });
 
       if (!result.canceled) {
-        setImageUri(result.assets[0].uri);
-        setFoodDescription('');
-        setConversation([]);
-        setCurrentMacros(null);
-        setCurrentExtendedMetrics(null);
-        setShowInput(false);
+        const newPhotoUri = result.assets[0].uri;
+        
+        // If there's already a main image, add this as an additional image
+        if (imageUri) {
+          setAdditionalImages(prev => [...prev, newPhotoUri]);
+        } else {
+          // First photo - set as main image
+          setImageUri(newPhotoUri);
+          setFoodDescription('');
+          setConversation([]);
+          setCurrentMacros(null);
+          setCurrentExtendedMetrics(null);
+          setShowInput(false);
+        }
       }
     } catch (error) {
       console.error('Error taking picture:', error);
@@ -570,6 +581,40 @@ const CameraScreen = ({ navigation, route }) => {
                     </ScrollView>
                   </View>
                 )}
+                
+                {/* Add Another Photo buttons */}
+                <View style={styles.addMorePhotosSection}>
+                  <TouchableOpacity style={styles.addMoreButton} onPress={takePicture}>
+                    <Ionicons name="camera" size={20} color={Colors.accent} />
+                    <Text style={styles.addMoreText}>Take Another</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.addMoreButton} onPress={async () => {
+                    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                    if (status !== 'granted') {
+                      Alert.alert('Permission needed', 'Photo library permission is required');
+                      return;
+                    }
+                    try {
+                      const result = await ImagePicker.launchImageLibraryAsync({
+                        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                        allowsEditing: false,
+                        allowsMultipleSelection: true,
+                        quality: 0.7,
+                      });
+                      if (!result.canceled) {
+                        // Add all selected images to additionalImages
+                        const newImages = result.assets.map(asset => asset.uri);
+                        setAdditionalImages(prev => [...prev, ...newImages]);
+                      }
+                    } catch (error) {
+                      console.error('Error picking additional images:', error);
+                      Alert.alert('Error', 'Failed to pick images');
+                    }
+                  }}>
+                    <Ionicons name="image" size={20} color={Colors.accent} />
+                    <Text style={styles.addMoreText}>Add from Gallery</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             ) : (
               <View style={styles.uploadSection}>
@@ -659,22 +704,32 @@ const CameraScreen = ({ navigation, route }) => {
 
             {/* Input Section */}
             {showInput && (
-              <View style={styles.inputSection}>
-                <TextInput
-                  style={styles.messageInput}
-                  placeholder="Add more details or answer the question..."
-                  value={userInput}
-                  onChangeText={setUserInput}
-                  multiline
-                  returnKeyType="done"
-                  blurOnSubmit={true}
-                  onSubmitEditing={() => {
-                    Keyboard.dismiss();
-                  }}
-                />
-                <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-                  <Ionicons name="send" size={20} color={Colors.textInverse} />
-                </TouchableOpacity>
+              <View>
+                {/* Add Photo Button */}
+                <View style={styles.addPhotoSection}>
+                  <TouchableOpacity style={styles.addPhotoButton} onPress={pickImage}>
+                    <Ionicons name="add-circle" size={20} color={Colors.accent} />
+                    <Text style={styles.addPhotoText}>Add Photo</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                <View style={styles.inputSection}>
+                  <TextInput
+                    style={styles.messageInput}
+                    placeholder="Add more details or answer the question..."
+                    value={userInput}
+                    onChangeText={setUserInput}
+                    multiline
+                    returnKeyType="done"
+                    blurOnSubmit={true}
+                    onSubmitEditing={() => {
+                      Keyboard.dismiss();
+                    }}
+                  />
+                  <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+                    <Ionicons name="send" size={20} color={Colors.textInverse} />
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
 
@@ -688,16 +743,178 @@ const CameraScreen = ({ navigation, route }) => {
 
             {/* Action Buttons */}
             <View style={styles.actionButtons}>
+              <TouchableOpacity style={styles.editButton} onPress={() => setShowMacroEditor(true)}>
+                <Text style={styles.editButtonText}>Edit Meal</Text>
+              </TouchableOpacity>
               <TouchableOpacity style={styles.logButton} onPress={logMeal}>
                 <Text style={styles.logButtonText}>Log This Meal</Text>
               </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={saveMealTemplate}>
-              <Text style={styles.saveButtonText}>Save Meal</Text>
-            </TouchableOpacity>
             </View>
           </View>
         )}
       </KeyboardAvoidingView>
+
+      {/* Macro Editor Modal */}
+      {showMacroEditor && currentMacros && (
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.macroEditorOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.macroEditorModal}>
+                <View style={styles.macroEditorHeader}>
+                  <Text style={styles.macroEditorTitle}>Edit Meal Macros</Text>
+                  <TouchableOpacity onPress={() => {
+                    Keyboard.dismiss();
+                    setShowMacroEditor(false);
+                    setPortionSize('1');
+                  }}>
+                    <Ionicons name="close" size={24} color={Colors.textPrimary} />
+                  </TouchableOpacity>
+                </View>
+                
+                {/* Portion Size */}
+                <View style={styles.portionSizeSection}>
+                  <Text style={styles.portionSizeLabel}>Portion Size</Text>
+                  <View style={styles.portionSizeInput}>
+                    <TextInput
+                      style={styles.portionInput}
+                      value={portionSize}
+                      onChangeText={setPortionSize}
+                      keyboardType="decimal-pad"
+                      selectTextOnFocus
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                      onSubmitEditing={() => Keyboard.dismiss()}
+                    />
+                    <Text style={styles.portionX}>x</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.macroEditorInputs}>
+                  <Text style={styles.baseMacrosLabel}>Base Values (1x portion):</Text>
+                  
+                  <View style={styles.macroEditorRow}>
+                    <Text style={styles.macroEditorLabel}>Calories</Text>
+                    <TextInput
+                      style={styles.macroEditorInput}
+                      value={(editedMacros?.calories ?? currentMacros.calories).toString()}
+                      onChangeText={(text) => setEditedMacros({
+                        ...editedMacros,
+                        calories: parseInt(text) || 0
+                      })}
+                      keyboardType="numeric"
+                      selectTextOnFocus
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                      onSubmitEditing={() => Keyboard.dismiss()}
+                    />
+                  </View>
+                  
+                  <View style={styles.macroEditorRow}>
+                    <Text style={styles.macroEditorLabel}>Protein (g)</Text>
+                    <TextInput
+                      style={styles.macroEditorInput}
+                      value={(editedMacros?.protein ?? currentMacros.protein).toString()}
+                      onChangeText={(text) => setEditedMacros({
+                        ...editedMacros,
+                        protein: parseInt(text) || 0
+                      })}
+                      keyboardType="numeric"
+                      selectTextOnFocus
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                      onSubmitEditing={() => Keyboard.dismiss()}
+                    />
+                  </View>
+                  
+                  <View style={styles.macroEditorRow}>
+                    <Text style={styles.macroEditorLabel}>Carbs (g)</Text>
+                    <TextInput
+                      style={styles.macroEditorInput}
+                      value={(editedMacros?.carbs ?? currentMacros.carbs).toString()}
+                      onChangeText={(text) => setEditedMacros({
+                        ...editedMacros,
+                        carbs: parseInt(text) || 0
+                      })}
+                      keyboardType="numeric"
+                      selectTextOnFocus
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                      onSubmitEditing={() => Keyboard.dismiss()}
+                    />
+                  </View>
+                  
+                  <View style={styles.macroEditorRow}>
+                    <Text style={styles.macroEditorLabel}>Fat (g)</Text>
+                    <TextInput
+                      style={styles.macroEditorInput}
+                      value={(editedMacros?.fat ?? currentMacros.fat).toString()}
+                      onChangeText={(text) => setEditedMacros({
+                        ...editedMacros,
+                        fat: parseInt(text) || 0
+                      })}
+                      keyboardType="numeric"
+                      selectTextOnFocus
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                      onSubmitEditing={() => Keyboard.dismiss()}
+                    />
+                  </View>
+                </View>
+                
+                {/* Preview of final values */}
+                {portionSize && parseFloat(portionSize) !== 1 && (
+                  <View style={styles.previewSection}>
+                    <Text style={styles.previewTitle}>Final values ({portionSize}x):</Text>
+                    <Text style={styles.previewText}>
+                      {Math.round((editedMacros?.calories ?? currentMacros.calories) * parseFloat(portionSize))} cal | {' '}
+                      {Math.round((editedMacros?.protein ?? currentMacros.protein) * parseFloat(portionSize))}g protein | {' '}
+                      {Math.round((editedMacros?.carbs ?? currentMacros.carbs) * parseFloat(portionSize))}g carbs | {' '}
+                      {Math.round((editedMacros?.fat ?? currentMacros.fat) * parseFloat(portionSize))}g fat
+                    </Text>
+                  </View>
+                )}
+                
+                <View style={styles.macroEditorActions}>
+                  <TouchableOpacity 
+                    style={styles.macroEditorCancel}
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      setShowMacroEditor(false);
+                      setEditedMacros(null);
+                      setPortionSize('1');
+                    }}
+                  >
+                    <Text style={styles.macroEditorCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={styles.macroEditorSave}
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      const portion = parseFloat(portionSize) || 1;
+                      const baseMacros = editedMacros || currentMacros;
+                      
+                      // Apply portion multiplier to macros
+                      setCurrentMacros({
+                        calories: Math.round(baseMacros.calories * portion),
+                        protein: Math.round(baseMacros.protein * portion),
+                        carbs: Math.round(baseMacros.carbs * portion),
+                        fat: Math.round(baseMacros.fat * portion),
+                      });
+                      
+                      setShowMacroEditor(false);
+                      setEditedMacros(null);
+                      setPortionSize('1');
+                    }}
+                  >
+                    <Text style={styles.macroEditorSaveText}>Save Changes</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      )}
 
       {/* Full Screen Loading Overlay */}
       {isAnalyzing && (
@@ -834,6 +1051,29 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
     fontWeight: '500',
     letterSpacing: Typography.letterSpacingNormal,
+  },
+  addMorePhotosSection: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: Spacing.md,
+  },
+  addMoreButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.base,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    backgroundColor: Colors.backgroundElevated,
+    gap: Spacing.xs,
+  },
+  addMoreText: {
+    fontSize: Typography.sm,
+    color: Colors.accent,
+    fontWeight: '500',
   },
   additionalImagesScroll: {
     flexDirection: 'row',
@@ -999,6 +1239,28 @@ const styles = StyleSheet.create({
     color: Colors.accent,
     fontWeight: '600',
   },
+  addPhotoSection: {
+    paddingHorizontal: 15,
+    paddingTop: 10,
+    paddingBottom: 5,
+  },
+  addPhotoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.base,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    backgroundColor: Colors.backgroundElevated,
+    gap: Spacing.xs,
+  },
+  addPhotoText: {
+    fontSize: Typography.sm,
+    color: Colors.accent,
+    fontWeight: '500',
+  },
   inputSection: {
     flexDirection: 'row',
     paddingHorizontal: 15,
@@ -1058,8 +1320,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: Typography.letterSpacingNormal,
   },
-  saveButton: {
-    backgroundColor: Colors.success,
+  editButton: {
+    backgroundColor: Colors.accent,
     paddingVertical: Spacing.base,
     borderRadius: BorderRadius.base,
     alignItems: 'center',
@@ -1067,11 +1329,165 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     ...Shadows.sm,
   },
-  saveButtonText: {
+  editButtonText: {
     color: Colors.textInverse,
     fontSize: Typography.base,
     fontWeight: '600',
     letterSpacing: Typography.letterSpacingNormal,
+  },
+  macroEditorOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1001,
+  },
+  macroEditorModal: {
+    backgroundColor: Colors.backgroundElevated,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    width: '85%',
+    maxWidth: 400,
+    ...Shadows.lg,
+  },
+  macroEditorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  macroEditorTitle: {
+    fontSize: Typography.lg,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  portionSizeSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    marginBottom: Spacing.md,
+    backgroundColor: Colors.backgroundSubtle,
+    borderRadius: BorderRadius.base,
+  },
+  portionSizeLabel: {
+    fontSize: Typography.base,
+    fontWeight: '500',
+    color: Colors.textPrimary,
+  },
+  portionSizeInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  portionInput: {
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    borderRadius: BorderRadius.base,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    fontSize: Typography.lg,
+    textAlign: 'center',
+    width: 70,
+    backgroundColor: Colors.backgroundElevated,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  portionX: {
+    fontSize: Typography.lg,
+    fontWeight: '600',
+    color: Colors.accent,
+    marginLeft: Spacing.sm,
+  },
+  baseMacrosLabel: {
+    fontSize: Typography.xs,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
+    textTransform: 'uppercase',
+    letterSpacing: Typography.letterSpacingWide,
+  },
+  macroEditorInputs: {
+    gap: Spacing.md,
+  },
+  macroEditorRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  macroEditorLabel: {
+    fontSize: Typography.base,
+    fontWeight: '500',
+    color: Colors.textSecondary,
+  },
+  macroEditorInput: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.base,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    fontSize: Typography.base,
+    textAlign: 'center',
+    width: 100,
+    backgroundColor: Colors.backgroundSubtle,
+    color: Colors.textPrimary,
+  },
+  previewSection: {
+    backgroundColor: Colors.infoLight,
+    borderRadius: BorderRadius.base,
+    padding: Spacing.md,
+    marginTop: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.info,
+  },
+  previewTitle: {
+    fontSize: Typography.xs,
+    fontWeight: '600',
+    color: Colors.info,
+    marginBottom: Spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: Typography.letterSpacingWide,
+  },
+  previewText: {
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  macroEditorActions: {
+    flexDirection: 'row',
+    marginTop: Spacing.xl,
+    gap: Spacing.md,
+  },
+  macroEditorCancel: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.base,
+    alignItems: 'center',
+    backgroundColor: Colors.backgroundSubtle,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  macroEditorCancelText: {
+    fontSize: Typography.base,
+    fontWeight: '500',
+    color: Colors.textSecondary,
+  },
+  macroEditorSave: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.base,
+    alignItems: 'center',
+    backgroundColor: Colors.accent,
+    ...Shadows.sm,
+  },
+  macroEditorSaveText: {
+    fontSize: Typography.base,
+    fontWeight: '600',
+    color: Colors.textInverse,
   },
   toggleContainer: {
     backgroundColor: Colors.backgroundElevated,

@@ -263,8 +263,11 @@ const SignInScreen = () => {
                 >
                   <Text style={styles.switchButtonText}>
                     {isSignUp 
-                      ? 'Already have an account? Sign In' 
-                      : "Don't have an account? Sign Up"}
+                      ? 'Already have an account? ' 
+                      : "Don't have an account? "}
+                    <Text style={styles.switchButtonTextBold}>
+                      {isSignUp ? 'Sign In' : 'Sign Up'}
+                    </Text>
                   </Text>
                 </TouchableOpacity>
               </>
@@ -394,6 +397,10 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     fontSize: Typography.sm,
     letterSpacing: Typography.letterSpacingNormal,
+  },
+  switchButtonTextBold: {
+    fontWeight: '700',
+    opacity: 1,
   },
   verificationTitle: {
     fontSize: Typography.lg,

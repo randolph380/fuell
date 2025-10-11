@@ -80,30 +80,35 @@ Use the NOVA classification system to estimate processed food percentage:
 For each component, assign the appropriate NOVA group and calculate the weighted processed calories.
 
 **CRITICAL FORMATTING REQUIREMENTS:**
-YOU MUST format your response EXACTLY as shown below. Start with the title on the FIRST LINE.
+YOU MUST format your response EXACTLY as shown below:
 
 **Title:** [EXACTLY 2 words - e.g. "Chocolate Cookie", "Grilled Chicken", "Yogurt Berries"]
 
-[Your brief analysis here - include breakdown of components by NOVA group when calculating processed calories]
+[Your brief conversational analysis - 2-3 sentences max. Mention NOVA classification naturally.]
 
 I have [low/medium/high] certainty on this estimate.
 
 [Optional: ONE question if critical info missing]
 
-**Macros:**
-Calories: ### kcal
-Protein: ### g
-Fat: ### g
-Net carbs: ### g
+**NUTRITION_DATA:**
+\`\`\`json
+{
+  "calories": ###,
+  "protein": ###,
+  "fat": ###,
+  "carbs": ###,
+  "processed": {
+    "percent": ##,
+    "calories": ###
+  }
+}
+\`\`\`
 
-**Processed Food:**
-Processed calories: ### kcal
-Processed percent: ##%
-
-IMPORTANT: 
-- Start your response with "**Title:**" on the FIRST LINE
-- Use exact format with asterisks for all sections, NOT markdown headers (##)
-- This formatting is critical for proper parsing`;
+CRITICAL:
+- Start with **Title:** on first line
+- Keep analysis conversational and brief
+- End with valid JSON in the NUTRITION_DATA code block
+- JSON must be parseable and include all fields`;
 
       let messageContent = [];
       
@@ -258,32 +263,37 @@ PROCESSED FOOD (NOVA):
 - If user clarifies ingredients/preparation, adjust NOVA groups accordingly
 
 **CRITICAL FORMATTING REQUIREMENTS:**
-YOU MUST format your response EXACTLY as shown below. Start with the title on the FIRST LINE.
+YOU MUST format your response EXACTLY as shown below:
 
 **Title:** [Keep same 2-word title from before]
 
-[Your brief update - acknowledge new info, show key math, update NOVA classification if needed]
+[Your brief update - acknowledge new info, show key math if needed. 2-3 sentences max.]
 
-Example: "Perfect! Scale was tared, so 200g is yogurt weight. Label: 150 cal per 170g. Math: (200/170) × 150 = 176 cal. Plus 30 cal berries = 206 total."
+Example: "Perfect! Scale was tared, so 200g is yogurt weight. Math: (200/170) × 150 = 176 cal. Plus 30 cal berries = 206 total."
 
 I have [low/medium/high] certainty on this estimate.
 
 [ONE question only if critical detail missing, otherwise skip entirely]
 
-**Macros:**
-Calories: ### kcal
-Protein: ### g
-Fat: ### g
-Net carbs: ### g
+**NUTRITION_DATA:**
+\`\`\`json
+{
+  "calories": ###,
+  "protein": ###,
+  "fat": ###,
+  "carbs": ###,
+  "processed": {
+    "percent": ##,
+    "calories": ###
+  }
+}
+\`\`\`
 
-**Processed Food:**
-Processed calories: ### kcal
-Processed percent: ##%
-
-IMPORTANT: 
-- Start your response with "**Title:**" on the FIRST LINE
-- Use exact format with asterisks for all sections, NOT markdown headers (##)
-- This formatting is critical for proper parsing`
+CRITICAL:
+- Start with **Title:** on first line
+- Keep update brief and conversational
+- End with valid JSON in the NUTRITION_DATA code block
+- JSON must be parseable and include all fields`
         })
       });
 
@@ -317,9 +327,61 @@ IMPORTANT:
   }
 
   extractNutritionData(text) {
-    // Strategy: Look for the LAST occurrence of each value in the text
-    // Specifically search for the **Macros:** section to avoid false matches
-    
+    try {
+      // Strategy: Extract JSON from NUTRITION_DATA code block
+      // This is more robust than regex and scales infinitely
+      
+      // Look for JSON block in ```json ``` or ```
+      const jsonMatch = text.match(/\*\*NUTRITION_DATA:\*\*\s*```(?:json)?\s*(\{[\s\S]*?\})\s*```/i);
+      
+      if (!jsonMatch) {
+        console.warn('⚠️ No NUTRITION_DATA JSON block found, falling back to regex');
+        return this._extractNutritionDataLegacy(text);
+      }
+      
+      const jsonString = jsonMatch[1].trim();
+      const data = JSON.parse(jsonString);
+      
+      // Validate required fields
+      if (typeof data.calories !== 'number' || 
+          typeof data.protein !== 'number' || 
+          typeof data.fat !== 'number' || 
+          typeof data.carbs !== 'number') {
+        console.warn('⚠️ Invalid JSON structure, missing required fields');
+        return this._extractNutritionDataLegacy(text);
+      }
+      
+      // Build response
+      const macros = {
+        calories: data.calories,
+        protein: data.protein,
+        carbs: data.carbs,
+        fat: data.fat
+      };
+      
+      // Extract extended metrics if present
+      const extendedMetrics = data.processed ? {
+        processedCalories: data.processed.calories || null,
+        processedPercent: data.processed.percent || null
+      } : null;
+      
+      console.log('✅ Successfully extracted nutrition data from JSON:');
+      console.log('  Macros:', macros);
+      if (extendedMetrics) {
+        console.log('  Extended metrics:', extendedMetrics);
+      }
+      
+      return { macros, extendedMetrics };
+      
+    } catch (error) {
+      console.error('❌ JSON parsing failed:', error.message);
+      console.log('Falling back to legacy regex extraction');
+      return this._extractNutritionDataLegacy(text);
+    }
+  }
+
+  // Legacy fallback for backwards compatibility
+  _extractNutritionDataLegacy(text) {
     // Get the last 1500 characters where the final values should be
     const endOfText = text.slice(-1500);
     
@@ -327,9 +389,9 @@ IMPORTANT:
     const macrosSection = endOfText.match(/\*\*Macros:\*\*\s*([\s\S]*?)(?:\*\*Processed Food:\*\*|$)/i);
     const macrosText = macrosSection ? macrosSection[1] : endOfText;
     
-    // Extract basic macros (required) - now searching only within macros section
+    // Extract basic macros (required)
     const caloriesMatch = macrosText.match(/[-•\s]*Calories:\s*([\d,]+)\s*kcal/i);
-    const proteinMatch = macrosText.match(/[-•\s]*Protein:\s*([\d,]+)\s*g(?!\s*x)/i); // Exclude "24 g x" patterns
+    const proteinMatch = macrosText.match(/[-•\s]*Protein:\s*([\d,]+)\s*g(?!\s*x)/i);
     const fatMatch = macrosText.match(/[-•\s]*Fat:\s*([\d,]+)\s*g(?!\s*x)/i);
     const carbsMatch = macrosText.match(/[-•\s]*(?:Net\s+)?Carbs:\s*([\d,]+)\s*g(?!\s*x)/i);
     
@@ -338,31 +400,21 @@ IMPORTANT:
     const fat = fatMatch ? parseInt(fatMatch[1].replace(/,/g, '')) : null;
     const carbs = carbsMatch ? parseInt(carbsMatch[1].replace(/,/g, '')) : null;
     
-    // Extract extended metrics (optional - processed food)
+    // Extract extended metrics (optional)
     const processedCalMatch = endOfText.match(/[-•\s]*Processed\s+calories:\s*([\d,]+)\s*kcal/i);
     const processedPercentMatch = endOfText.match(/[-•\s]*Processed\s+percent:\s*([\d,]+)%/i);
     
     const processedCalories = processedCalMatch ? parseInt(processedCalMatch[1].replace(/,/g, '')) : null;
     const processedPercent = processedPercentMatch ? parseInt(processedPercentMatch[1].replace(/,/g, '')) : null;
     
-    // Build extended metrics object (only if we have at least one value)
     const extendedMetrics = (processedCalories !== null || processedPercent !== null) ? {
       processedCalories,
       processedPercent
     } : null;
     
-    // Log parsing results
     if (calories === null || protein === null || fat === null || carbs === null) {
-      console.warn('⚠️ Failed to parse some macros from end of response');
-      console.warn('Last 300 chars:', endOfText.slice(-300));
-      console.warn('Parsed values:', { calories, protein, fat, carbs });
+      console.warn('⚠️ Failed to parse macros from text');
       return { macros: null, extendedMetrics: null };
-    }
-    
-    console.log('✅ Successfully extracted nutrition data:');
-    console.log('  Macros:', { calories, protein, fat, carbs });
-    if (extendedMetrics) {
-      console.log('  Extended metrics:', extendedMetrics);
     }
     
     return {

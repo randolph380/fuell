@@ -161,9 +161,18 @@ const CameraScreen = ({ navigation, route }) => {
         setMealTitle('Meal');
       }
       
-      // Remove title and macros section from the response text
-      // TEMPORARILY: Show raw response for debugging
+      // Clean the response text for display
+      // Remove: Title, and the entire NUTRITION_DATA JSON block
       let cleanedResponse = result.response || 'Analysis complete';
+      
+      // Strip **Title:** line
+      cleanedResponse = cleanedResponse.replace(/\*\*Title:\*\*[^\n]*\n+/i, '');
+      
+      // Strip **NUTRITION_DATA:** and the entire JSON code block
+      cleanedResponse = cleanedResponse.replace(/\*\*NUTRITION_DATA:\*\*\s*```(?:json)?\s*\{[\s\S]*?\}\s*```/i, '');
+      
+      // Clean up extra whitespace
+      cleanedResponse = cleanedResponse.trim();
       
       // Add helpful hint at the end
       cleanedResponse += '\n\nFeel free to share any other details.';
@@ -306,9 +315,18 @@ const CameraScreen = ({ navigation, route }) => {
         console.log('DEBUG - Updated title:', extractedTitle);
       }
       
-      // Remove title and macros section from response
-      // TEMPORARILY: Show raw response for debugging
+      // Clean the response text for display
+      // Remove: Title, and the entire NUTRITION_DATA JSON block
       let cleanedResponse = result.response || 'Analysis updated';
+      
+      // Strip **Title:** line
+      cleanedResponse = cleanedResponse.replace(/\*\*Title:\*\*[^\n]*\n+/i, '');
+      
+      // Strip **NUTRITION_DATA:** and the entire JSON code block
+      cleanedResponse = cleanedResponse.replace(/\*\*NUTRITION_DATA:\*\*\s*```(?:json)?\s*\{[\s\S]*?\}\s*```/i, '');
+      
+      // Clean up extra whitespace
+      cleanedResponse = cleanedResponse.trim();
       
       const assistantMessage = {
         role: 'assistant',

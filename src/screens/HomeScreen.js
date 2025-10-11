@@ -438,7 +438,8 @@ const HomeScreen = ({ navigation }) => {
                     protein: meal.protein,
                     carbs: meal.carbs,
                     fat: meal.fat,
-                    time: formatMealTime(meal.timestamp)
+                    time: formatMealTime(meal.timestamp),
+                    extendedMetrics: meal.extendedMetrics
                   }}
                   onDelete={deleteMeal}
                   onSave={saveMealAsTemplate}

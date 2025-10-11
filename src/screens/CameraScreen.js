@@ -33,6 +33,7 @@ const CameraScreen = ({ navigation, route }) => {
   const [isRefining, setIsRefining] = useState(false);
   const [mealTitle, setMealTitle] = useState('');
   const [isMultipleDishes, setIsMultipleDishes] = useState(false);
+  const [showExtendedOutput, setShowExtendedOutput] = useState(false);
   const scrollViewRef = React.useRef(null);
   
   // Get the target date from navigation params (defaults to today)
@@ -161,21 +162,22 @@ const CameraScreen = ({ navigation, route }) => {
         setMealTitle('Meal');
       }
       
-      // Clean the response text for display
-      // Remove: Title, and the entire NUTRITION_DATA JSON block
+      // Clean the response text for display (unless extended output is enabled)
       let cleanedResponse = result.response || 'Analysis complete';
       
-      // Strip **Title:** line
-      cleanedResponse = cleanedResponse.replace(/\*\*Title:\*\*[^\n]*\n+/i, '');
-      
-      // Strip **NUTRITION_DATA:** and the entire JSON code block
-      cleanedResponse = cleanedResponse.replace(/\*\*NUTRITION_DATA:\*\*\s*```(?:json)?\s*\{[\s\S]*?\}\s*```/i, '');
-      
-      // Clean up extra whitespace
-      cleanedResponse = cleanedResponse.trim();
-      
-      // Add helpful hint at the end
-      cleanedResponse += '\n\nFeel free to share any other details.';
+      if (!showExtendedOutput) {
+        // Strip **Title:** line
+        cleanedResponse = cleanedResponse.replace(/\*\*Title:\*\*[^\n]*\n+/i, '');
+        
+        // Strip **NUTRITION_DATA:** and the entire JSON code block
+        cleanedResponse = cleanedResponse.replace(/\*\*NUTRITION_DATA:\*\*\s*```(?:json)?\s*\{[\s\S]*?\}\s*```/i, '');
+        
+        // Clean up extra whitespace
+        cleanedResponse = cleanedResponse.trim();
+        
+        // Add helpful hint at the end
+        cleanedResponse += '\n\nFeel free to share any other details.';
+      }
       
       // Add to conversation
       const newConversation = [
@@ -315,18 +317,19 @@ const CameraScreen = ({ navigation, route }) => {
         console.log('DEBUG - Updated title:', extractedTitle);
       }
       
-      // Clean the response text for display
-      // Remove: Title, and the entire NUTRITION_DATA JSON block
+      // Clean the response text for display (unless extended output is enabled)
       let cleanedResponse = result.response || 'Analysis updated';
       
-      // Strip **Title:** line
-      cleanedResponse = cleanedResponse.replace(/\*\*Title:\*\*[^\n]*\n+/i, '');
-      
-      // Strip **NUTRITION_DATA:** and the entire JSON code block
-      cleanedResponse = cleanedResponse.replace(/\*\*NUTRITION_DATA:\*\*\s*```(?:json)?\s*\{[\s\S]*?\}\s*```/i, '');
-      
-      // Clean up extra whitespace
-      cleanedResponse = cleanedResponse.trim();
+      if (!showExtendedOutput) {
+        // Strip **Title:** line
+        cleanedResponse = cleanedResponse.replace(/\*\*Title:\*\*[^\n]*\n+/i, '');
+        
+        // Strip **NUTRITION_DATA:** and the entire JSON code block
+        cleanedResponse = cleanedResponse.replace(/\*\*NUTRITION_DATA:\*\*\s*```(?:json)?\s*\{[\s\S]*?\}\s*```/i, '');
+        
+        // Clean up extra whitespace
+        cleanedResponse = cleanedResponse.trim();
+      }
       
       const assistantMessage = {
         role: 'assistant',
@@ -474,6 +477,22 @@ const CameraScreen = ({ navigation, route }) => {
                 </Text>
               </TouchableOpacity>
             </View>
+          </View>
+
+          {/* Debug Toggle - Show Extended Output */}
+          <View style={styles.debugToggleContainer}>
+            <TouchableOpacity 
+              style={styles.debugToggle}
+              onPress={() => setShowExtendedOutput(!showExtendedOutput)}
+              activeOpacity={0.7}
+            >
+              <Ionicons 
+                name={showExtendedOutput ? "checkbox" : "square-outline"} 
+                size={20} 
+                color={showExtendedOutput ? Colors.accent : Colors.textTertiary} 
+              />
+              <Text style={styles.debugToggleText}>Show extended output (debug)</Text>
+            </TouchableOpacity>
           </View>
           
           {/* Text Input */}
@@ -1052,6 +1071,22 @@ const styles = StyleSheet.create({
   toggleButtonTextActive: {
     color: Colors.accent,
     fontWeight: '600',
+  },
+  debugToggleContainer: {
+    marginBottom: Spacing.base,
+    paddingHorizontal: Spacing.xs,
+  },
+  debugToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingVertical: Spacing.xs,
+  },
+  debugToggleText: {
+    fontSize: Typography.xs,
+    color: Colors.textSecondary,
+    letterSpacing: Typography.letterSpacingNormal,
+    fontWeight: '500',
   },
 });
 

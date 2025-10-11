@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
 
-const MacroDisplay = ({ macros, processedPercent }) => {
+const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber }) => {
   const formatNumber = (num) => {
     return num ? num.toLocaleString() : '0';
   };
@@ -33,12 +33,24 @@ const MacroDisplay = ({ macros, processedPercent }) => {
         </View>
       </View>
       
-      {/* Processed Food Metric */}
-      {processedPercent != null && (
-        <View style={styles.processedBadge}>
-          <Text style={styles.processedText}>
-            {processedPercent}% of calories from processed sources
-          </Text>
+      {/* Extended Metrics */}
+      {(processedPercent != null || ultraProcessedPercent != null || (fiber != null && fiber > 0)) && (
+        <View style={styles.extendedMetricsContainer}>
+          {processedPercent != null && (
+            <Text style={styles.extendedMetricText}>
+              {processedPercent}% processed
+            </Text>
+          )}
+          {ultraProcessedPercent != null && (
+            <Text style={styles.extendedMetricText}>
+              {ultraProcessedPercent}% ultra-processed
+            </Text>
+          )}
+          {fiber != null && fiber > 0 && (
+            <Text style={styles.extendedMetricText}>
+              {formatNumber(fiber)}g fiber
+            </Text>
+          )}
         </View>
       )}
     </View>
@@ -117,20 +129,19 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     marginTop: 1,
   },
-  processedBadge: {
+  extendedMetricsContainer: {
     marginTop: Spacing.md,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.base,
     borderRadius: BorderRadius.base,
-    alignSelf: 'center',
     backgroundColor: Colors.backgroundSecondary,
+    gap: Spacing.xs,
   },
-  processedText: {
+  extendedMetricText: {
     fontSize: Typography.xs,
     fontWeight: '600',
     color: Colors.textSecondary,
     letterSpacing: Typography.letterSpacingNormal,
-    textAlign: 'center',
   },
 });
 

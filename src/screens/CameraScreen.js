@@ -636,11 +636,23 @@ const CameraScreen = ({ navigation, route }) => {
               </View>
               
               {/* Extended Metrics Row */}
-              {currentExtendedMetrics?.processedPercent != null && (
+              {(currentExtendedMetrics?.processedPercent != null || currentExtendedMetrics?.ultraProcessedPercent != null || currentExtendedMetrics?.fiber != null) && (
                 <View style={styles.extendedMetricsRow}>
-                  <Text style={styles.extendedMetricText}>
-                    {currentExtendedMetrics.processedPercent}% processed
-                  </Text>
+                  {currentExtendedMetrics?.processedPercent != null && (
+                    <Text style={styles.extendedMetricText}>
+                      {currentExtendedMetrics.processedPercent}% processed
+                    </Text>
+                  )}
+                  {currentExtendedMetrics?.ultraProcessedPercent != null && (
+                    <Text style={[styles.extendedMetricText, currentExtendedMetrics?.processedPercent != null && { marginLeft: Spacing.base }]}>
+                      {currentExtendedMetrics.ultraProcessedPercent}% ultra
+                    </Text>
+                  )}
+                  {currentExtendedMetrics?.fiber != null && (
+                    <Text style={[styles.extendedMetricText, (currentExtendedMetrics?.processedPercent != null || currentExtendedMetrics?.ultraProcessedPercent != null) && { marginLeft: Spacing.base }]}>
+                      {currentExtendedMetrics.fiber}g fiber
+                    </Text>
+                  )}
                 </View>
               )}
             </View>
@@ -928,6 +940,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
+    flexDirection: 'row',
     alignItems: 'center',
   },
   extendedMetricText: {

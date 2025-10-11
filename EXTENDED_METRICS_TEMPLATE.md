@@ -4,7 +4,7 @@ This document provides a step-by-step recipe for adding new secondary nutrition 
 
 ## Overview
 
-The app uses a flexible JSON-based system to track unlimited nutrition metrics beyond the core macros (calories, protein, carbs, fat). Current extended metrics: **processed %**.
+The app uses a flexible JSON-based system to track unlimited nutrition metrics beyond the core macros (calories, protein, carbs, fat). Current extended metrics: **processed %**, **ultra-processed %**, **fiber**.
 
 ---
 
@@ -248,7 +248,119 @@ const has[MetricName] = typeof data.[metricField] === 'number';
 
 ---
 
-### **Step 7: Test & Commit**
+### **Step 7: Add to Home Screen Daily Totals**
+
+**File:** `src/screens/HomeScreen.js`
+
+**Add state for the metric:**
+```javascript
+const [dailyFiber, setDailyFiber] = useState(0);  // ← ADD THIS
+```
+
+**Calculate daily total in `loadMeals()` (after calculating processed %):**
+```javascript
+// Calculate total fiber for the day
+const totalFiber = dateMeals.reduce((sum, meal) => 
+  sum + (meal.extendedMetrics?.fiber || 0), 0);
+setDailyFiber(totalFiber);
+```
+
+**Pass to MacroDisplay component:**
+```javascript
+<MacroDisplay macros={dailyMacros} processedPercent={dailyProcessedPercent} fiber={dailyFiber} />
+```
+
+---
+
+### **Step 8: Update MacroDisplay Component**
+
+**File:** `src/components/MacroDisplay.js`
+
+**Update component signature:**
+```javascript
+const MacroDisplay = ({ macros, processedPercent, fiber }) => {  // ← ADD fiber
+```
+
+**Update the extended metrics display:**
+```javascript
+{/* Extended Metrics */}
+{(processedPercent != null || (fiber != null && fiber > 0)) && (
+  <View style={styles.extendedMetricsContainer}>
+    {processedPercent != null && (
+      <Text style={styles.extendedMetricText}>
+        {processedPercent}% of calories from processed sources
+      </Text>
+    )}
+    {fiber != null && fiber > 0 && (
+      <Text style={styles.extendedMetricText}>
+        {formatNumber(fiber)}g fiber
+      </Text>
+    )}
+  </View>
+)}
+```
+
+**Note:** Metrics will be left-aligned and stacked vertically in the gray container.
+
+---
+
+### **Step 9: Update Chat Sticky Macros Alignment**
+
+**File:** `src/screens/CameraScreen.js`
+**Style:** `extendedMetricsRow` (around line 933)
+
+**Ensure left alignment (not centered):**
+```javascript
+extendedMetricsRow: {
+  marginTop: Spacing.sm,
+  paddingTop: Spacing.sm,
+  borderTopWidth: 1,
+  borderTopColor: Colors.borderLight,
+  flexDirection: 'row',  // ← ADD THIS (not 'center')
+  alignItems: 'center',
+},
+```
+
+**Result:** Metrics align to the left side of the sticky macros card, not centered.
+
+---
+
+### **Step 10: Add to Trends Page (Optional)**
+
+If you want to plot the metric over time on the Trends page:
+
+**File:** `src/screens/HistoryScreen.js`
+
+**Simply add to the METRICS configuration object at the top of the file:**
+
+```javascript
+const METRICS = {
+  // ... existing metrics
+  fiber: {
+    label: 'Fiber',
+    displayLabel: 'Fiber',
+    extract: (meal) => meal.extendedMetrics?.fiber || 0,
+    type: 'extended'  // or 'standard' if it's a core macro
+  }
+};
+```
+
+**That's it!** The metric will automatically:
+- ✅ Appear in the radio buttons
+- ✅ Be calculated correctly for days/weeks/months
+- ✅ Show the right label on the chart
+- ✅ Handle moving averages
+
+**Metric Types:**
+- `'standard'`: Core macros stored directly on meal (e.g., `meal.calories`)
+- `'extended'`: Metrics in `extendedMetrics` object (e.g., `meal.extendedMetrics.fiber`)
+- `'aggregated'`: Metrics that need special calculation (e.g., processed % uses `calculateAggregatedProcessed`)
+
+**No other code changes needed!** The calculation functions are fully generic.
+
+---
+
+### **Step 11: Test & Commit**
 
 1. **Check for syntax errors:**
    ```bash
@@ -287,6 +399,10 @@ const has[MetricName] = typeof data.[metricField] === 'number';
 | 4 | `src/services/api.js` | Lines 372-387 | Add extraction logic |
 | 5 | `src/components/MealCard.js` | Lines 80-92 | Add display row |
 | 6 | `src/screens/CameraScreen.js` | Lines 638-645 | Add to sticky macros |
+| 7 | `src/screens/HomeScreen.js` | Multiple | Add daily aggregation |
+| 8 | `src/components/MacroDisplay.js` | Multiple | Update to display metric |
+| 9 | `src/screens/CameraScreen.js` | Line 933 | Fix alignment (left, not center) |
+| 10 | `src/screens/HistoryScreen.js` | Multiple | (Optional) Add to Trends page |
 
 ---
 

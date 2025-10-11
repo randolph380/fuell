@@ -48,6 +48,28 @@ export const calculateAggregatedProcessed = (meals) => {
 };
 
 /**
+ * Calculate aggregated ultra-processed percentage from multiple meals
+ * @param {Array} meals - Array of meal objects
+ * @returns {Object} { ultraProcessedCalories, totalCalories, ultraProcessedPercent }
+ */
+export const calculateAggregatedUltraProcessed = (meals) => {
+  if (!meals || meals.length === 0) {
+    return { ultraProcessedCalories: 0, totalCalories: 0, ultraProcessedPercent: 0 };
+  }
+
+  const totalCalories = meals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
+  const ultraProcessedCalories = meals.reduce((sum, meal) => 
+    sum + (meal.extendedMetrics?.ultraProcessedCalories || 0), 0
+  );
+
+  const ultraProcessedPercent = totalCalories > 0 
+    ? Math.round((ultraProcessedCalories / totalCalories) * 100) 
+    : 0;
+
+  return { ultraProcessedCalories, totalCalories, ultraProcessedPercent };
+};
+
+/**
  * Get default extended metrics object
  * @returns {Object} Default extended metrics with all fields set to null
  */

@@ -79,6 +79,18 @@ Use the NOVA classification system to estimate processed food percentage:
 
 For each component, assign the appropriate NOVA group and calculate the weighted processed calories.
 
+**FIBER:**
+Estimate dietary fiber in grams based on the food components.
+- Use nutrition label data if visible in images
+- Otherwise estimate using standard fiber content
+- Round to nearest gram
+
+**ULTRA-PROCESSED FOOD:**
+Estimate the percentage of calories from ultra-processed foods (NOVA Group 4 only).
+- NOVA 4 includes: Industrial formulations with 5+ ingredients, additives, preservatives
+- Examples: packaged snacks, sodas, instant meals, processed meats, sweetened cereals
+- Report as percentage of total calories from NOVA 4 foods only
+
 **CRITICAL FORMATTING REQUIREMENTS:**
 YOU MUST format your response EXACTLY as shown below:
 
@@ -97,7 +109,12 @@ I have [low/medium/high] certainty on this estimate.
   "protein": ###,
   "fat": ###,
   "carbs": ###,
+  "fiber": ###,
   "processed": {
+    "percent": ##,
+    "calories": ###
+  },
+  "ultraProcessed": {
     "percent": ##,
     "calories": ###
   }
@@ -282,7 +299,12 @@ I have [low/medium/high] certainty on this estimate.
   "protein": ###,
   "fat": ###,
   "carbs": ###,
+  "fiber": ###,
   "processed": {
+    "percent": ##,
+    "calories": ###
+  },
+  "ultraProcessed": {
     "percent": ##,
     "calories": ###
   }
@@ -363,15 +385,23 @@ CRITICAL:
       
       // Extract extended metrics if present
       let extendedMetrics = null;
-      if (data.processed && 
-          (typeof data.processed.percent === 'number' || typeof data.processed.calories === 'number')) {
+      const hasProcessed = data.processed && 
+          (typeof data.processed.percent === 'number' || typeof data.processed.calories === 'number');
+      const hasUltraProcessed = data.ultraProcessed && 
+          (typeof data.ultraProcessed.percent === 'number' || typeof data.ultraProcessed.calories === 'number');
+      const hasFiber = typeof data.fiber === 'number';
+      
+      if (hasProcessed || hasUltraProcessed || hasFiber) {
         extendedMetrics = {
-          processedCalories: typeof data.processed.calories === 'number' ? data.processed.calories : null,
-          processedPercent: typeof data.processed.percent === 'number' ? data.processed.percent : null
+          processedCalories: data.processed?.calories ?? null,
+          processedPercent: data.processed?.percent ?? null,
+          ultraProcessedCalories: data.ultraProcessed?.calories ?? null,
+          ultraProcessedPercent: data.ultraProcessed?.percent ?? null,
+          fiber: hasFiber ? data.fiber : null
         };
         console.log('📊 Extracted extended metrics:', extendedMetrics);
       } else {
-        console.warn('⚠️ No valid processed food data found in JSON');
+        console.warn('⚠️ No valid extended metrics found in JSON');
       }
       
       console.log('✅ Successfully extracted nutrition data from JSON:');

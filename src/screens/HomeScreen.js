@@ -21,7 +21,7 @@ import MealCard from '../components/MealCard';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
 import StorageService from '../services/storage';
 import DateHelpers from '../utils/dateHelpers';
-import { calculateAggregatedProcessed } from '../utils/extendedMetrics';
+import { calculateAggregatedProcessed, calculateAggregatedUltraProcessed } from '../utils/extendedMetrics';
 
 const HomeScreen = ({ navigation }) => {
   const { signOut } = useAuth();
@@ -36,6 +36,8 @@ const HomeScreen = ({ navigation }) => {
     fat: 0
   });
   const [dailyProcessedPercent, setDailyProcessedPercent] = useState(null);
+  const [dailyUltraProcessedPercent, setDailyUltraProcessedPercent] = useState(null);
+  const [dailyFiber, setDailyFiber] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [editingMealId, setEditingMealId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
@@ -83,6 +85,15 @@ const HomeScreen = ({ navigation }) => {
       // Calculate processed food percentage for the day
       const processedData = calculateAggregatedProcessed(dateMeals);
       setDailyProcessedPercent(processedData.processedPercent);
+      
+      // Calculate ultra-processed food percentage for the day
+      const ultraProcessedData = calculateAggregatedUltraProcessed(dateMeals);
+      setDailyUltraProcessedPercent(ultraProcessedData.ultraProcessedPercent);
+      
+      // Calculate total fiber for the day
+      const totalFiber = dateMeals.reduce((sum, meal) => 
+        sum + (meal.extendedMetrics?.fiber || 0), 0);
+      setDailyFiber(totalFiber);
     } catch (error) {
       console.error('Error loading meals:', error);
     }
@@ -270,7 +281,7 @@ const HomeScreen = ({ navigation }) => {
       />
 
       {/* Daily Totals */}
-      <MacroDisplay macros={dailyMacros} processedPercent={dailyProcessedPercent} />
+      <MacroDisplay macros={dailyMacros} processedPercent={dailyProcessedPercent} ultraProcessedPercent={dailyUltraProcessedPercent} fiber={dailyFiber} />
 
       {/* Add Meal Button - Now available for all dates */}
       <TouchableOpacity style={styles.addMealButton} onPress={navigateToCamera}>

@@ -11,11 +11,57 @@ import {
 import { LineChart } from 'react-native-chart-kit';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
 import StorageService from '../services/storage';
-import { calculateAggregatedProcessed } from '../utils/extendedMetrics';
+import { calculateAggregatedProcessed, calculateAggregatedUltraProcessed } from '../utils/extendedMetrics';
+
+// Metric configuration - add new metrics here!
+const METRICS = {
+  calories: {
+    label: 'Calories',
+    displayLabel: 'Calories',
+    extract: (meal) => meal.calories || 0,
+    type: 'standard'
+  },
+  protein: {
+    label: 'Protein',
+    displayLabel: 'Protein',
+    extract: (meal) => meal.protein || 0,
+    type: 'standard'
+  },
+  carbs: {
+    label: 'Net Carbs',
+    displayLabel: 'Net Carbs',
+    extract: (meal) => meal.carbs || 0,
+    type: 'standard'
+  },
+  fat: {
+    label: 'Fat',
+    displayLabel: 'Fat',
+    extract: (meal) => meal.fat || 0,
+    type: 'standard'
+  },
+  fiber: {
+    label: 'Fiber',
+    displayLabel: 'Fiber',
+    extract: (meal) => meal.extendedMetrics?.fiber || 0,
+    type: 'extended'
+  },
+  processed: {
+    label: 'Processed %',
+    displayLabel: 'Processed %',
+    extract: (meals) => calculateAggregatedProcessed(meals).processedPercent || 0,
+    type: 'aggregated'  // Special: operates on meal array
+  },
+  ultraProcessed: {
+    label: 'Ultra-Processed %',
+    displayLabel: 'Ultra-Processed %',
+    extract: (meals) => calculateAggregatedUltraProcessed(meals).ultraProcessedPercent || 0,
+    type: 'aggregated'  // Special: operates on meal array
+  }
+};
 
 const TrendsScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedMacro, setSelectedMacro] = useState('calories'); // calories, protein, carbs, fat, processed
+  const [selectedMacro, setSelectedMacro] = useState('calories'); // calories, protein, carbs, fat, processed, fiber
   const [selectedPeriod, setSelectedPeriod] = useState('week'); // day, week, month
   const [chartData, setChartData] = useState({
     labels: [],
@@ -32,6 +78,7 @@ const TrendsScreen = ({ navigation }) => {
   const calculateDailyData = (meals, macro) => {
     const days = [];
     const today = new Date();
+    const metricConfig = METRICS[macro];
     
     // Calculate for past 10 days
     for (let dayNum = 0; dayNum < 10; dayNum++) {
@@ -43,14 +90,10 @@ const TrendsScreen = ({ navigation }) => {
         return new Date(meal.date).toDateString() === dateKey;
       });
       
-      let dayTotal;
-      if (macro === 'processed') {
-        // Calculate processed % for the day
-        const processedData = calculateAggregatedProcessed(dayMeals);
-        dayTotal = processedData.processedPercent || 0;
-      } else {
-        dayTotal = dayMeals.reduce((acc, meal) => acc + (meal[macro] || 0), 0);
-      }
+      // Generic extraction based on metric type
+      const dayTotal = metricConfig.type === 'aggregated'
+        ? metricConfig.extract(dayMeals)  // Pass whole array for aggregated metrics
+        : dayMeals.reduce((sum, meal) => sum + metricConfig.extract(meal), 0);  // Sum individual meals
       
       days.unshift({ value: dayTotal, dayNum: dayNum + 1 });
     }
@@ -93,6 +136,7 @@ const TrendsScreen = ({ navigation }) => {
   const calculateMonthlyData = (meals, macro) => {
     const months = [];
     const today = new Date();
+    const metricConfig = METRICS[macro];
     
     // Calculate for past 10 months
     for (let monthNum = 0; monthNum < 10; monthNum++) {
@@ -117,21 +161,14 @@ const TrendsScreen = ({ navigation }) => {
       const daysTracked = Object.keys(mealsByDate).length;
       
       if (daysTracked > 0) {
-        let monthAverage;
-        if (macro === 'processed') {
-          // Calculate processed % average for the month
-          const dailyProcessedPercents = Object.values(mealsByDate).map(dayMeals => {
-            const processedData = calculateAggregatedProcessed(dayMeals);
-            return processedData.processedPercent || 0;
-          });
-          monthAverage = Math.round(dailyProcessedPercents.reduce((a, b) => a + b, 0) / daysTracked);
-        } else {
-          const dailyTotals = Object.values(mealsByDate).map(dayMeals => {
-            return dayMeals.reduce((acc, meal) => acc + (meal[macro] || 0), 0);
-          });
-          monthAverage = Math.round(dailyTotals.reduce((a, b) => a + b, 0) / daysTracked);
-        }
+        // Generic calculation: get daily values, then average
+        const dailyValues = Object.values(mealsByDate).map(dayMeals => {
+          return metricConfig.type === 'aggregated'
+            ? metricConfig.extract(dayMeals)  // Aggregated: operate on day's meals
+            : dayMeals.reduce((sum, meal) => sum + metricConfig.extract(meal), 0);  // Standard: sum individual meals
+        });
         
+        const monthAverage = Math.round(dailyValues.reduce((a, b) => a + b, 0) / daysTracked);
         months.unshift({ average: monthAverage, monthNum: monthNum + 1 });
       } else {
         months.unshift({ average: 0, monthNum: monthNum + 1 });
@@ -229,6 +266,7 @@ const TrendsScreen = ({ navigation }) => {
   const calculateWeeklyData = (meals, macro) => {
     const weeks = [];
     const today = new Date();
+    const metricConfig = METRICS[macro];
     
     // Calculate for past 10 weeks
     for (let weekNum = 0; weekNum < 10; weekNum++) {
@@ -256,21 +294,14 @@ const TrendsScreen = ({ navigation }) => {
       const daysTracked = Object.keys(mealsByDate).length;
       
       if (daysTracked > 0) {
-        let weekAverage;
-        if (macro === 'processed') {
-          // Calculate processed % average for the week
-          const dailyProcessedPercents = Object.values(mealsByDate).map(dayMeals => {
-            const processedData = calculateAggregatedProcessed(dayMeals);
-            return processedData.processedPercent || 0;
-          });
-          weekAverage = Math.round(dailyProcessedPercents.reduce((a, b) => a + b, 0) / daysTracked);
-        } else {
-          const dailyTotals = Object.values(mealsByDate).map(dayMeals => {
-            return dayMeals.reduce((acc, meal) => acc + (meal[macro] || 0), 0);
-          });
-          weekAverage = Math.round(dailyTotals.reduce((a, b) => a + b, 0) / daysTracked);
-        }
+        // Generic calculation: get daily values, then average
+        const dailyValues = Object.values(mealsByDate).map(dayMeals => {
+          return metricConfig.type === 'aggregated'
+            ? metricConfig.extract(dayMeals)  // Aggregated: operate on day's meals
+            : dayMeals.reduce((sum, meal) => sum + metricConfig.extract(meal), 0);  // Standard: sum individual meals
+        });
         
+        const weekAverage = Math.round(dailyValues.reduce((a, b) => a + b, 0) / daysTracked);
         weeks.unshift({ average: weekAverage, weekNum: weekNum + 1 });
       } else {
         weeks.unshift({ average: 0, weekNum: weekNum + 1 });
@@ -337,14 +368,7 @@ const TrendsScreen = ({ navigation }) => {
   };
 
   const getMacroLabel = () => {
-    const labels = {
-      calories: 'Calories',
-      protein: 'Protein',
-      carbs: 'Net Carbs',
-      fat: 'Fat',
-      processed: 'Processed %'
-    };
-    return labels[selectedMacro];
+    return METRICS[selectedMacro]?.label || 'Unknown';
   };
 
   const getPeriodLabel = () => {
@@ -427,7 +451,7 @@ const TrendsScreen = ({ navigation }) => {
         <View style={styles.controlSection}>
           <Text style={styles.controlLabel}>Metric</Text>
           <View style={styles.radioGroup}>
-            {['calories', 'protein', 'carbs', 'fat', 'processed'].map((macro) => (
+            {Object.keys(METRICS).map((macro) => (
               <TouchableOpacity
                 key={macro}
                 style={[
@@ -440,7 +464,7 @@ const TrendsScreen = ({ navigation }) => {
                   styles.radioButtonText,
                   selectedMacro === macro && styles.radioButtonTextSelected
                 ]}>
-                  {macro === 'carbs' ? 'Net Carbs' : macro === 'processed' ? 'Processed %' : macro.charAt(0).toUpperCase() + macro.slice(1)}
+                  {METRICS[macro].displayLabel}
                 </Text>
               </TouchableOpacity>
             ))}

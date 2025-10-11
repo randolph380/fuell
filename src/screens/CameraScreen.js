@@ -961,7 +961,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
+    rowGap: Spacing.xs,
   },
   extendedMetricText: {
     fontSize: Typography.xs,

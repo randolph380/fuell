@@ -3,14 +3,14 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
 
-const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber }) => {
+const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber, caffeine }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
   const formatNumber = (num) => {
     return num ? num.toLocaleString() : '0';
   };
 
-  const hasExtendedMetrics = processedPercent != null || ultraProcessedPercent != null || (fiber != null && fiber > 0);
+  const hasExtendedMetrics = processedPercent != null || ultraProcessedPercent != null || (fiber != null && fiber > 0) || (caffeine != null && caffeine > 0);
 
   return (
     <TouchableOpacity 
@@ -76,6 +76,13 @@ const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber }
             <View style={styles.metricRow}>
               <Text style={styles.metricLabel}>Fiber</Text>
               <Text style={styles.metricValue}>{formatNumber(fiber)}g</Text>
+            </View>
+          )}
+          
+          {caffeine != null && caffeine > 0 && (
+            <View style={styles.metricRow}>
+              <Text style={styles.metricLabel}>Caffeine</Text>
+              <Text style={styles.metricValue}>{formatNumber(caffeine)}mg</Text>
             </View>
           )}
         </View>

@@ -38,6 +38,7 @@ const HomeScreen = ({ navigation }) => {
   const [dailyProcessedPercent, setDailyProcessedPercent] = useState(null);
   const [dailyUltraProcessedPercent, setDailyUltraProcessedPercent] = useState(null);
   const [dailyFiber, setDailyFiber] = useState(0);
+  const [dailyCaffeine, setDailyCaffeine] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [editingMealId, setEditingMealId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
@@ -94,6 +95,11 @@ const HomeScreen = ({ navigation }) => {
       const totalFiber = dateMeals.reduce((sum, meal) => 
         sum + (meal.extendedMetrics?.fiber || 0), 0);
       setDailyFiber(totalFiber);
+      
+      // Calculate total caffeine for the day
+      const totalCaffeine = dateMeals.reduce((sum, meal) => 
+        sum + (meal.extendedMetrics?.caffeine || 0), 0);
+      setDailyCaffeine(totalCaffeine);
     } catch (error) {
       console.error('Error loading meals:', error);
     }
@@ -281,7 +287,7 @@ const HomeScreen = ({ navigation }) => {
       />
 
       {/* Daily Totals */}
-      <MacroDisplay macros={dailyMacros} processedPercent={dailyProcessedPercent} ultraProcessedPercent={dailyUltraProcessedPercent} fiber={dailyFiber} />
+      <MacroDisplay macros={dailyMacros} processedPercent={dailyProcessedPercent} ultraProcessedPercent={dailyUltraProcessedPercent} fiber={dailyFiber} caffeine={dailyCaffeine} />
 
       {/* Add Meal Button - Now available for all dates */}
       <TouchableOpacity style={styles.addMealButton} onPress={navigateToCamera}>

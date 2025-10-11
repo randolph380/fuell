@@ -56,6 +56,12 @@ const METRICS = {
     displayLabel: 'Ultra-Processed %',
     extract: (meals) => calculateAggregatedUltraProcessed(meals).ultraProcessedPercent || 0,
     type: 'aggregated'  // Special: operates on meal array
+  },
+  caffeine: {
+    label: 'Caffeine',
+    displayLabel: 'Caffeine',
+    extract: (meal) => meal.extendedMetrics?.caffeine || 0,
+    type: 'extended'
   }
 };
 

@@ -91,6 +91,12 @@ Estimate the percentage of calories from ultra-processed foods (NOVA Group 4 onl
 - Examples: packaged snacks, sodas, instant meals, processed meats, sweetened cereals
 - Report as percentage of total calories from NOVA 4 foods only
 
+**CAFFEINE:**
+Estimate caffeine content in milligrams based on the food/beverage components.
+- Use nutrition label data if visible in images
+- Otherwise estimate using standard caffeine content
+- Round to nearest 5mg
+
 **CRITICAL FORMATTING REQUIREMENTS:**
 YOU MUST format your response EXACTLY as shown below:
 
@@ -110,6 +116,7 @@ I have [low/medium/high] certainty on this estimate.
   "fat": ###,
   "carbs": ###,
   "fiber": ###,
+  "caffeine": ###,
   "processed": {
     "percent": ##,
     "calories": ###
@@ -300,6 +307,7 @@ I have [low/medium/high] certainty on this estimate.
   "fat": ###,
   "carbs": ###,
   "fiber": ###,
+  "caffeine": ###,
   "processed": {
     "percent": ##,
     "calories": ###
@@ -390,14 +398,16 @@ CRITICAL:
       const hasUltraProcessed = data.ultraProcessed && 
           (typeof data.ultraProcessed.percent === 'number' || typeof data.ultraProcessed.calories === 'number');
       const hasFiber = typeof data.fiber === 'number';
+      const hasCaffeine = typeof data.caffeine === 'number';
       
-      if (hasProcessed || hasUltraProcessed || hasFiber) {
+      if (hasProcessed || hasUltraProcessed || hasFiber || hasCaffeine) {
         extendedMetrics = {
           processedCalories: data.processed?.calories ?? null,
           processedPercent: data.processed?.percent ?? null,
           ultraProcessedCalories: data.ultraProcessed?.calories ?? null,
           ultraProcessedPercent: data.ultraProcessed?.percent ?? null,
-          fiber: hasFiber ? data.fiber : null
+          fiber: hasFiber ? data.fiber : null,
+          caffeine: hasCaffeine ? data.caffeine : null
         };
         console.log('📊 Extracted extended metrics:', extendedMetrics);
       } else {

@@ -10,7 +10,8 @@ const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber, 
     return num ? num.toLocaleString() : '0';
   };
 
-  const hasExtendedMetrics = processedPercent != null || ultraProcessedPercent != null || (fiber != null && fiber > 0) || (caffeine != null && caffeine > 0);
+  // Always show extended metrics section (even if values are 0)
+  const hasExtendedMetrics = true;
 
   return (
     <TouchableOpacity 
@@ -58,33 +59,25 @@ const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber, 
         <View style={styles.extendedMetricsContainer}>
           <Text style={styles.extendedMetricsTitle}>Additional Metrics</Text>
           
-          {processedPercent != null && (
-            <View style={styles.metricRow}>
-              <Text style={styles.metricLabel}>Processed calories</Text>
-              <Text style={styles.metricValue}>{processedPercent}%</Text>
-            </View>
-          )}
+          <View style={styles.metricRow}>
+            <Text style={styles.metricLabel}>Processed calories</Text>
+            <Text style={styles.metricValue}>{processedPercent ?? 0}%</Text>
+          </View>
           
-          {ultraProcessedPercent != null && (
-            <View style={styles.metricRow}>
-              <Text style={styles.metricLabel}>Ultra-processed calories</Text>
-              <Text style={styles.metricValue}>{ultraProcessedPercent}%</Text>
-            </View>
-          )}
+          <View style={styles.metricRow}>
+            <Text style={styles.metricLabel}>Ultra-processed calories</Text>
+            <Text style={styles.metricValue}>{ultraProcessedPercent ?? 0}%</Text>
+          </View>
           
-          {fiber != null && fiber > 0 && (
-            <View style={styles.metricRow}>
-              <Text style={styles.metricLabel}>Fiber</Text>
-              <Text style={styles.metricValue}>{formatNumber(fiber)}g</Text>
-            </View>
-          )}
+          <View style={styles.metricRow}>
+            <Text style={styles.metricLabel}>Fiber</Text>
+            <Text style={styles.metricValue}>{formatNumber(fiber)}g</Text>
+          </View>
           
-          {caffeine != null && caffeine > 0 && (
-            <View style={styles.metricRow}>
-              <Text style={styles.metricLabel}>Caffeine</Text>
-              <Text style={styles.metricValue}>{formatNumber(caffeine)}mg</Text>
-            </View>
-          )}
+          <View style={styles.metricRow}>
+            <Text style={styles.metricLabel}>Caffeine</Text>
+            <Text style={styles.metricValue}>{formatNumber(caffeine)}mg</Text>
+          </View>
         </View>
       )}
     </TouchableOpacity>

@@ -340,7 +340,9 @@ CRITICAL:
       }
       
       const jsonString = jsonMatch[1].trim();
+      console.log('📦 Extracted JSON string:', jsonString);
       const data = JSON.parse(jsonString);
+      console.log('📦 Parsed JSON data:', JSON.stringify(data, null, 2));
       
       // Validate required fields
       if (typeof data.calories !== 'number' || 
@@ -360,10 +362,17 @@ CRITICAL:
       };
       
       // Extract extended metrics if present
-      const extendedMetrics = data.processed ? {
-        processedCalories: data.processed.calories || null,
-        processedPercent: data.processed.percent || null
-      } : null;
+      let extendedMetrics = null;
+      if (data.processed && 
+          (typeof data.processed.percent === 'number' || typeof data.processed.calories === 'number')) {
+        extendedMetrics = {
+          processedCalories: typeof data.processed.calories === 'number' ? data.processed.calories : null,
+          processedPercent: typeof data.processed.percent === 'number' ? data.processed.percent : null
+        };
+        console.log('📊 Extracted extended metrics:', extendedMetrics);
+      } else {
+        console.warn('⚠️ No valid processed food data found in JSON');
+      }
       
       console.log('✅ Successfully extracted nutrition data from JSON:');
       console.log('  Macros:', macros);

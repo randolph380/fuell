@@ -149,10 +149,13 @@ const CameraScreen = ({ navigation, route }) => {
       }
       
       // Extract and store the title from JSON (preferred) or fallback to regex
-      if (result.title) {
-        setMealTitle(result.title);
-        console.log('DEBUG - Extracted title from JSON:', result.title);
+      console.log('DEBUG - result.title value:', result.title, 'type:', typeof result.title);
+      
+      if (result.title && result.title.trim().length > 0) {
+        setMealTitle(result.title.trim());
+        console.log('DEBUG - ✅ Extracted title from JSON:', result.title);
       } else {
+        console.log('DEBUG - ⚠️ No title in JSON, trying regex fallback');
         // Fallback: Look for **Title:** in the first 500 characters
         const firstPart = result.response.slice(0, 500);
         let titleMatch = firstPart.match(/\*\*Title:\*\*\s*([^\n]+)/i);
@@ -160,9 +163,9 @@ const CameraScreen = ({ navigation, route }) => {
         if (titleMatch) {
           const extractedTitle = titleMatch[1].trim().replace(/\*\*/g, '').replace(/\*/g, '').replace(/\[|\]/g, '').trim();
           setMealTitle(extractedTitle);
-          console.log('DEBUG - Extracted title from text:', extractedTitle);
+          console.log('DEBUG - ✅ Extracted title from text:', extractedTitle);
         } else {
-          console.warn('⚠️ Could not extract title');
+          console.warn('DEBUG - ❌ Could not extract title from anywhere, defaulting to Meal');
           setMealTitle('Meal');
         }
       }
@@ -312,10 +315,13 @@ const CameraScreen = ({ navigation, route }) => {
       }
       
       // Update the title from JSON (preferred) or fallback to regex
-      if (result.title) {
-        setMealTitle(result.title);
-        console.log('DEBUG - Updated title from JSON:', result.title);
+      console.log('DEBUG - Refinement result.title value:', result.title, 'type:', typeof result.title);
+      
+      if (result.title && result.title.trim().length > 0) {
+        setMealTitle(result.title.trim());
+        console.log('DEBUG - ✅ Updated title from JSON:', result.title);
       } else {
+        console.log('DEBUG - ⚠️ No title in refinement JSON, trying regex fallback');
         // Fallback: Look for **Title:** in the first 500 characters
         const firstPart = result.response.slice(0, 500);
         let titleMatch = firstPart.match(/\*\*Title:\*\*\s*([^\n]+)/i);
@@ -323,7 +329,9 @@ const CameraScreen = ({ navigation, route }) => {
         if (titleMatch) {
           const extractedTitle = titleMatch[1].trim().replace(/\*\*/g, '').replace(/\*/g, '').replace(/\[|\]/g, '').trim();
           setMealTitle(extractedTitle);
-          console.log('DEBUG - Updated title from text:', extractedTitle);
+          console.log('DEBUG - ✅ Updated title from text:', extractedTitle);
+        } else {
+          console.log('DEBUG - ⚠️ Could not update title, keeping existing:', mealTitle);
         }
       }
       

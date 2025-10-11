@@ -148,14 +148,9 @@ const CameraScreen = ({ navigation, route }) => {
       }
       
       // Extract and store the title BEFORE cleaning
-      // Try multiple patterns to catch variations
-      let titleMatch = result.response.match(/\*\*Title:\*\*\s*([^\n]+)/i);
-      if (!titleMatch) {
-        titleMatch = result.response.match(/Title:\s*([^\n]+)/i);
-      }
-      if (!titleMatch) {
-        titleMatch = result.response.match(/#\s*([^\n]+)/); // Sometimes might use # for title
-      }
+      // Look for **Title:** in the first 500 characters only to avoid false matches
+      const firstPart = result.response.slice(0, 500);
+      let titleMatch = firstPart.match(/\*\*Title:\*\*\s*([^\n]+)/i);
       
       if (titleMatch) {
         const extractedTitle = titleMatch[1].trim().replace(/\*\*/g, '').replace(/\*/g, '').replace(/\[|\]/g, '').trim();
@@ -301,13 +296,9 @@ const CameraScreen = ({ navigation, route }) => {
       }
       
       // Update the title if it changed
-      let titleMatch = result.response.match(/\*\*Title:\*\*\s*([^\n]+)/i);
-      if (!titleMatch) {
-        titleMatch = result.response.match(/Title:\s*([^\n]+)/i);
-      }
-      if (!titleMatch) {
-        titleMatch = result.response.match(/#\s*([^\n]+)/);
-      }
+      // Look for **Title:** in the first 500 characters only to avoid false matches
+      const firstPart = result.response.slice(0, 500);
+      let titleMatch = firstPart.match(/\*\*Title:\*\*\s*([^\n]+)/i);
       
       if (titleMatch) {
         const extractedTitle = titleMatch[1].trim().replace(/\*\*/g, '').replace(/\*/g, '').replace(/\[|\]/g, '').trim();

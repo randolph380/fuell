@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
-import { getProcessedColor, formatProcessedMetric } from '../utils/extendedMetrics';
 
 const MealCard = ({ meal, onPress, onDelete, onSave, onEdit }) => {
   const [showActions, setShowActions] = useState(false);
@@ -72,20 +71,24 @@ const MealCard = ({ meal, onPress, onDelete, onSave, onEdit }) => {
         </View>
       </View>
       
-      {/* Processed Food Metric */}
-      {meal.extendedMetrics?.processedPercent != null && (
-        <View style={[
-          styles.processedBadge,
-          { backgroundColor: getProcessedColor(meal.extendedMetrics.processedPercent) }
-        ]}>
-          <Text style={styles.processedText}>
-            {meal.extendedMetrics.processedPercent}% processed
-          </Text>
-        </View>
-      )}
-      
       {showActions && (
-        <View style={styles.actionsContainer}>
+        <View style={styles.expandedContainer}>
+          {/* Extended Metrics Section */}
+          {meal.extendedMetrics && Object.keys(meal.extendedMetrics).length > 0 && (
+            <View style={styles.extendedMetricsContainer}>
+              <Text style={styles.extendedMetricsTitle}>Additional Metrics</Text>
+              {meal.extendedMetrics.processedPercent != null && (
+                <View style={styles.metricRow}>
+                  <Text style={styles.metricLabel}>Processed calories</Text>
+                  <Text style={styles.metricValue}>{meal.extendedMetrics.processedPercent}%</Text>
+                </View>
+              )}
+              {/* Future metrics can be added here */}
+            </View>
+          )}
+          
+          {/* Action Buttons */}
+          <View style={styles.actionsContainer}>
           {onEdit && (
             <TouchableOpacity 
               style={[styles.actionButton, styles.editButton]} 
@@ -122,6 +125,7 @@ const MealCard = ({ meal, onPress, onDelete, onSave, onEdit }) => {
               <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Delete</Text>
             </TouchableOpacity>
           )}
+          </View>
         </View>
       )}
     </TouchableOpacity>
@@ -201,24 +205,45 @@ const styles = StyleSheet.create({
     letterSpacing: Typography.letterSpacingWide,
     fontWeight: '500',
   },
-  processedBadge: {
-    marginTop: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    alignSelf: 'flex-start',
-  },
-  processedText: {
-    fontSize: Typography.xs,
-    fontWeight: '600',
-    color: Colors.textInverse,
-    letterSpacing: Typography.letterSpacingNormal,
-  },
-  actionsContainer: {
+  expandedContainer: {
     marginTop: Spacing.md,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
+  },
+  extendedMetricsContainer: {
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: BorderRadius.sm,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  extendedMetricsTitle: {
+    fontSize: Typography.xs,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    letterSpacing: Typography.letterSpacingWide,
+    marginBottom: Spacing.sm,
+    textTransform: 'uppercase',
+  },
+  metricRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.xs,
+  },
+  metricLabel: {
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
+    letterSpacing: Typography.letterSpacingNormal,
+    fontWeight: '500',
+  },
+  metricValue: {
+    fontSize: Typography.sm,
+    color: Colors.textPrimary,
+    letterSpacing: Typography.letterSpacingTight,
+    fontWeight: '600',
+  },
+  actionsContainer: {
     flexDirection: 'row',
     gap: Spacing.sm,
   },

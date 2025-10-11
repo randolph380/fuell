@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
+import { getProcessedColor, formatProcessedMetric } from '../utils/extendedMetrics';
 
 const MealCard = ({ meal, onPress, onDelete, onSave, onEdit }) => {
   const [showActions, setShowActions] = useState(false);
@@ -70,6 +71,18 @@ const MealCard = ({ meal, onPress, onDelete, onSave, onEdit }) => {
           <Text style={styles.macroLabel}>FAT</Text>
         </View>
       </View>
+      
+      {/* Processed Food Metric */}
+      {meal.extendedMetrics?.processedPercent != null && (
+        <View style={[
+          styles.processedBadge,
+          { backgroundColor: getProcessedColor(meal.extendedMetrics.processedPercent) }
+        ]}>
+          <Text style={styles.processedText}>
+            {meal.extendedMetrics.processedPercent}% processed
+          </Text>
+        </View>
+      )}
       
       {showActions && (
         <View style={styles.actionsContainer}>
@@ -187,6 +200,19 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
     letterSpacing: Typography.letterSpacingWide,
     fontWeight: '500',
+  },
+  processedBadge: {
+    marginTop: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    alignSelf: 'flex-start',
+  },
+  processedText: {
+    fontSize: Typography.xs,
+    fontWeight: '600',
+    color: Colors.textInverse,
+    letterSpacing: Typography.letterSpacingNormal,
   },
   actionsContainer: {
     marginTop: Spacing.md,

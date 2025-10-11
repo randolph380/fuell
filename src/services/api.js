@@ -70,12 +70,37 @@ ${multiImageInstructions}
 - Skip unnecessary elaboration
 - Focus on the key facts and calculations
 
+**PROCESSED FOOD CLASSIFICATION (NOVA System):**
+Estimate what percentage of calories come from processed sources using NOVA groups:
+
+- **NOVA 1 (Unprocessed/Minimally Processed)** - 0% processed weight:
+  Fresh/frozen: meat, fish, eggs, vegetables, fruits, plain milk/yogurt, grains, legumes, nuts
+  
+- **NOVA 2 (Processed Culinary Ingredients)** - 100% processed weight:
+  Oils, butter, lard, sugar, honey, salt (used in cooking)
+  
+- **NOVA 3 (Processed Foods)** - 70% processed weight:
+  Canned vegetables/fish, cheese, freshly made bread, bacon, salted nuts
+  
+- **NOVA 4 (Ultra-Processed)** - 100% processed weight:
+  Packaged snacks, candy, soda, frozen meals, fast food, products with 5+ ingredients/additives
+
+**Calculate processed calories:**
+1. Break down each component and its calories
+2. Assign NOVA group to each component
+3. Apply weighting: processed_kcal = component_kcal × NOVA_weight
+4. Sum all processed calories
+5. Calculate percent: (total_processed / total_meal) × 100
+
+Example: Chicken (400 kcal, NOVA 1) + olive oil (120 kcal, NOVA 2) + bread (200 kcal, NOVA 3)
+= 0 + 120 + 140 = 260 processed kcal out of 720 total = 36% processed
+
 **CRITICAL FORMATTING REQUIREMENTS:**
 YOU MUST format your response EXACTLY as shown below. Do NOT use markdown headers (##) or any other formatting. Use ONLY the format shown:
 
 **Title:** [EXACTLY 2 words - e.g. "Chocolate Cookie", "Grilled Chicken"]
 
-[Your brief analysis here - keep it short and focused on key facts and calculations]
+[Your brief analysis here - include breakdown of components by NOVA group when calculating processed calories]
 
 I have [low/medium/high] certainty on this estimate.
 
@@ -87,7 +112,11 @@ Protein: ### g
 Fat: ### g
 Net carbs: ### g
 
-IMPORTANT: The "**Macros:**" section MUST use exactly this format with asterisks, NOT markdown headers (##). This is critical for proper parsing.`;
+**Processed Food:**
+Processed calories: ### kcal
+Processed percent: ##%
+
+IMPORTANT: Use exact format with asterisks for "**Macros:**" and "**Processed Food:**" sections, NOT markdown headers (##). This is critical for parsing.`;
 
       let messageContent = [];
       
@@ -188,12 +217,13 @@ ${initialPrompt}`;
       const data = await response.json();
       const assistantMessage = data.content[0].text;
       
-      // Parse macros from response
-      const macros = this.extractMacros(assistantMessage);
+      // Parse nutrition data (macros + extended metrics) from response
+      const nutritionData = this.extractNutritionData(assistantMessage);
       
       return {
         response: assistantMessage,
-        macros: macros
+        macros: nutritionData.macros,
+        extendedMetrics: nutritionData.extendedMetrics
       };
     } catch (error) {
       console.error('Error analyzing meal image:', error);
@@ -235,12 +265,17 @@ RESPONSE STYLE:
 - Focus on key updates and math
 - Skip unnecessary elaboration
 
+PROCESSED FOOD (NOVA):
+- Update your NOVA classification if new information changes it
+- Recalculate processed calories and percent based on new details
+- If user clarifies ingredients/preparation, adjust NOVA groups accordingly
+
 **CRITICAL FORMATTING REQUIREMENTS:**
-YOU MUST format your response EXACTLY as shown below. Use the EXACT format with asterisks for **Title:** and **Macros:**, NOT markdown headers (##):
+YOU MUST format your response EXACTLY as shown below. Use the EXACT format with asterisks for **Title:**, **Macros:**, and **Processed Food:**, NOT markdown headers (##):
 
 **Title:** [Keep same 2-word title from before]
 
-[Your brief update - acknowledge new info, show key math, state ingredient calories concisely]
+[Your brief update - acknowledge new info, show key math, update NOVA classification if needed]
 
 Example: "Perfect! Scale was tared, so 200g is yogurt weight. Label: 150 cal per 170g. Math: (200/170) × 150 = 176 cal. Plus 30 cal berries = 206 total."
 
@@ -254,7 +289,11 @@ Protein: ### g
 Fat: ### g
 Net carbs: ### g
 
-IMPORTANT: Use "**Macros:**" with asterisks exactly as shown above, NOT "## Macros:" or any other format.`
+**Processed Food:**
+Processed calories: ### kcal
+Processed percent: ##%
+
+IMPORTANT: Use "**Macros:**" and "**Processed Food:**" with asterisks exactly as shown above, NOT "##" or any other format.`
         })
       });
 
@@ -273,12 +312,13 @@ IMPORTANT: Use "**Macros:**" with asterisks exactly as shown above, NOT "## Macr
       const data = await response.json();
       const assistantMessage = data.content[0].text;
       
-      // Parse macros from response
-      const macros = this.extractMacros(assistantMessage);
+      // Parse nutrition data (macros + extended metrics) from response
+      const nutritionData = this.extractNutritionData(assistantMessage);
       
       return {
         response: assistantMessage,
-        macros: macros
+        macros: nutritionData.macros,
+        extendedMetrics: nutritionData.extendedMetrics
       };
     } catch (error) {
       console.error('Error refining analysis:', error);
@@ -286,15 +326,15 @@ IMPORTANT: Use "**Macros:**" with asterisks exactly as shown above, NOT "## Macr
     }
   }
 
-  extractMacros(text) {
-    // Strategy: Look for the LAST occurrence of each macro in the text
+  extractNutritionData(text) {
+    // Strategy: Look for the LAST occurrence of each value in the text
     // This avoids matching intermediate calculations and is more robust
-    // The prompt asks for macros at the end, so we search from the end
+    // The prompt asks for macros and extended metrics at the end
     
-    // Get the last 1000 characters where the final macros should be
-    const endOfText = text.slice(-1000);
+    // Get the last 1500 characters where the final values should be
+    const endOfText = text.slice(-1500);
     
-    // Look for each macro value (case insensitive, handles commas, bullet points, dashes)
+    // Extract basic macros (required)
     const caloriesMatch = endOfText.match(/[-•\s]*Calories:\s*([\d,]+)\s*kcal/i);
     const proteinMatch = endOfText.match(/[-•\s]*Protein:\s*([\d,]+)\s*g/i);
     const fatMatch = endOfText.match(/[-•\s]*Fat:\s*([\d,]+)\s*g/i);
@@ -305,16 +345,37 @@ IMPORTANT: Use "**Macros:**" with asterisks exactly as shown above, NOT "## Macr
     const fat = fatMatch ? parseInt(fatMatch[1].replace(/,/g, '')) : null;
     const carbs = carbsMatch ? parseInt(carbsMatch[1].replace(/,/g, '')) : null;
     
-    // Log if any macro failed to parse
+    // Extract extended metrics (optional - processed food)
+    const processedCalMatch = endOfText.match(/[-•\s]*Processed\s+calories:\s*([\d,]+)\s*kcal/i);
+    const processedPercentMatch = endOfText.match(/[-•\s]*Processed\s+percent:\s*([\d,]+)%/i);
+    
+    const processedCalories = processedCalMatch ? parseInt(processedCalMatch[1].replace(/,/g, '')) : null;
+    const processedPercent = processedPercentMatch ? parseInt(processedPercentMatch[1].replace(/,/g, '')) : null;
+    
+    // Build extended metrics object (only if we have at least one value)
+    const extendedMetrics = (processedCalories !== null || processedPercent !== null) ? {
+      processedCalories,
+      processedPercent
+    } : null;
+    
+    // Log parsing results
     if (calories === null || protein === null || fat === null || carbs === null) {
-      console.warn('⚠️ Failed to parse macros from end of response');
+      console.warn('⚠️ Failed to parse some macros from end of response');
       console.warn('Last 300 chars:', endOfText.slice(-300));
       console.warn('Parsed values:', { calories, protein, fat, carbs });
-      return null;
+      return { macros: null, extendedMetrics: null };
     }
     
-    console.log('✅ Successfully extracted macros:', { calories, protein, fat, carbs });
-    return { calories, protein, carbs, fat };
+    console.log('✅ Successfully extracted nutrition data:');
+    console.log('  Macros:', { calories, protein, fat, carbs });
+    if (extendedMetrics) {
+      console.log('  Extended metrics:', extendedMetrics);
+    }
+    
+    return {
+      macros: { calories, protein, carbs, fat },
+      extendedMetrics
+    };
   }
 
   // Legacy fallback method - no longer used

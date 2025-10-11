@@ -1,8 +1,9 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
+import { getProcessedColor } from '../utils/extendedMetrics';
 
-const MacroDisplay = ({ macros }) => {
+const MacroDisplay = ({ macros, processedPercent }) => {
   const formatNumber = (num) => {
     return num ? num.toLocaleString() : '0';
   };
@@ -32,6 +33,18 @@ const MacroDisplay = ({ macros }) => {
           <Text style={styles.macroUnit}>(g)</Text>
         </View>
       </View>
+      
+      {/* Processed Food Metric */}
+      {processedPercent != null && (
+        <View style={[
+          styles.processedBadge,
+          { backgroundColor: getProcessedColor(processedPercent) }
+        ]}>
+          <Text style={styles.processedText}>
+            {processedPercent}% of calories from processed sources
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -107,6 +120,20 @@ const styles = StyleSheet.create({
     letterSpacing: Typography.letterSpacingNormal,
     fontWeight: '400',
     marginTop: 1,
+  },
+  processedBadge: {
+    marginTop: Spacing.md,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.base,
+    borderRadius: BorderRadius.base,
+    alignSelf: 'center',
+  },
+  processedText: {
+    fontSize: Typography.xs,
+    fontWeight: '600',
+    color: Colors.textInverse,
+    letterSpacing: Typography.letterSpacingNormal,
+    textAlign: 'center',
   },
 });
 

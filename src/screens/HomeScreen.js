@@ -21,6 +21,7 @@ import MealCard from '../components/MealCard';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
 import StorageService from '../services/storage';
 import DateHelpers from '../utils/dateHelpers';
+import { calculateAggregatedProcessed } from '../utils/extendedMetrics';
 
 const HomeScreen = ({ navigation }) => {
   const { signOut } = useAuth();
@@ -34,6 +35,7 @@ const HomeScreen = ({ navigation }) => {
     carbs: 0,
     fat: 0
   });
+  const [dailyProcessedPercent, setDailyProcessedPercent] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [editingMealId, setEditingMealId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
@@ -77,6 +79,10 @@ const HomeScreen = ({ navigation }) => {
       }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
       
       setDailyMacros(totals);
+      
+      // Calculate processed food percentage for the day
+      const processedData = calculateAggregatedProcessed(dateMeals);
+      setDailyProcessedPercent(processedData.processedPercent);
     } catch (error) {
       console.error('Error loading meals:', error);
     }
@@ -264,7 +270,7 @@ const HomeScreen = ({ navigation }) => {
       />
 
       {/* Daily Totals */}
-      <MacroDisplay macros={dailyMacros} />
+      <MacroDisplay macros={dailyMacros} processedPercent={dailyProcessedPercent} />
 
       {/* Add Meal Button - Now available for all dates */}
       <TouchableOpacity style={styles.addMealButton} onPress={navigateToCamera}>

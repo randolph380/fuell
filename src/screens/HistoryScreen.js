@@ -11,6 +11,7 @@ import {
 import { LineChart } from 'react-native-chart-kit';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
 import StorageService from '../services/storage';
+import { calculateAggregatedProcessed, getProcessedColor } from '../utils/extendedMetrics';
 
 const TrendsScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
@@ -22,6 +23,11 @@ const TrendsScreen = ({ navigation }) => {
       { data: [], color: () => Colors.accent, strokeWidth: 3 },
       { data: [], color: () => '#10b981', strokeWidth: 2 }
     ]
+  });
+  const [processedData, setProcessedData] = useState({
+    threeDays: null,
+    sevenDays: null,
+    thirtyDays: null
   });
 
   useEffect(() => {
@@ -296,6 +302,33 @@ const TrendsScreen = ({ navigation }) => {
       }
       
       setChartData(data);
+      
+      // Calculate processed food percentages for different time periods
+      const today = new Date();
+      
+      // Last 3 days
+      const threeDaysAgo = new Date(today);
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      const threeDayMeals = allMeals.filter(meal => new Date(meal.date) >= threeDaysAgo);
+      const threeDayProcessed = calculateAggregatedProcessed(threeDayMeals);
+      
+      // Last 7 days
+      const sevenDaysAgo = new Date(today);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const sevenDayMeals = allMeals.filter(meal => new Date(meal.date) >= sevenDaysAgo);
+      const sevenDayProcessed = calculateAggregatedProcessed(sevenDayMeals);
+      
+      // Last 30 days
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const thirtyDayMeals = allMeals.filter(meal => new Date(meal.date) >= thirtyDaysAgo);
+      const thirtyDayProcessed = calculateAggregatedProcessed(thirtyDayMeals);
+      
+      setProcessedData({
+        threeDays: threeDayProcessed.processedPercent,
+        sevenDays: sevenDayProcessed.processedPercent,
+        thirtyDays: thirtyDayProcessed.processedPercent
+      });
     } catch (error) {
       console.error('Error loading trends:', error);
     }
@@ -389,6 +422,53 @@ const TrendsScreen = ({ navigation }) => {
             </View>
           </View>
         )}
+      </View>
+
+      {/* Food Quality Metrics */}
+      <View style={styles.qualityContainer}>
+        <Text style={styles.qualityTitle}>Food Quality Trends</Text>
+        <View style={styles.qualityGrid}>
+          <View style={styles.qualityItem}>
+            <Text style={styles.qualityPeriod}>3 Days</Text>
+            {processedData.threeDays != null ? (
+              <View style={[
+                styles.processedBadge,
+                { backgroundColor: getProcessedColor(processedData.threeDays) }
+              ]}>
+                <Text style={styles.processedText}>{processedData.threeDays}%</Text>
+              </View>
+            ) : (
+              <Text style={styles.noData}>No data</Text>
+            )}
+          </View>
+          <View style={styles.qualityItem}>
+            <Text style={styles.qualityPeriod}>7 Days</Text>
+            {processedData.sevenDays != null ? (
+              <View style={[
+                styles.processedBadge,
+                { backgroundColor: getProcessedColor(processedData.sevenDays) }
+              ]}>
+                <Text style={styles.processedText}>{processedData.sevenDays}%</Text>
+              </View>
+            ) : (
+              <Text style={styles.noData}>No data</Text>
+            )}
+          </View>
+          <View style={styles.qualityItem}>
+            <Text style={styles.qualityPeriod}>30 Days</Text>
+            {processedData.thirtyDays != null ? (
+              <View style={[
+                styles.processedBadge,
+                { backgroundColor: getProcessedColor(processedData.thirtyDays) }
+              ]}>
+                <Text style={styles.processedText}>{processedData.thirtyDays}%</Text>
+              </View>
+            ) : (
+              <Text style={styles.noData}>No data</Text>
+            )}
+          </View>
+        </View>
+        <Text style={styles.qualitySubtitle}>% of calories from processed sources</Text>
       </View>
 
       {/* Controls */}
@@ -522,6 +602,65 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: Typography.xs,
     color: Colors.textSecondary,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  qualityContainer: {
+    marginHorizontal: Spacing.base,
+    marginVertical: Spacing.base,
+    backgroundColor: Colors.backgroundElevated,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.base,
+  },
+  qualityTitle: {
+    fontSize: Typography.base,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+    letterSpacing: Typography.letterSpacingNormal,
+    textAlign: 'center',
+  },
+  qualityGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: Spacing.sm,
+  },
+  qualityItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  qualityPeriod: {
+    fontSize: Typography.xs,
+    fontWeight: '500',
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xs,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  processedBadge: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.base,
+    borderRadius: BorderRadius.base,
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  processedText: {
+    fontSize: Typography.base,
+    fontWeight: '700',
+    color: Colors.textInverse,
+    letterSpacing: Typography.letterSpacingTight,
+  },
+  noData: {
+    fontSize: Typography.xs,
+    color: Colors.textTertiary,
+    fontStyle: 'italic',
+  },
+  qualitySubtitle: {
+    fontSize: Typography.xs,
+    color: Colors.textTertiary,
+    textAlign: 'center',
+    marginTop: Spacing.xs,
     letterSpacing: Typography.letterSpacingNormal,
   },
   controlsContainer: {

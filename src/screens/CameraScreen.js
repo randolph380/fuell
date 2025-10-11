@@ -27,6 +27,7 @@ const CameraScreen = ({ navigation, route }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [conversation, setConversation] = useState([]);
   const [currentMacros, setCurrentMacros] = useState(null);
+  const [currentExtendedMetrics, setCurrentExtendedMetrics] = useState(null);
   const [showInput, setShowInput] = useState(false);
   const [userInput, setUserInput] = useState('');
   const [isRefining, setIsRefining] = useState(false);
@@ -61,6 +62,7 @@ const CameraScreen = ({ navigation, route }) => {
         setFoodDescription('');
         setConversation([]);
         setCurrentMacros(null);
+        setCurrentExtendedMetrics(null);
         setShowInput(false);
       }
     } catch (error) {
@@ -102,6 +104,7 @@ const CameraScreen = ({ navigation, route }) => {
         setFoodDescription('');
         setConversation([]);
         setCurrentMacros(null);
+        setCurrentExtendedMetrics(null);
         setShowInput(false);
       }
     } catch (error) {
@@ -135,10 +138,11 @@ const CameraScreen = ({ navigation, route }) => {
 
       const result = await claudeAPI.analyzeMealImage(base64Image, foodDescription, base64AdditionalImages, isMultipleDishes);
       
-      // Store macros FIRST (before cleaning)
+      // Store macros and extended metrics FIRST (before cleaning)
       // Only update if macros were successfully parsed
       if (result.macros) {
         setCurrentMacros(result.macros);
+        setCurrentExtendedMetrics(result.extendedMetrics || null);
       } else {
         console.warn('⚠️ Initial analysis: Failed to parse macros, keeping previous values');
       }
@@ -286,13 +290,14 @@ const CameraScreen = ({ navigation, route }) => {
 
       const result = await claudeAPI.refineAnalysis(conversationHistory);
       
-      // Store macros FIRST (before cleaning)
+      // Store macros and extended metrics FIRST (before cleaning)
       // Only update if macros were successfully parsed, otherwise keep previous values
       if (result.macros) {
         setCurrentMacros(result.macros);
+        setCurrentExtendedMetrics(result.extendedMetrics || null);
       } else {
         console.warn('⚠️ Refinement: Failed to parse macros, keeping previous values');
-        // Keep the existing currentMacros value
+        // Keep the existing currentMacros and currentExtendedMetrics values
       }
       
       // Update the title if it changed
@@ -360,7 +365,8 @@ const CameraScreen = ({ navigation, route }) => {
         carbs: currentMacros.carbs,
         fat: currentMacros.fat,
         timestamp: mealDate.getTime(),
-        date: mealDate.toDateString()
+        date: mealDate.toDateString(),
+        extendedMetrics: currentExtendedMetrics
       };
 
       await StorageService.saveMeal(meal);
@@ -396,7 +402,8 @@ const CameraScreen = ({ navigation, route }) => {
                 calories: currentMacros.calories,
                 protein: currentMacros.protein,
                 carbs: currentMacros.carbs,
-                fat: currentMacros.fat
+                fat: currentMacros.fat,
+                extendedMetrics: currentExtendedMetrics
               };
 
               await StorageService.saveMealTemplate(savedMeal);
@@ -419,6 +426,7 @@ const CameraScreen = ({ navigation, route }) => {
     setFoodDescription('');
     setConversation([]);
     setCurrentMacros(null);
+    setCurrentExtendedMetrics(null);
     setShowInput(false);
     setUserInput('');
   };

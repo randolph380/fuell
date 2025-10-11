@@ -70,6 +70,9 @@ const HomeScreen = ({ navigation }) => {
       
       const dateMeals = await StorageService.getMealsByDate(currentDate);
       
+      // Debug: Log meal names
+      console.log('DEBUG - Loaded meals:', dateMeals.map(m => ({ name: m.name, id: m.id })));
+      
       // Sort meals by timestamp - most recent first
       const sortedMeals = dateMeals.sort((a, b) => b.timestamp - a.timestamp);
       setMeals(sortedMeals);

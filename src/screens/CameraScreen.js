@@ -139,7 +139,7 @@ const CameraScreen = ({ navigation, route }) => {
 
       const result = await claudeAPI.analyzeMealImage(base64Image, foodDescription, base64AdditionalImages, isMultipleDishes);
       
-      // Store macros and extended metrics FIRST (before cleaning)
+      // Store macros, extended metrics, and title FIRST (before cleaning)
       // Only update if macros were successfully parsed
       if (result.macros) {
         setCurrentMacros(result.macros);
@@ -148,18 +148,23 @@ const CameraScreen = ({ navigation, route }) => {
         console.warn('⚠️ Initial analysis: Failed to parse macros, keeping previous values');
       }
       
-      // Extract and store the title BEFORE cleaning
-      // Look for **Title:** in the first 500 characters only to avoid false matches
-      const firstPart = result.response.slice(0, 500);
-      let titleMatch = firstPart.match(/\*\*Title:\*\*\s*([^\n]+)/i);
-      
-      if (titleMatch) {
-        const extractedTitle = titleMatch[1].trim().replace(/\*\*/g, '').replace(/\*/g, '').replace(/\[|\]/g, '').trim();
-        setMealTitle(extractedTitle);
-        console.log('DEBUG - Extracted title:', extractedTitle);
+      // Extract and store the title from JSON (preferred) or fallback to regex
+      if (result.title) {
+        setMealTitle(result.title);
+        console.log('DEBUG - Extracted title from JSON:', result.title);
       } else {
-        console.warn('⚠️ Could not extract title from response');
-        setMealTitle('Meal');
+        // Fallback: Look for **Title:** in the first 500 characters
+        const firstPart = result.response.slice(0, 500);
+        let titleMatch = firstPart.match(/\*\*Title:\*\*\s*([^\n]+)/i);
+        
+        if (titleMatch) {
+          const extractedTitle = titleMatch[1].trim().replace(/\*\*/g, '').replace(/\*/g, '').replace(/\[|\]/g, '').trim();
+          setMealTitle(extractedTitle);
+          console.log('DEBUG - Extracted title from text:', extractedTitle);
+        } else {
+          console.warn('⚠️ Could not extract title');
+          setMealTitle('Meal');
+        }
       }
       
       // Clean the response text for display (unless extended output is enabled)
@@ -296,7 +301,7 @@ const CameraScreen = ({ navigation, route }) => {
 
       const result = await claudeAPI.refineAnalysis(conversationHistory);
       
-      // Store macros and extended metrics FIRST (before cleaning)
+      // Store macros, extended metrics, and title FIRST (before cleaning)
       // Only update if macros were successfully parsed, otherwise keep previous values
       if (result.macros) {
         setCurrentMacros(result.macros);
@@ -306,15 +311,20 @@ const CameraScreen = ({ navigation, route }) => {
         // Keep the existing currentMacros and currentExtendedMetrics values
       }
       
-      // Update the title if it changed
-      // Look for **Title:** in the first 500 characters only to avoid false matches
-      const firstPart = result.response.slice(0, 500);
-      let titleMatch = firstPart.match(/\*\*Title:\*\*\s*([^\n]+)/i);
-      
-      if (titleMatch) {
-        const extractedTitle = titleMatch[1].trim().replace(/\*\*/g, '').replace(/\*/g, '').replace(/\[|\]/g, '').trim();
-        setMealTitle(extractedTitle);
-        console.log('DEBUG - Updated title:', extractedTitle);
+      // Update the title from JSON (preferred) or fallback to regex
+      if (result.title) {
+        setMealTitle(result.title);
+        console.log('DEBUG - Updated title from JSON:', result.title);
+      } else {
+        // Fallback: Look for **Title:** in the first 500 characters
+        const firstPart = result.response.slice(0, 500);
+        let titleMatch = firstPart.match(/\*\*Title:\*\*\s*([^\n]+)/i);
+        
+        if (titleMatch) {
+          const extractedTitle = titleMatch[1].trim().replace(/\*\*/g, '').replace(/\*/g, '').replace(/\[|\]/g, '').trim();
+          setMealTitle(extractedTitle);
+          console.log('DEBUG - Updated title from text:', extractedTitle);
+        }
       }
       
       // Clean the response text for display (unless extended output is enabled)

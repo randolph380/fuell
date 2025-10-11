@@ -107,8 +107,6 @@ Estimate total grams of fresh fruits and vegetables (combined).
 **CRITICAL FORMATTING REQUIREMENTS:**
 YOU MUST format your response EXACTLY as shown below:
 
-**Title:** [EXACTLY 2 words - e.g. "Chocolate Cookie", "Grilled Chicken", "Yogurt Berries"]
-
 [Your brief conversational analysis - 2-3 sentences max. Mention NOVA classification naturally.]
 
 I have [low/medium/high] certainty on this estimate.
@@ -118,6 +116,7 @@ I have [low/medium/high] certainty on this estimate.
 **NUTRITION_DATA:**
 \`\`\`json
 {
+  "title": "[EXACTLY 2 words - e.g. Chocolate Cookie, Grilled Chicken, Yogurt Berries]",
   "calories": ###,
   "protein": ###,
   "fat": ###,
@@ -137,10 +136,10 @@ I have [low/medium/high] certainty on this estimate.
 \`\`\`
 
 CRITICAL:
-- Start with **Title:** on first line
 - Keep analysis conversational and brief
 - End with valid JSON in the NUTRITION_DATA code block
-- JSON must be parseable and include all fields`;
+- JSON must be parseable and include all fields
+- Title must be EXACTLY 2 words inside the JSON`;
 
       let messageContent = [];
       
@@ -297,8 +296,6 @@ PROCESSED FOOD (NOVA):
 **CRITICAL FORMATTING REQUIREMENTS:**
 YOU MUST format your response EXACTLY as shown below:
 
-**Title:** [Keep same 2-word title from before]
-
 [Your brief update - acknowledge new info, show key math if needed. 2-3 sentences max.]
 
 Example: "Perfect! Scale was tared, so 200g is yogurt weight. Math: (200/170) × 150 = 176 cal. Plus 30 cal berries = 206 total."
@@ -310,6 +307,7 @@ I have [low/medium/high] certainty on this estimate.
 **NUTRITION_DATA:**
 \`\`\`json
 {
+  "title": "[Keep same 2-word title from before]",
   "calories": ###,
   "protein": ###,
   "fat": ###,
@@ -329,10 +327,10 @@ I have [low/medium/high] certainty on this estimate.
 \`\`\`
 
 CRITICAL:
-- Start with **Title:** on first line
 - Keep update brief and conversational
 - End with valid JSON in the NUTRITION_DATA code block
-- JSON must be parseable and include all fields`
+- JSON must be parseable and include all fields
+- Title must be inside the JSON, same as before`
         })
       });
 
@@ -392,6 +390,12 @@ CRITICAL:
         return this._extractNutritionDataLegacy(text);
       }
       
+      // Extract title if present
+      const title = typeof data.title === 'string' ? data.title.trim() : null;
+      if (title) {
+        console.log('📝 Extracted title from JSON:', title);
+      }
+      
       // Build response
       const macros = {
         calories: data.calories,
@@ -426,12 +430,13 @@ CRITICAL:
       }
       
       console.log('✅ Successfully extracted nutrition data from JSON:');
+      console.log('  Title:', title);
       console.log('  Macros:', macros);
       if (extendedMetrics) {
         console.log('  Extended metrics:', extendedMetrics);
       }
       
-      return { macros, extendedMetrics };
+      return { macros, extendedMetrics, title };
       
     } catch (error) {
       console.error('❌ JSON parsing failed:', error.message);

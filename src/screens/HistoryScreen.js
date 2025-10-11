@@ -11,11 +11,11 @@ import {
 import { LineChart } from 'react-native-chart-kit';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
 import StorageService from '../services/storage';
-import { calculateAggregatedProcessed, getProcessedColor } from '../utils/extendedMetrics';
+import { calculateAggregatedProcessed } from '../utils/extendedMetrics';
 
 const TrendsScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedMacro, setSelectedMacro] = useState('calories'); // calories, protein, carbs, fat
+  const [selectedMacro, setSelectedMacro] = useState('calories'); // calories, protein, carbs, fat, processed
   const [selectedPeriod, setSelectedPeriod] = useState('week'); // day, week, month
   const [chartData, setChartData] = useState({
     labels: [],
@@ -23,11 +23,6 @@ const TrendsScreen = ({ navigation }) => {
       { data: [], color: () => Colors.accent, strokeWidth: 3 },
       { data: [], color: () => '#10b981', strokeWidth: 2 }
     ]
-  });
-  const [processedData, setProcessedData] = useState({
-    threeDays: null,
-    sevenDays: null,
-    thirtyDays: null
   });
 
   useEffect(() => {
@@ -48,7 +43,15 @@ const TrendsScreen = ({ navigation }) => {
         return new Date(meal.date).toDateString() === dateKey;
       });
       
-      const dayTotal = dayMeals.reduce((acc, meal) => acc + (meal[macro] || 0), 0);
+      let dayTotal;
+      if (macro === 'processed') {
+        // Calculate processed % for the day
+        const processedData = calculateAggregatedProcessed(dayMeals);
+        dayTotal = processedData.processedPercent || 0;
+      } else {
+        dayTotal = dayMeals.reduce((acc, meal) => acc + (meal[macro] || 0), 0);
+      }
+      
       days.unshift({ value: dayTotal, dayNum: dayNum + 1 });
     }
     
@@ -114,11 +117,21 @@ const TrendsScreen = ({ navigation }) => {
       const daysTracked = Object.keys(mealsByDate).length;
       
       if (daysTracked > 0) {
-        const dailyTotals = Object.values(mealsByDate).map(dayMeals => {
-          return dayMeals.reduce((acc, meal) => acc + (meal[macro] || 0), 0);
-        });
+        let monthAverage;
+        if (macro === 'processed') {
+          // Calculate processed % average for the month
+          const dailyProcessedPercents = Object.values(mealsByDate).map(dayMeals => {
+            const processedData = calculateAggregatedProcessed(dayMeals);
+            return processedData.processedPercent || 0;
+          });
+          monthAverage = Math.round(dailyProcessedPercents.reduce((a, b) => a + b, 0) / daysTracked);
+        } else {
+          const dailyTotals = Object.values(mealsByDate).map(dayMeals => {
+            return dayMeals.reduce((acc, meal) => acc + (meal[macro] || 0), 0);
+          });
+          monthAverage = Math.round(dailyTotals.reduce((a, b) => a + b, 0) / daysTracked);
+        }
         
-        const monthAverage = Math.round(dailyTotals.reduce((a, b) => a + b, 0) / daysTracked);
         months.unshift({ average: monthAverage, monthNum: monthNum + 1 });
       } else {
         months.unshift({ average: 0, monthNum: monthNum + 1 });
@@ -243,11 +256,21 @@ const TrendsScreen = ({ navigation }) => {
       const daysTracked = Object.keys(mealsByDate).length;
       
       if (daysTracked > 0) {
-        const dailyTotals = Object.values(mealsByDate).map(dayMeals => {
-          return dayMeals.reduce((acc, meal) => acc + (meal[macro] || 0), 0);
-        });
+        let weekAverage;
+        if (macro === 'processed') {
+          // Calculate processed % average for the week
+          const dailyProcessedPercents = Object.values(mealsByDate).map(dayMeals => {
+            const processedData = calculateAggregatedProcessed(dayMeals);
+            return processedData.processedPercent || 0;
+          });
+          weekAverage = Math.round(dailyProcessedPercents.reduce((a, b) => a + b, 0) / daysTracked);
+        } else {
+          const dailyTotals = Object.values(mealsByDate).map(dayMeals => {
+            return dayMeals.reduce((acc, meal) => acc + (meal[macro] || 0), 0);
+          });
+          weekAverage = Math.round(dailyTotals.reduce((a, b) => a + b, 0) / daysTracked);
+        }
         
-        const weekAverage = Math.round(dailyTotals.reduce((a, b) => a + b, 0) / daysTracked);
         weeks.unshift({ average: weekAverage, weekNum: weekNum + 1 });
       } else {
         weeks.unshift({ average: 0, weekNum: weekNum + 1 });
@@ -302,33 +325,6 @@ const TrendsScreen = ({ navigation }) => {
       }
       
       setChartData(data);
-      
-      // Calculate processed food percentages for different time periods
-      const today = new Date();
-      
-      // Last 3 days
-      const threeDaysAgo = new Date(today);
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-      const threeDayMeals = allMeals.filter(meal => new Date(meal.date) >= threeDaysAgo);
-      const threeDayProcessed = calculateAggregatedProcessed(threeDayMeals);
-      
-      // Last 7 days
-      const sevenDaysAgo = new Date(today);
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const sevenDayMeals = allMeals.filter(meal => new Date(meal.date) >= sevenDaysAgo);
-      const sevenDayProcessed = calculateAggregatedProcessed(sevenDayMeals);
-      
-      // Last 30 days
-      const thirtyDaysAgo = new Date(today);
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const thirtyDayMeals = allMeals.filter(meal => new Date(meal.date) >= thirtyDaysAgo);
-      const thirtyDayProcessed = calculateAggregatedProcessed(thirtyDayMeals);
-      
-      setProcessedData({
-        threeDays: threeDayProcessed.processedPercent,
-        sevenDays: sevenDayProcessed.processedPercent,
-        thirtyDays: thirtyDayProcessed.processedPercent
-      });
     } catch (error) {
       console.error('Error loading trends:', error);
     }
@@ -345,7 +341,8 @@ const TrendsScreen = ({ navigation }) => {
       calories: 'Calories',
       protein: 'Protein',
       carbs: 'Net Carbs',
-      fat: 'Fat'
+      fat: 'Fat',
+      processed: 'Processed %'
     };
     return labels[selectedMacro];
   };
@@ -424,60 +421,13 @@ const TrendsScreen = ({ navigation }) => {
         )}
       </View>
 
-      {/* Food Quality Metrics */}
-      <View style={styles.qualityContainer}>
-        <Text style={styles.qualityTitle}>Food Quality Trends</Text>
-        <View style={styles.qualityGrid}>
-          <View style={styles.qualityItem}>
-            <Text style={styles.qualityPeriod}>3 Days</Text>
-            {processedData.threeDays != null ? (
-              <View style={[
-                styles.processedBadge,
-                { backgroundColor: getProcessedColor(processedData.threeDays) }
-              ]}>
-                <Text style={styles.processedText}>{processedData.threeDays}%</Text>
-              </View>
-            ) : (
-              <Text style={styles.noData}>No data</Text>
-            )}
-          </View>
-          <View style={styles.qualityItem}>
-            <Text style={styles.qualityPeriod}>7 Days</Text>
-            {processedData.sevenDays != null ? (
-              <View style={[
-                styles.processedBadge,
-                { backgroundColor: getProcessedColor(processedData.sevenDays) }
-              ]}>
-                <Text style={styles.processedText}>{processedData.sevenDays}%</Text>
-              </View>
-            ) : (
-              <Text style={styles.noData}>No data</Text>
-            )}
-          </View>
-          <View style={styles.qualityItem}>
-            <Text style={styles.qualityPeriod}>30 Days</Text>
-            {processedData.thirtyDays != null ? (
-              <View style={[
-                styles.processedBadge,
-                { backgroundColor: getProcessedColor(processedData.thirtyDays) }
-              ]}>
-                <Text style={styles.processedText}>{processedData.thirtyDays}%</Text>
-              </View>
-            ) : (
-              <Text style={styles.noData}>No data</Text>
-            )}
-          </View>
-        </View>
-        <Text style={styles.qualitySubtitle}>% of calories from processed sources</Text>
-      </View>
-
       {/* Controls */}
       <View style={styles.controlsContainer}>
         {/* Macro Selection */}
         <View style={styles.controlSection}>
-          <Text style={styles.controlLabel}>Macronutrient</Text>
+          <Text style={styles.controlLabel}>Metric</Text>
           <View style={styles.radioGroup}>
-            {['calories', 'protein', 'carbs', 'fat'].map((macro) => (
+            {['calories', 'protein', 'carbs', 'fat', 'processed'].map((macro) => (
               <TouchableOpacity
                 key={macro}
                 style={[
@@ -490,7 +440,7 @@ const TrendsScreen = ({ navigation }) => {
                   styles.radioButtonText,
                   selectedMacro === macro && styles.radioButtonTextSelected
                 ]}>
-                  {macro === 'carbs' ? 'Net Carbs' : macro.charAt(0).toUpperCase() + macro.slice(1)}
+                  {macro === 'carbs' ? 'Net Carbs' : macro === 'processed' ? 'Processed %' : macro.charAt(0).toUpperCase() + macro.slice(1)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -602,65 +552,6 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: Typography.xs,
     color: Colors.textSecondary,
-    letterSpacing: Typography.letterSpacingNormal,
-  },
-  qualityContainer: {
-    marginHorizontal: Spacing.base,
-    marginVertical: Spacing.base,
-    backgroundColor: Colors.backgroundElevated,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...Shadows.base,
-  },
-  qualityTitle: {
-    fontSize: Typography.base,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-    marginBottom: Spacing.md,
-    letterSpacing: Typography.letterSpacingNormal,
-    textAlign: 'center',
-  },
-  qualityGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: Spacing.sm,
-  },
-  qualityItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  qualityPeriod: {
-    fontSize: Typography.xs,
-    fontWeight: '500',
-    color: Colors.textSecondary,
-    marginBottom: Spacing.xs,
-    letterSpacing: Typography.letterSpacingNormal,
-  },
-  processedBadge: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.base,
-    borderRadius: BorderRadius.base,
-    minWidth: 60,
-    alignItems: 'center',
-  },
-  processedText: {
-    fontSize: Typography.base,
-    fontWeight: '700',
-    color: Colors.textInverse,
-    letterSpacing: Typography.letterSpacingTight,
-  },
-  noData: {
-    fontSize: Typography.xs,
-    color: Colors.textTertiary,
-    fontStyle: 'italic',
-  },
-  qualitySubtitle: {
-    fontSize: Typography.xs,
-    color: Colors.textTertiary,
-    textAlign: 'center',
-    marginTop: Spacing.xs,
     letterSpacing: Typography.letterSpacingNormal,
   },
   controlsContainer: {

@@ -3,7 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
 
-const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber, caffeine }) => {
+const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber, caffeine, freshProduce }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
   const formatNumber = (num) => {
@@ -77,6 +77,11 @@ const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber, 
           <View style={styles.metricRow}>
             <Text style={styles.metricLabel}>Caffeine</Text>
             <Text style={styles.metricValue}>{formatNumber(caffeine)}mg</Text>
+          </View>
+          
+          <View style={styles.metricRow}>
+            <Text style={styles.metricLabel}>Fresh produce</Text>
+            <Text style={styles.metricValue}>{formatNumber(freshProduce)}g</Text>
           </View>
         </View>
       )}

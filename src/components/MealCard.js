@@ -101,6 +101,12 @@ const MealCard = ({ meal, onPress, onDelete, onSave, onEdit }) => {
                 <Text style={styles.metricValue}>{meal.extendedMetrics.caffeine}mg</Text>
               </View>
             )}
+            {meal.extendedMetrics.freshProduce != null && (
+              <View style={styles.metricRow}>
+                <Text style={styles.metricLabel}>Fresh produce</Text>
+                <Text style={styles.metricValue}>{meal.extendedMetrics.freshProduce}g</Text>
+              </View>
+            )}
             {/* Future metrics can be added here */}
             </View>
           )}

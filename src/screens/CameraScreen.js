@@ -636,7 +636,7 @@ const CameraScreen = ({ navigation, route }) => {
               </View>
               
               {/* Extended Metrics Row */}
-              {(currentExtendedMetrics?.processedPercent != null || currentExtendedMetrics?.ultraProcessedPercent != null || currentExtendedMetrics?.fiber != null || currentExtendedMetrics?.caffeine != null) && (
+              {(currentExtendedMetrics?.processedPercent != null || currentExtendedMetrics?.ultraProcessedPercent != null || currentExtendedMetrics?.fiber != null || currentExtendedMetrics?.caffeine != null || currentExtendedMetrics?.freshProduce != null) && (
                 <View style={styles.extendedMetricsRow}>
                   {currentExtendedMetrics?.processedPercent != null && (
                     <Text style={styles.extendedMetricText}>
@@ -656,6 +656,11 @@ const CameraScreen = ({ navigation, route }) => {
                   {currentExtendedMetrics?.caffeine != null && (
                     <Text style={[styles.extendedMetricText, (currentExtendedMetrics?.processedPercent != null || currentExtendedMetrics?.ultraProcessedPercent != null || currentExtendedMetrics?.fiber != null) && { marginLeft: Spacing.base }]}>
                       {currentExtendedMetrics.caffeine}mg caffeine
+                    </Text>
+                  )}
+                  {currentExtendedMetrics?.freshProduce != null && (
+                    <Text style={[styles.extendedMetricText, (currentExtendedMetrics?.processedPercent != null || currentExtendedMetrics?.ultraProcessedPercent != null || currentExtendedMetrics?.fiber != null || currentExtendedMetrics?.caffeine != null) && { marginLeft: Spacing.base }]}>
+                      {currentExtendedMetrics.freshProduce}g produce
                     </Text>
                   )}
                 </View>

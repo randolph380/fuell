@@ -62,6 +62,12 @@ const METRICS = {
     displayLabel: 'Caffeine',
     extract: (meal) => meal.extendedMetrics?.caffeine || 0,
     type: 'extended'
+  },
+  freshProduce: {
+    label: 'Fresh Produce',
+    displayLabel: 'Fresh Produce',
+    extract: (meal) => meal.extendedMetrics?.freshProduce || 0,
+    type: 'extended'
   }
 };
 

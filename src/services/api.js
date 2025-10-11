@@ -97,6 +97,13 @@ Estimate caffeine content in milligrams based on the food/beverage components.
 - Otherwise estimate using standard caffeine content
 - Round to nearest 5mg
 
+**FRESH PRODUCE:**
+Estimate total grams of fresh fruits and vegetables (combined).
+- Include: fresh or frozen fruits and vegetables (raw or cooked), legumes
+- Exclude: potatoes and other starchy tubers (cassava, yams)
+- Exclude: fruit juice, dried fruit
+- Round to nearest 10g
+
 **CRITICAL FORMATTING REQUIREMENTS:**
 YOU MUST format your response EXACTLY as shown below:
 
@@ -117,6 +124,7 @@ I have [low/medium/high] certainty on this estimate.
   "carbs": ###,
   "fiber": ###,
   "caffeine": ###,
+  "freshProduce": ###,
   "processed": {
     "percent": ##,
     "calories": ###
@@ -308,6 +316,7 @@ I have [low/medium/high] certainty on this estimate.
   "carbs": ###,
   "fiber": ###,
   "caffeine": ###,
+  "freshProduce": ###,
   "processed": {
     "percent": ##,
     "calories": ###
@@ -399,15 +408,17 @@ CRITICAL:
           (typeof data.ultraProcessed.percent === 'number' || typeof data.ultraProcessed.calories === 'number');
       const hasFiber = typeof data.fiber === 'number';
       const hasCaffeine = typeof data.caffeine === 'number';
+      const hasFreshProduce = typeof data.freshProduce === 'number';
       
-      if (hasProcessed || hasUltraProcessed || hasFiber || hasCaffeine) {
+      if (hasProcessed || hasUltraProcessed || hasFiber || hasCaffeine || hasFreshProduce) {
         extendedMetrics = {
           processedCalories: data.processed?.calories ?? null,
           processedPercent: data.processed?.percent ?? null,
           ultraProcessedCalories: data.ultraProcessed?.calories ?? null,
           ultraProcessedPercent: data.ultraProcessed?.percent ?? null,
           fiber: hasFiber ? data.fiber : null,
-          caffeine: hasCaffeine ? data.caffeine : null
+          caffeine: hasCaffeine ? data.caffeine : null,
+          freshProduce: hasFreshProduce ? data.freshProduce : null
         };
         console.log('📊 Extracted extended metrics:', extendedMetrics);
       } else {

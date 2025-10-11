@@ -39,6 +39,7 @@ const HomeScreen = ({ navigation }) => {
   const [dailyUltraProcessedPercent, setDailyUltraProcessedPercent] = useState(null);
   const [dailyFiber, setDailyFiber] = useState(0);
   const [dailyCaffeine, setDailyCaffeine] = useState(0);
+  const [dailyFreshProduce, setDailyFreshProduce] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [editingMealId, setEditingMealId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
@@ -100,6 +101,11 @@ const HomeScreen = ({ navigation }) => {
       const totalCaffeine = dateMeals.reduce((sum, meal) => 
         sum + (meal.extendedMetrics?.caffeine || 0), 0);
       setDailyCaffeine(totalCaffeine);
+      
+      // Calculate total fresh produce for the day
+      const totalFreshProduce = dateMeals.reduce((sum, meal) => 
+        sum + (meal.extendedMetrics?.freshProduce || 0), 0);
+      setDailyFreshProduce(totalFreshProduce);
     } catch (error) {
       console.error('Error loading meals:', error);
     }
@@ -287,7 +293,7 @@ const HomeScreen = ({ navigation }) => {
       />
 
       {/* Daily Totals */}
-      <MacroDisplay macros={dailyMacros} processedPercent={dailyProcessedPercent} ultraProcessedPercent={dailyUltraProcessedPercent} fiber={dailyFiber} caffeine={dailyCaffeine} />
+      <MacroDisplay macros={dailyMacros} processedPercent={dailyProcessedPercent} ultraProcessedPercent={dailyUltraProcessedPercent} fiber={dailyFiber} caffeine={dailyCaffeine} freshProduce={dailyFreshProduce} />
 
       {/* Add Meal Button - Now available for all dates */}
       <TouchableOpacity style={styles.addMealButton} onPress={navigateToCamera}>

@@ -70,30 +70,14 @@ ${multiImageInstructions}
 - Skip unnecessary elaboration
 - Focus on the key facts and calculations
 
-**PROCESSED FOOD CLASSIFICATION (NOVA System):**
-Estimate what percentage of calories come from processed sources using NOVA groups:
+**PROCESSED FOOD CLASSIFICATION:**
+Use the NOVA classification system to estimate processed food percentage:
+- NOVA 1 (0% processed): Unprocessed/minimally processed foods
+- NOVA 2 (100% processed): Processed culinary ingredients  
+- NOVA 3 (70% processed): Processed foods
+- NOVA 4 (100% processed): Ultra-processed foods
 
-- **NOVA 1 (Unprocessed/Minimally Processed)** - 0% processed weight:
-  Fresh/frozen: meat, fish, eggs, vegetables, fruits, plain milk/yogurt, grains, legumes, nuts
-  
-- **NOVA 2 (Processed Culinary Ingredients)** - 100% processed weight:
-  Oils, butter, lard, sugar, honey, salt (used in cooking)
-  
-- **NOVA 3 (Processed Foods)** - 70% processed weight:
-  Canned vegetables/fish, cheese, freshly made bread, bacon, salted nuts
-  
-- **NOVA 4 (Ultra-Processed)** - 100% processed weight:
-  Packaged snacks, candy, soda, frozen meals, fast food, products with 5+ ingredients/additives
-
-**Calculate processed calories:**
-1. Break down each component and its calories
-2. Assign NOVA group to each component
-3. Apply weighting: processed_kcal = component_kcal × NOVA_weight
-4. Sum all processed calories
-5. Calculate percent: (total_processed / total_meal) × 100
-
-Example: Chicken (400 kcal, NOVA 1) + olive oil (120 kcal, NOVA 2) + bread (200 kcal, NOVA 3)
-= 0 + 120 + 140 = 260 processed kcal out of 720 total = 36% processed
+For each component, assign the appropriate NOVA group and calculate the weighted processed calories.
 
 **CRITICAL FORMATTING REQUIREMENTS:**
 YOU MUST format your response EXACTLY as shown below. Do NOT use markdown headers (##) or any other formatting. Use ONLY the format shown:
@@ -328,17 +312,20 @@ IMPORTANT: Use "**Macros:**" and "**Processed Food:**" with asterisks exactly as
 
   extractNutritionData(text) {
     // Strategy: Look for the LAST occurrence of each value in the text
-    // This avoids matching intermediate calculations and is more robust
-    // The prompt asks for macros and extended metrics at the end
+    // Specifically search for the **Macros:** section to avoid false matches
     
     // Get the last 1500 characters where the final values should be
     const endOfText = text.slice(-1500);
     
-    // Extract basic macros (required)
-    const caloriesMatch = endOfText.match(/[-•\s]*Calories:\s*([\d,]+)\s*kcal/i);
-    const proteinMatch = endOfText.match(/[-•\s]*Protein:\s*([\d,]+)\s*g/i);
-    const fatMatch = endOfText.match(/[-•\s]*Fat:\s*([\d,]+)\s*g/i);
-    const carbsMatch = endOfText.match(/[-•\s]*(?:Net\s+)?Carbs:\s*([\d,]+)\s*g/i);
+    // Find the Macros: section specifically
+    const macrosSection = endOfText.match(/\*\*Macros:\*\*\s*([\s\S]*?)(?:\*\*Processed Food:\*\*|$)/i);
+    const macrosText = macrosSection ? macrosSection[1] : endOfText;
+    
+    // Extract basic macros (required) - now searching only within macros section
+    const caloriesMatch = macrosText.match(/[-•\s]*Calories:\s*([\d,]+)\s*kcal/i);
+    const proteinMatch = macrosText.match(/[-•\s]*Protein:\s*([\d,]+)\s*g(?!\s*x)/i); // Exclude "24 g x" patterns
+    const fatMatch = macrosText.match(/[-•\s]*Fat:\s*([\d,]+)\s*g(?!\s*x)/i);
+    const carbsMatch = macrosText.match(/[-•\s]*(?:Net\s+)?Carbs:\s*([\d,]+)\s*g(?!\s*x)/i);
     
     const calories = caloriesMatch ? parseInt(caloriesMatch[1].replace(/,/g, '')) : null;
     const protein = proteinMatch ? parseInt(proteinMatch[1].replace(/,/g, '')) : null;

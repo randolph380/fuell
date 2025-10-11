@@ -670,7 +670,7 @@ const CameraScreen = ({ navigation, route }) => {
                   )}
                   {currentExtendedMetrics?.freshProduce != null && (
                     <Text style={[styles.extendedMetricText, (currentExtendedMetrics?.processedPercent != null || currentExtendedMetrics?.ultraProcessedPercent != null || currentExtendedMetrics?.fiber != null || currentExtendedMetrics?.caffeine != null) && { marginLeft: Spacing.base }]}>
-                      {currentExtendedMetrics.freshProduce}g produce
+                      {currentExtendedMetrics.freshProduce}g fruits & veg
                     </Text>
                   )}
                 </View>

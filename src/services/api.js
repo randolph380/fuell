@@ -97,7 +97,7 @@ Estimate caffeine content in milligrams based on the food/beverage components.
 - Otherwise estimate using standard caffeine content
 - Round to nearest 5mg
 
-**FRESH PRODUCE:**
+**FRUITS & VEGETABLES:**
 Estimate total grams of fresh fruits and vegetables (combined).
 - Include: fresh or frozen fruits and vegetables (raw or cooked), legumes
 - Exclude: potatoes and other starchy tubers (cassava, yams)

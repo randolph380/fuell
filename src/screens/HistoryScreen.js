@@ -64,8 +64,8 @@ const METRICS = {
     type: 'extended'
   },
   freshProduce: {
-    label: 'Fresh Produce',
-    displayLabel: 'Fresh Produce',
+    label: 'Fruits & Vegetables',
+    displayLabel: 'Fruits & Vegetables',
     extract: (meal) => meal.extendedMetrics?.freshProduce || 0,
     type: 'extended'
   }

@@ -80,7 +80,7 @@ const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber, 
           </View>
           
           <View style={styles.metricRow}>
-            <Text style={styles.metricLabel}>Fresh produce</Text>
+            <Text style={styles.metricLabel}>Fruits & vegetables</Text>
             <Text style={styles.metricValue}>{formatNumber(freshProduce)}g</Text>
           </View>
         </View>

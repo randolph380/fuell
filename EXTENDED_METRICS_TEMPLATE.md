@@ -4,7 +4,7 @@ This document provides a step-by-step recipe for adding new secondary nutrition 
 
 ## Overview
 
-The app uses a flexible JSON-based system to track unlimited nutrition metrics beyond the core macros (calories, protein, carbs, fat). Current extended metrics: **processed %**, **ultra-processed %**, **fiber**, **caffeine**, **fresh produce**.
+The app uses a flexible JSON-based system to track unlimited nutrition metrics beyond the core macros (calories, protein, carbs, fat). Current extended metrics: **processed %**, **ultra-processed %**, **fiber**, **caffeine**, **fruits & vegetables**.
 
 ---
 

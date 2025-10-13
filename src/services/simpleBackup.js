@@ -10,8 +10,8 @@ import StorageService from './storage';
  */
 class SimpleBackup {
   
-  // Backup directory in project folder
-  static BACKUP_DIR = '/Users/randolphlopez/MacroTracker/backups/';
+  // Use device document directory for backups
+  static BACKUP_DIR = FileSystem.documentDirectory + 'backups/';
   
   /**
    * Create a backup of all user data

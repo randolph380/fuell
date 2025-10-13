@@ -66,7 +66,7 @@ export default function SimpleBackupScreen({ navigation }) {
   const handleImportBackup = () => {
     Alert.alert(
       'Import Backup',
-      'To import a backup:\n\n1. Place your backup JSON file in the "backups" folder\n2. The file should be named like: fuel_backup_[userId]_[timestamp].json\n3. Restart the app to load the backup',
+      'To import a backup:\n\n1. Share the backup file to your device\n2. Save it to your device\'s Downloads folder\n3. The app will guide you through the import process\n\nNote: Import functionality will be added in a future update.',
       [
         { text: 'OK', style: 'default' }
       ]

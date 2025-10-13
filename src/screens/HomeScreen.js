@@ -56,10 +56,11 @@ const HomeScreen = ({ navigation }) => {
   // Reload meals when screen comes into focus (e.g., after logging a meal)
   useFocusEffect(
     useCallback(() => {
+      console.log('DEBUG - useFocusEffect triggered, currentDate:', currentDate.toDateString());
       if (user?.id) {
         loadMeals();
       }
-    }, [currentDate, user?.id])
+    }, [user?.id]) // Remove currentDate dependency to ensure it always runs on focus
   );
 
   const loadMeals = async () => {

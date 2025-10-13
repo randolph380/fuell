@@ -116,6 +116,20 @@ const CameraScreen = ({ navigation, route }) => {
     }
   }, [isAnalyzing, isRefining]);
 
+  // Handle keyboard events to scroll to bottom
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      // Scroll to bottom when keyboard opens
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    });
+
+    return () => {
+      keyboardDidShowListener?.remove();
+    };
+  }, []);
+
   const takePicture = async () => {
     // Request permission
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -608,6 +622,7 @@ const CameraScreen = ({ navigation, route }) => {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollViewContent}
         keyboardDismissMode="interactive"
+        showsVerticalScrollIndicator={false}
       >
 
         {/* Input Methods - hide after analysis starts */}
@@ -825,38 +840,39 @@ const CameraScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Conversation */}
-        {conversation.length > 0 && (
-          <View style={styles.conversationContainer}>
-            {conversation.map((message, index) => {
-              // Parse markdown: remove ** for bold, keep the text
-              const displayText = message.content
-                .replace(/\*\*(.*?)\*\*/g, '$1')
-                .replace(/\*(.*?)\*/g, '$1');
-              
-              return (
-                <View key={index} style={[
-                  styles.message,
-                  message.role === 'user' ? styles.userMessage : styles.assistantMessage
+      {/* Conversation */}
+      {conversation.length > 0 && (
+        <View style={styles.conversationContainer}>
+          {conversation.map((message, index) => {
+            // Parse markdown: remove ** for bold, keep the text
+            const displayText = message.content
+              .replace(/\*\*(.*?)\*\*/g, '$1')
+              .replace(/\*(.*?)\*/g, '$1');
+            
+            return (
+              <View key={index} style={[
+                styles.message,
+                message.role === 'user' ? styles.userMessage : styles.assistantMessage
+              ]}>
+                <Text style={[
+                  styles.messageText,
+                  message.role === 'user' ? styles.userMessageText : styles.assistantMessageText
                 ]}>
-                  <Text style={[
-                    styles.messageText,
-                    message.role === 'user' ? styles.userMessageText : styles.assistantMessageText
-                  ]}>
-                    {message.role === 'assistant' ? parseTextWithQuestions(displayText) : displayText}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-        )}
-      </ScrollView>
+                  {message.role === 'assistant' ? parseTextWithQuestions(displayText) : displayText}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      )}
+    </ScrollView>
 
-      {/* Sticky Bottom Section */}
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
+    {/* Sticky Bottom Section */}
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      style={styles.keyboardAvoidingView}
+    >
         {currentMacros && (
           <View style={styles.stickyBottomContainer}>
             {/* Current Macros Card */}
@@ -1241,6 +1257,9 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     paddingBottom: Spacing.lg,
+  },
+  keyboardAvoidingView: {
+    flex: 0,
   },
   stickyBottomContainer: {
     backgroundColor: Colors.backgroundElevated,

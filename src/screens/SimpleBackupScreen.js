@@ -9,6 +9,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
 import { Colors, Spacing, Typography } from '../constants/colors';
 import SimpleBackup from '../services/simpleBackup';
 import StorageService from '../services/storage';
@@ -64,14 +65,65 @@ export default function SimpleBackupScreen({ navigation }) {
     }
   };
 
-  const handleImportBackup = () => {
-    Alert.alert(
-      'Import Backup',
-      'To import a backup:\n\n1. Share the backup file to your device\n2. Save it to your device\'s Downloads folder\n3. The app will guide you through the import process\n\nNote: Import functionality will be added in a future update.',
-      [
-        { text: 'OK', style: 'default' }
-      ]
-    );
+  const handleImportBackup = async () => {
+    setIsLoading(true);
+    try {
+      // Open document picker to select backup file
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/json',
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) {
+        setIsLoading(false);
+        return;
+      }
+
+      if (!result.assets || result.assets.length === 0) {
+        throw new Error('No file selected');
+      }
+
+      const fileUri = result.assets[0].uri;
+      
+      // Confirm import action
+      Alert.alert(
+        '⚠️ Import Backup',
+        'This will replace ALL your current data with the backup data. This action cannot be undone.\n\nAre you sure you want to continue?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Import', 
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await SimpleBackup.importFromFile(fileUri);
+                Alert.alert(
+                  'Import Successful',
+                  'Your backup has been imported successfully! All your data has been restored.',
+                  [
+                    { 
+                      text: 'OK', 
+                      onPress: () => {
+                        loadStats(); // Refresh stats to show imported data
+                      }
+                    }
+                  ]
+                );
+              } catch (error) {
+                console.error('Import error:', error);
+                Alert.alert('Import Failed', `Failed to import backup: ${error.message}`);
+              } finally {
+                setIsLoading(false);
+              }
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('File picker error:', error);
+      Alert.alert('Error', 'Failed to select backup file. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   const handleClearAllData = () => {
@@ -182,7 +234,7 @@ export default function SimpleBackupScreen({ navigation }) {
           • <Text style={styles.bold}>Share:</Text> Send the backup file to yourself or another device
         </Text>
         <Text style={styles.infoText}>
-          • <Text style={styles.bold}>Import:</Text> Place the backup file in the "backups" folder
+          • <Text style={styles.bold}>Import:</Text> Select a backup JSON file from your device
         </Text>
         <Text style={styles.infoText}>
           • <Text style={styles.bold}>Account-specific:</Text> Backups are tied to your user account

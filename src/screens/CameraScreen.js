@@ -1436,7 +1436,6 @@ const styles = StyleSheet.create({
   },
   questionText: {
     fontWeight: '600',
-    color: Colors.accent,
   },
   normalText: {
     fontWeight: '400',

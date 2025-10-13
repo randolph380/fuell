@@ -1,6 +1,8 @@
+import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
+    Alert,
     Animated,
     Dimensions,
     Modal,
@@ -10,11 +12,14 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import { Colors } from '../constants/colors';
+import { Colors, Spacing, Typography } from '../constants/colors';
+import StorageService from '../services/storage';
 
 const { width, height } = Dimensions.get('window');
 
 export default function HamburgerMenu({ navigation }) {
+  const { signOut } = useAuth();
+  const { user } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const slideAnim = useRef(new Animated.Value(-250)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -59,6 +64,45 @@ export default function HamburgerMenu({ navigation }) {
     setTimeout(() => {
       navigation.navigate(screen);
     }, 100);
+  };
+
+  const handleSignOut = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            await StorageService.clearUserId();
+            await signOut();
+          }
+        }
+      ]
+    );
+  };
+
+  const getSignInMethod = () => {
+    if (!user) return 'Unknown';
+    
+    // Check for Google OAuth
+    if (user.externalAccounts?.some(account => account.provider === 'google')) {
+      return 'Google';
+    }
+    
+    // Check for Apple OAuth
+    if (user.externalAccounts?.some(account => account.provider === 'apple')) {
+      return 'Apple';
+    }
+    
+    // Check for email/password
+    if (user.emailAddresses?.length > 0) {
+      return 'Email';
+    }
+    
+    return 'Unknown';
   };
 
   const menuItems = [
@@ -141,6 +185,24 @@ export default function HamburgerMenu({ navigation }) {
             </TouchableOpacity>
           </View>
 
+          {/* Account Section */}
+          <View style={styles.accountSection}>
+            <View style={styles.accountHeader}>
+              <Ionicons name="person-circle" size={32} color={Colors.primary} />
+              <View style={styles.accountInfo}>
+                <Text style={styles.accountName}>
+                  {user?.firstName || user?.emailAddresses?.[0]?.emailAddress || 'User'}
+                </Text>
+                <Text style={styles.accountEmail}>
+                  {user?.emailAddresses?.[0]?.emailAddress}
+                </Text>
+                <Text style={styles.signInMethod}>
+                  Signed in with {getSignInMethod()}
+                </Text>
+              </View>
+            </View>
+          </View>
+
           {/* Menu Items */}
           <View style={styles.menuItems}>
             {menuItems.map((item) => (
@@ -167,6 +229,18 @@ export default function HamburgerMenu({ navigation }) {
                 />
               </TouchableOpacity>
             ))}
+          </View>
+
+          {/* Sign Out Section */}
+          <View style={styles.signOutSection}>
+            <TouchableOpacity
+              style={styles.signOutButton}
+              onPress={handleSignOut}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="log-out-outline" size={24} color={Colors.error} />
+              <Text style={styles.signOutText}>Sign Out</Text>
+            </TouchableOpacity>
           </View>
         </Animated.View>
       </Modal>
@@ -262,6 +336,59 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '500',
     color: Colors.textPrimary,
+    marginLeft: 8,
+  },
+  accountSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    backgroundColor: Colors.backgroundSubtle,
+  },
+  accountHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  accountInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  accountName: {
+    fontSize: Typography.base,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  accountEmail: {
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
+    marginBottom: 4,
+  },
+  signInMethod: {
+    fontSize: Typography.xs,
+    color: Colors.textTertiary,
+    fontStyle: 'italic',
+  },
+  signOutSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  signOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.error,
+    backgroundColor: Colors.backgroundElevated,
+  },
+  signOutText: {
+    fontSize: Typography.base,
+    fontWeight: '500',
+    color: Colors.error,
     marginLeft: 8,
   },
 });

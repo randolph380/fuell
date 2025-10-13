@@ -40,6 +40,7 @@ function AppNavigator() {
           component={HomeScreen}
           options={{ 
             title: 'Fuell',
+            headerLeft: null, // Remove back button
             headerTitle: () => (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Text style={{ color: Colors.textInverse, fontSize: 17, fontWeight: '600', letterSpacing: -0.4 }}>Fuell</Text>

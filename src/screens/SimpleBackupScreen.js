@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography } from '../constants/colors';
 import SimpleBackup from '../services/simpleBackup';
+import StorageService from '../services/storage';
 
 export default function SimpleBackupScreen({ navigation }) {
   const [stats, setStats] = useState({
@@ -73,6 +74,43 @@ export default function SimpleBackupScreen({ navigation }) {
     );
   };
 
+  const handleClearAllData = () => {
+    Alert.alert(
+      '⚠️ Clear All Data',
+      'This will permanently delete ALL your data:\n\n• All meals and meal history\n• All saved meal templates\n• All daily macro records\n• All user preferences\n\nThis action cannot be undone. Are you sure you want to continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Clear All Data', 
+          style: 'destructive',
+          onPress: async () => {
+            setIsLoading(true);
+            try {
+              await StorageService.clearAllData();
+              Alert.alert(
+                'Data Cleared',
+                'All your data has been permanently deleted. You can now test importing a backup.',
+                [
+                  { 
+                    text: 'OK', 
+                    onPress: () => {
+                      loadStats(); // Refresh stats to show 0
+                    }
+                  }
+                ]
+              );
+            } catch (error) {
+              console.error('Clear data error:', error);
+              Alert.alert('Error', 'Failed to clear data. Please try again.');
+            } finally {
+              setIsLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Backup & Restore</Text>
@@ -124,6 +162,17 @@ export default function SimpleBackupScreen({ navigation }) {
         <Text style={[styles.buttonText, styles.importButtonText]}>Import Backup</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity
+        style={[styles.button, styles.clearButton]}
+        onPress={handleClearAllData}
+        disabled={isLoading}
+      >
+        <Ionicons name="trash-outline" size={24} color={Colors.textInverse} />
+        <Text style={styles.buttonText}>
+          {isLoading ? 'Clearing...' : 'Clear All Data'}
+        </Text>
+      </TouchableOpacity>
+
       <View style={styles.infoBox}>
         <Text style={styles.infoTitle}>How it works:</Text>
         <Text style={styles.infoText}>
@@ -137,6 +186,9 @@ export default function SimpleBackupScreen({ navigation }) {
         </Text>
         <Text style={styles.infoText}>
           • <Text style={styles.bold}>Account-specific:</Text> Backups are tied to your user account
+        </Text>
+        <Text style={styles.infoText}>
+          • <Text style={styles.bold}>Clear Data:</Text> Wipe all data to test backup/restore functionality
         </Text>
       </View>
     </ScrollView>
@@ -199,6 +251,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     borderWidth: 1,
     borderColor: Colors.primary,
+  },
+  clearButton: {
+    backgroundColor: '#dc3545', // Red color for destructive action
   },
   buttonText: {
     ...Typography.button,

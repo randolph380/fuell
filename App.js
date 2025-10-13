@@ -26,11 +26,12 @@ function AppNavigator() {
             shadowOpacity: 0,
             borderBottomWidth: 1,
             borderBottomColor: Colors.border,
+            height: 60, // Reduced from default ~90px
           },
           headerTintColor: Colors.textInverse,
           headerTitleStyle: {
             fontWeight: '600',
-            fontSize: 17,
+            fontSize: 16, // Reduced from 17
             letterSpacing: -0.4,
           },
         }}
@@ -42,8 +43,8 @@ function AppNavigator() {
             title: 'Fuell',
             headerTitle: () => (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={{ color: Colors.textInverse, fontSize: 17, fontWeight: '600', letterSpacing: -0.4 }}>Fuell</Text>
-                <Ionicons name="flash" size={16} color={Colors.textInverse} style={{ marginLeft: 6 }} />
+                <Text style={{ color: Colors.textInverse, fontSize: 16, fontWeight: '600', letterSpacing: -0.4 }}>Fuell</Text>
+                <Ionicons name="flash" size={14} color={Colors.textInverse} style={{ marginLeft: 4 }} />
               </View>
             )
           }}

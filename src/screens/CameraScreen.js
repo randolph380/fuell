@@ -658,37 +658,34 @@ const CameraScreen = ({ navigation, route }) => {
             
             {imageUri ? (
               <View>
-                <View style={styles.imageContainer}>
-                  <Image source={{ uri: imageUri }} style={styles.imagePreview} />
-                  <TouchableOpacity style={styles.removeImageButton} onPress={() => {
-                    setImageUri(null);
-                    setAdditionalImages([]);
-                  }}>
-                    <Ionicons name="close-circle" size={24} color={Colors.error} />
-                  </TouchableOpacity>
-                </View>
-                
-                {/* Show additional images if any */}
-                {additionalImages.length > 0 && (
-                  <View style={styles.additionalImagesContainer}>
-                    <Text style={styles.additionalImagesLabel}>+ {additionalImages.length} more image{additionalImages.length > 1 ? 's' : ''}</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.additionalImagesScroll}>
-                      {additionalImages.map((uri, index) => (
-                        <View key={index} style={styles.additionalImageWrapper}>
-                          <Image source={{ uri }} style={styles.additionalImage} />
-                          <TouchableOpacity 
-                            style={styles.removeAdditionalImageButton} 
-                            onPress={() => {
-                              setAdditionalImages(prev => prev.filter((_, i) => i !== index));
-                            }}
-                          >
-                            <Ionicons name="close-circle" size={20} color={Colors.error} />
-                          </TouchableOpacity>
-                        </View>
-                      ))}
-                    </ScrollView>
+                {/* All images in one horizontal row */}
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.allImagesScroll}>
+                  {/* Main image */}
+                  <View style={styles.imageWrapper}>
+                    <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+                    <TouchableOpacity style={styles.removeImageButton} onPress={() => {
+                      setImageUri(null);
+                      setAdditionalImages([]);
+                    }}>
+                      <Ionicons name="close-circle" size={20} color={Colors.error} />
+                    </TouchableOpacity>
                   </View>
-                )}
+                  
+                  {/* Additional images */}
+                  {additionalImages.map((uri, index) => (
+                    <View key={index} style={styles.imageWrapper}>
+                      <Image source={{ uri }} style={styles.imagePreview} />
+                      <TouchableOpacity 
+                        style={styles.removeImageButton} 
+                        onPress={() => {
+                          setAdditionalImages(prev => prev.filter((_, i) => i !== index));
+                        }}
+                      >
+                        <Ionicons name="close-circle" size={20} color={Colors.error} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
                 
                 {/* Add Another Photo buttons */}
                 <View style={styles.addMorePhotosSection}>
@@ -1135,9 +1132,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     letterSpacing: Typography.letterSpacingNormal,
   },
-  imageContainer: {
-    position: 'relative',
+  allImagesScroll: {
     marginTop: 8,
+  },
+  imageWrapper: {
+    position: 'relative',
+    marginRight: 8,
   },
   imagePreview: {
     width: 60,
@@ -1150,19 +1150,6 @@ const styles = StyleSheet.create({
     right: -2,
     backgroundColor: '#fff',
     borderRadius: 10,
-  },
-  additionalImagesContainer: {
-    marginTop: 6,
-    paddingTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
-  },
-  additionalImagesLabel: {
-    fontSize: Typography.xs - 1,
-    color: Colors.textTertiary,
-    marginBottom: 3,
-    fontWeight: '500',
-    letterSpacing: Typography.letterSpacingNormal,
   },
   addMorePhotosSection: {
     flexDirection: 'row',
@@ -1186,27 +1173,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.sm,
     color: Colors.accent,
     fontWeight: '500',
-  },
-  additionalImagesScroll: {
-    flexDirection: 'row',
-  },
-  additionalImageWrapper: {
-    position: 'relative',
-    marginRight: 8,
-  },
-  additionalImage: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.sm,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  removeAdditionalImageButton: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#fff',
-    borderRadius: 8,
   },
   actionButtonsRow: {
     flexDirection: 'row',

@@ -1188,7 +1188,7 @@ const CameraScreen = ({ navigation, route }) => {
                       
                       // Apply portion multiplier to extended metrics
                       if (baseExtendedMetrics) {
-                        const updatedExtendedMetrics = {};
+                        const updatedExtendedMetrics = { ...currentExtendedMetrics }; // Start with original
                         Object.keys(baseExtendedMetrics).forEach(key => {
                           if (baseExtendedMetrics[key] != null) {
                             updatedExtendedMetrics[key] = Math.round(baseExtendedMetrics[key] * portion * 100) / 100;

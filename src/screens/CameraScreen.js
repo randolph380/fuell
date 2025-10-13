@@ -38,6 +38,7 @@ const CameraScreen = ({ navigation, route }) => {
   const [mealPreparation, setMealPreparation] = useState(null); // null, 'prepackaged', 'restaurant', 'homemade'
   const [showMacroEditor, setShowMacroEditor] = useState(false);
   const [editedMacros, setEditedMacros] = useState(null);
+  const [editedExtendedMetrics, setEditedExtendedMetrics] = useState(null);
   const [portionSize, setPortionSize] = useState('1');
   const scrollViewRef = React.useRef(null);
   
@@ -923,7 +924,7 @@ const CameraScreen = ({ navigation, route }) => {
             {/* Action Buttons */}
             <View style={styles.actionButtons}>
               <TouchableOpacity style={styles.editButton} onPress={() => setShowMacroEditor(true)}>
-                <Text style={styles.editButtonText}>Edit meal</Text>
+                <Text style={styles.editButtonText}>Edit macros</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.logButton} onPress={logMeal}>
                 <Text style={styles.logButtonText}>Log meal</Text>
@@ -1040,6 +1041,108 @@ const CameraScreen = ({ navigation, route }) => {
                   </View>
                 </View>
                 
+                {/* Extended Metrics Section */}
+                {currentExtendedMetrics && (
+                  <View style={styles.extendedMetricsSection}>
+                    <Text style={styles.baseMacrosLabel}>Additional Metrics (1x portion):</Text>
+                    
+                    {currentExtendedMetrics.fiber != null && (
+                      <View style={styles.macroEditorRow}>
+                        <Text style={styles.macroEditorLabel}>Fiber (g)</Text>
+                        <TextInput
+                          style={styles.macroEditorInput}
+                          value={(editedExtendedMetrics?.fiber ?? currentExtendedMetrics.fiber).toString()}
+                          onChangeText={(text) => setEditedExtendedMetrics({
+                            ...editedExtendedMetrics,
+                            fiber: parseFloat(text) || 0
+                          })}
+                          keyboardType="numeric"
+                          selectTextOnFocus
+                          returnKeyType="done"
+                          blurOnSubmit={true}
+                          onSubmitEditing={() => Keyboard.dismiss()}
+                        />
+                      </View>
+                    )}
+                    
+                    {currentExtendedMetrics.caffeine != null && (
+                      <View style={styles.macroEditorRow}>
+                        <Text style={styles.macroEditorLabel}>Caffeine (mg)</Text>
+                        <TextInput
+                          style={styles.macroEditorInput}
+                          value={(editedExtendedMetrics?.caffeine ?? currentExtendedMetrics.caffeine).toString()}
+                          onChangeText={(text) => setEditedExtendedMetrics({
+                            ...editedExtendedMetrics,
+                            caffeine: parseFloat(text) || 0
+                          })}
+                          keyboardType="numeric"
+                          selectTextOnFocus
+                          returnKeyType="done"
+                          blurOnSubmit={true}
+                          onSubmitEditing={() => Keyboard.dismiss()}
+                        />
+                      </View>
+                    )}
+                    
+                    {currentExtendedMetrics.freshProduce != null && (
+                      <View style={styles.macroEditorRow}>
+                        <Text style={styles.macroEditorLabel}>Fresh Produce (g)</Text>
+                        <TextInput
+                          style={styles.macroEditorInput}
+                          value={(editedExtendedMetrics?.freshProduce ?? currentExtendedMetrics.freshProduce).toString()}
+                          onChangeText={(text) => setEditedExtendedMetrics({
+                            ...editedExtendedMetrics,
+                            freshProduce: parseFloat(text) || 0
+                          })}
+                          keyboardType="numeric"
+                          selectTextOnFocus
+                          returnKeyType="done"
+                          blurOnSubmit={true}
+                          onSubmitEditing={() => Keyboard.dismiss()}
+                        />
+                      </View>
+                    )}
+                    
+                    {currentExtendedMetrics.processedPercent != null && (
+                      <View style={styles.macroEditorRow}>
+                        <Text style={styles.macroEditorLabel}>Processed %</Text>
+                        <TextInput
+                          style={styles.macroEditorInput}
+                          value={(editedExtendedMetrics?.processedPercent ?? currentExtendedMetrics.processedPercent).toString()}
+                          onChangeText={(text) => setEditedExtendedMetrics({
+                            ...editedExtendedMetrics,
+                            processedPercent: parseFloat(text) || 0
+                          })}
+                          keyboardType="numeric"
+                          selectTextOnFocus
+                          returnKeyType="done"
+                          blurOnSubmit={true}
+                          onSubmitEditing={() => Keyboard.dismiss()}
+                        />
+                      </View>
+                    )}
+                    
+                    {currentExtendedMetrics.ultraProcessedPercent != null && (
+                      <View style={styles.macroEditorRow}>
+                        <Text style={styles.macroEditorLabel}>Ultra-processed %</Text>
+                        <TextInput
+                          style={styles.macroEditorInput}
+                          value={(editedExtendedMetrics?.ultraProcessedPercent ?? currentExtendedMetrics.ultraProcessedPercent).toString()}
+                          onChangeText={(text) => setEditedExtendedMetrics({
+                            ...editedExtendedMetrics,
+                            ultraProcessedPercent: parseFloat(text) || 0
+                          })}
+                          keyboardType="numeric"
+                          selectTextOnFocus
+                          returnKeyType="done"
+                          blurOnSubmit={true}
+                          onSubmitEditing={() => Keyboard.dismiss()}
+                        />
+                      </View>
+                    )}
+                  </View>
+                )}
+                
                 {/* Preview of final values */}
                 {portionSize && parseFloat(portionSize) !== 1 && (
                   <View style={styles.previewSection}>
@@ -1060,6 +1163,7 @@ const CameraScreen = ({ navigation, route }) => {
                       Keyboard.dismiss();
                       setShowMacroEditor(false);
                       setEditedMacros(null);
+                      setEditedExtendedMetrics(null);
                       setPortionSize('1');
                     }}
                   >
@@ -1072,6 +1176,7 @@ const CameraScreen = ({ navigation, route }) => {
                       Keyboard.dismiss();
                       const portion = parseFloat(portionSize) || 1;
                       const baseMacros = editedMacros || currentMacros;
+                      const baseExtendedMetrics = editedExtendedMetrics || currentExtendedMetrics;
                       
                       // Apply portion multiplier to macros
                       setCurrentMacros({
@@ -1081,8 +1186,20 @@ const CameraScreen = ({ navigation, route }) => {
                         fat: Math.round(baseMacros.fat * portion),
                       });
                       
+                      // Apply portion multiplier to extended metrics
+                      if (baseExtendedMetrics) {
+                        const updatedExtendedMetrics = {};
+                        Object.keys(baseExtendedMetrics).forEach(key => {
+                          if (baseExtendedMetrics[key] != null) {
+                            updatedExtendedMetrics[key] = Math.round(baseExtendedMetrics[key] * portion * 100) / 100;
+                          }
+                        });
+                        setCurrentExtendedMetrics(updatedExtendedMetrics);
+                      }
+                      
                       setShowMacroEditor(false);
                       setEditedMacros(null);
+                      setEditedExtendedMetrics(null);
                       setPortionSize('1');
                     }}
                   >
@@ -1608,6 +1725,13 @@ const styles = StyleSheet.create({
     letterSpacing: Typography.letterSpacingWide,
   },
   macroEditorInputs: {
+    gap: Spacing.md,
+  },
+  extendedMetricsSection: {
+    marginTop: Spacing.lg,
+    paddingTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
     gap: Spacing.md,
   },
   macroEditorRow: {

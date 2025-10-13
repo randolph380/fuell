@@ -1,6 +1,33 @@
 # Changes Made - Fuel V1 Production Polish
 
-## What Changed Today
+## Latest Update: Major Prompt Engineering Improvements (Post-V1)
+
+### **Enhanced AI Accuracy System**
+**Files Modified:**
+- `src/services/api.js` - Complete prompt system overhaul
+
+**Major Improvements:**
+- **Per-Item Database Retrieval**: Forces AI to match foods against USDA FDC, Open Food Facts, and restaurant databases
+- **Enhanced Portion Estimation**: Requires reference objects (credit card, fork, plate) for size calibration
+- **Recipe Decomposition**: Parses complex meals into ingredients + cooking methods with scientific multipliers
+- **Hard Consistency Checks**: Enforces Atwater energy constraints with automatic rescaling
+- **Confidence System**: Per-item confidence scoring, source tracking, and active queries
+- **Updated JSON Structure**: Added foodItems, atwaterCheck, and activeQuery fields
+
+**Technical Details:**
+- **Database Matching**: USDA FDC for whole foods, Open Food Facts for packaged items, restaurant menus for branded items
+- **Cooking Method Multipliers**: Frying (+15-25% oil), Grilling (+5-10% oil), Steaming (no oil), Sautéing (+10-15% oil)
+- **Atwater Validation**: |calories - (4×carbs + 4×protein + 9×fat)| ≤ 10 calories tolerance
+- **Active Queries**: Triggers targeted questions when overall certainty <0.6
+- **Source Attribution**: Always cites data sources (USDA FDC, Open Food Facts, Restaurant Menu, or "Estimated")
+
+**Impact:**
+- Significantly improved macro estimation accuracy
+- Better portion size detection through reference objects
+- More reliable results through scientific constraint validation
+- Enhanced user experience with confidence indicators and source transparency
+
+## What Changed Today (Original V1 Polish)
 
 ### 1. **Removed Purple Ribbon & Emojis**
 **Files Modified:**

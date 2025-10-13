@@ -6,20 +6,77 @@ This document outlines the comprehensive prompt engineering strategy used in the
 
 ## 🎯 Core Strategy Principles
 
-### 1. **Context-Aware Prompting**
+### 1. **Database-Driven Accuracy**
+- **Per-Item Retrieval**: Forces AI to identify foods and match against databases (USDA FDC, Open Food Facts, restaurant menus)
+- **Source Attribution**: Always cites data sources for transparency and accuracy
+- **No Guessing Policy**: Unmatched items are clearly flagged with higher uncertainty
+
+### 2. **Scientific Validation**
+- **Atwater Constraints**: Enforces energy balance validation |calories - (4×carbs + 4×protein + 9×fat)| ≤ 10
+- **Automatic Rescaling**: Identifies least certain macro and adjusts to fit constraints
+- **Cooking Method Multipliers**: Scientific multipliers for oil absorption and water loss
+
+### 3. **Enhanced Portion Estimation**
+- **Reference Object Detection**: Actively looks for credit cards, forks, plates, hands for size calibration
+- **Multi-Angle Analysis**: Uses different image angles to triangulate portion size
+- **Density Conversion**: Food class → density mapping for volume to weight conversion
+
+### 4. **Context-Aware Prompting**
 - **Dynamic Context Building**: Prompts adapt based on user input type (images, text, multiple images)
 - **Meal Preparation Context**: Different prompts for restaurant vs. home-cooked vs. packaged meals
 - **Multi-Image Intelligence**: Specialized handling for nutrition labels, scales, and food photos
 
-### 2. **Structured Output Control**
+### 5. **Confidence & Active Queries**
+- **Per-Item Confidence**: Rates each food item separately (0-1 scale)
+- **Active Queries**: Triggers targeted questions when overall certainty <0.6
+- **Source Tracking**: Provides data sources and confidence levels for transparency
+
+### 6. **Structured Output Control**
 - **JSON Schema Enforcement**: Strict formatting requirements for consistent data extraction
 - **Fallback Mechanisms**: Multiple parsing strategies (JSON → regex → manual extraction)
 - **Validation Layers**: Built-in data validation and error handling
 
-### 3. **Conversational Refinement**
+### 7. **Conversational Refinement**
 - **Iterative Improvement**: Users can refine estimates through natural conversation
 - **Context Preservation**: Maintains conversation history for coherent interactions
 - **Confidence Scoring**: Transparent uncertainty communication to users
+
+## 🚀 Enhanced Features (Latest Update)
+
+### **Per-Item Database Retrieval System**
+- **USDA FDC Matching**: Primary source for whole foods with exact nutritional data
+- **Open Food Facts**: Packaged and branded food items with barcode data
+- **Restaurant Databases**: Chain restaurant menu items with standardized nutrition
+- **Source Attribution**: Always cites data source for transparency
+- **Unmatched Handling**: Clearly flags items with no database match and higher uncertainty
+
+### **Enhanced Portion Estimation**
+- **Reference Object Detection**: Actively looks for credit cards (3.375" × 2.125"), forks (7-8"), plates (10-12")
+- **Multi-Angle Analysis**: Uses different image angles to triangulate portion size
+- **Density Conversion Table**: Food class → density mapping for volume to weight conversion
+- **3D Volume Estimation**: Uses depth perception cues and cross-references between images
+
+### **Recipe Decomposition & Cooking Methods**
+- **Ingredient Breakdown**: Identifies base ingredients, cooking methods, and added fats/oils
+- **Cooking Method Multipliers**:
+  - **Frying**: +15-25% oil absorption, +5-10% water loss
+  - **Grilling**: +5-10% oil absorption, +10-15% water loss
+  - **Steaming**: No oil, +5-10% water gain
+  - **Sautéing**: +10-15% oil absorption, +5-10% water loss
+- **Default Templates**: Common dish templates (fried rice, stir-fry, pasta with sauce)
+- **User Overrides**: Allows user to specify cooking method if unclear
+
+### **Hard Consistency Checks (Atwater Constraints)**
+- **Energy Balance Validation**: |calories - (4×carbs + 4×protein + 9×fat)| ≤ 10 calories
+- **Automatic Rescaling**: Identifies least certain macro and rescales to fit constraint
+- **Clarification Requests**: Asks user for clarification if rescaling >20% of any macro
+- **Scientific Accuracy**: Ensures all estimates follow established nutritional science
+
+### **Confidence & Active Query System**
+- **Per-Item Confidence**: Rates each food item separately (0-1 scale)
+- **Overall Certainty**: Calculates weighted average of all items
+- **Active Queries**: If overall certainty <0.6, asks ONE targeted question
+- **Source Tracking**: Provides data sources and confidence levels for transparency
 
 ## 📋 Prompt Architecture
 
@@ -30,9 +87,13 @@ This document outlines the comprehensive prompt engineering strategy used in the
 **Location**: `src/services/api.js` lines 121-277
 
 **Key Components**:
+- **Per-Item Database Retrieval**: Forces identification and database matching for each food item
+- **Enhanced Portion Estimation**: Reference object detection and multi-angle analysis
+- **Recipe Decomposition**: Ingredient breakdown with cooking method multipliers
+- **Atwater Constraint Validation**: Scientific energy balance enforcement
+- **Confidence & Active Queries**: Per-item confidence scoring and targeted questions
 - **Context Detection**: Multi-image vs. single-item analysis
 - **Preparation Context**: Restaurant, home-cooked, or packaged meal handling
-- **Portion Estimation**: Visual reference calibration and weight assumptions
 - **NOVA Classification**: Scientific food processing level assessment
 - **Extended Metrics**: Fiber, caffeine, fresh produce, processed food percentages
 

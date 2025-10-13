@@ -10,6 +10,8 @@ The Fuel app is a React Native macro tracking application with a focus on clinic
 - **Storage**: AsyncStorage (local) + Cloud backup
 - **State Management**: React hooks + Context
 - **Styling**: StyleSheet with design system
+- **AI Analysis**: Claude Sonnet 4.5 with enhanced prompt engineering
+- **Food Databases**: USDA FDC, Open Food Facts, Restaurant menus
 
 ## Folder Structure
 ```
@@ -43,6 +45,46 @@ src/
 - **Design system**: Consistent colors, typography, spacing
 - **Component patterns**: Cards, buttons, forms follow established patterns
 - **Responsive design**: Works across different screen sizes
+
+## AI Analysis System
+
+### Enhanced Prompt Engineering
+- **Per-Item Database Retrieval**: Forces AI to match foods against USDA FDC, Open Food Facts, and restaurant databases
+- **Scientific Validation**: Enforces Atwater energy constraints with automatic rescaling
+- **Enhanced Portion Estimation**: Uses reference objects and multi-angle analysis for accurate sizing
+- **Recipe Decomposition**: Parses complex meals with cooking method multipliers
+- **Confidence System**: Per-item confidence scoring with active queries for low certainty
+
+### Data Sources
+- **USDA FDC**: Primary source for whole foods with exact nutritional data
+- **Open Food Facts**: Packaged and branded food items with barcode data
+- **Restaurant Databases**: Chain restaurant menu items with standardized nutrition
+- **Source Attribution**: Always cites data source for transparency
+
+### Response Structure
+```json
+{
+  "foodItems": [
+    {
+      "name": "Grilled Chicken Breast",
+      "weight": 150,
+      "calories": 250,
+      "protein": 46,
+      "carbs": 0,
+      "fat": 5,
+      "confidence": 0.9,
+      "source": "USDA FDC: Grilled Chicken Breast (100g)",
+      "matched": true
+    }
+  ],
+  "atwaterCheck": {
+    "passed": true,
+    "calculatedCalories": 510,
+    "difference": 0
+  },
+  "activeQuery": null
+}
+```
 
 ## Data Flow
 

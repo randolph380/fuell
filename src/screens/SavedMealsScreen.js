@@ -213,8 +213,8 @@ const SavedMealsScreen = ({ navigation }) => {
                   </View>
                 </View>
               ) : (
-                // Normal Mode - Regular meal card
-                <>
+                // Normal Mode - Regular meal card with action buttons
+                <View style={styles.mealCardContainer}>
                   <MealCard
                     meal={{
                       name: meal.name,
@@ -227,37 +227,25 @@ const SavedMealsScreen = ({ navigation }) => {
                     onPress={() => toggleExpanded(meal.id)}
                   />
                   
-                  {expandedMealId === meal.id && (
-                    <View style={styles.actionButtonsContainer}>
-                      <TouchableOpacity 
-                        key={`log-${meal.id}`}
-                        style={[styles.actionButton, styles.logActionButton]} 
-                        onPress={() => logSavedMeal(meal)}
-                      >
-                        <Ionicons name="add-circle" size={20} color="#fff" />
-                        <Text style={styles.actionButtonText}>Log Meal</Text>
-                      </TouchableOpacity>
-                      
-                      <TouchableOpacity 
-                        key={`edit-${meal.id}`}
-                        style={[styles.actionButton, styles.editButton]} 
-                        onPress={() => startEditingMeal(meal)}
-                      >
-                        <Ionicons name="create-outline" size={20} color={Colors.accent} />
-                        <Text style={[styles.actionButtonText, styles.editButtonText]}>Edit Macros</Text>
-                      </TouchableOpacity>
-                      
-                      <TouchableOpacity 
-                        key={`delete-${meal.id}`}
-                        style={[styles.actionButton, styles.deleteActionButton]} 
-                        onPress={() => deleteSavedMeal(meal.id)}
-                      >
-                        <Ionicons name="trash-outline" size={20} color="#ff4444" />
-                        <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Delete</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </>
+                  {/* Action Buttons - Always Visible */}
+                  <View style={styles.mealActionButtons}>
+                    <TouchableOpacity 
+                      style={styles.editMealButton} 
+                      onPress={() => startEditingMeal(meal)}
+                    >
+                      <Ionicons name="create-outline" size={18} color={Colors.primary} />
+                      <Text style={styles.editMealButtonText}>Edit</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                      style={styles.logMealButton} 
+                      onPress={() => logSavedMeal(meal)}
+                    >
+                      <Ionicons name="add-circle" size={18} color="#fff" />
+                      <Text style={styles.logMealButtonText}>Log</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               )}
             </View>
           ))}
@@ -395,6 +383,51 @@ const styles = StyleSheet.create({
     fontSize: Typography.sm,
     fontWeight: '500',
     color: Colors.textInverse,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  mealCardContainer: {
+    marginBottom: Spacing.sm,
+  },
+  mealActionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  editMealButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.backgroundElevated,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    ...Shadows.sm,
+  },
+  editMealButtonText: {
+    fontSize: Typography.sm,
+    fontWeight: '500',
+    color: Colors.primary,
+    marginLeft: Spacing.xs,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  logMealButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    ...Shadows.sm,
+  },
+  logMealButtonText: {
+    fontSize: Typography.sm,
+    fontWeight: '500',
+    color: Colors.textInverse,
+    marginLeft: Spacing.xs,
     letterSpacing: Typography.letterSpacingNormal,
   },
   emptyState: {

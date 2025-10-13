@@ -233,14 +233,16 @@ const SavedMealsScreen = ({ navigation }) => {
                       style={styles.inlineEditButton} 
                       onPress={() => startEditingMeal(meal)}
                     >
-                      <Ionicons name="create-outline" size={16} color={Colors.primary} />
+                      <Ionicons name="create-outline" size={20} color={Colors.primary} />
+                      <Text style={styles.inlineEditButtonText}>Edit</Text>
                     </TouchableOpacity>
                     
                     <TouchableOpacity 
                       style={styles.inlineLogButton} 
                       onPress={() => logSavedMeal(meal)}
                     >
-                      <Ionicons name="add-circle" size={16} color="#fff" />
+                      <Ionicons name="add-circle" size={20} color="#fff" />
+                      <Text style={styles.inlineLogButtonText}>Log</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -389,30 +391,49 @@ const styles = StyleSheet.create({
   },
   inlineActionButtons: {
     position: 'absolute',
-    top: Spacing.sm,
-    right: Spacing.sm,
+    top: 0,
+    right: 0,
+    bottom: 0,
     flexDirection: 'row',
-    gap: Spacing.xs,
+    width: 120, // Total width for both buttons
   },
   inlineEditButton: {
-    width: 32,
-    height: 32,
-    borderRadius: BorderRadius.sm,
+    flex: 1,
     backgroundColor: Colors.backgroundElevated,
     borderWidth: 1,
     borderColor: Colors.border,
     justifyContent: 'center',
     alignItems: 'center',
+    borderTopRightRadius: BorderRadius.md,
+    borderBottomRightRadius: 0,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
     ...Shadows.sm,
   },
   inlineLogButton: {
-    width: 32,
-    height: 32,
-    borderRadius: BorderRadius.sm,
+    flex: 1,
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    borderTopRightRadius: BorderRadius.md,
+    borderBottomRightRadius: BorderRadius.md,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
     ...Shadows.sm,
+  },
+  inlineEditButtonText: {
+    fontSize: Typography.xs,
+    fontWeight: '600',
+    color: Colors.primary,
+    marginTop: Spacing.xs,
+    letterSpacing: Typography.letterSpacingTight,
+  },
+  inlineLogButtonText: {
+    fontSize: Typography.xs,
+    fontWeight: '600',
+    color: Colors.textInverse,
+    marginTop: Spacing.xs,
+    letterSpacing: Typography.letterSpacingTight,
   },
   emptyState: {
     alignItems: 'center',

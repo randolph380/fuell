@@ -55,7 +55,7 @@ const CameraScreen = ({ navigation, route }) => {
 
   // Food animation effect
   useEffect(() => {
-    if (isAnalyzing) {
+    if (isAnalyzing || isRefining) {
       const createPulseAnimation = (animValue, delay = 0) => {
         return Animated.loop(
           Animated.sequence([
@@ -88,7 +88,7 @@ const CameraScreen = ({ navigation, route }) => {
         animations.forEach(anim => anim.stop());
       };
     }
-  }, [isAnalyzing]);
+  }, [isAnalyzing, isRefining]);
 
   const takePicture = async () => {
     // Request permission
@@ -885,8 +885,13 @@ const CameraScreen = ({ navigation, route }) => {
             {/* Refining Indicator */}
             {isRefining && (
               <View style={styles.refiningContainer}>
-                <ActivityIndicator size="small" color={Colors.accent} />
-                <Text style={styles.refiningText}>Refining estimate...</Text>
+                <View style={styles.foodAnimation}>
+                  <Animated.View style={[styles.foodDot, styles.foodDot1, { opacity: dot1Anim }]} />
+                  <Animated.View style={[styles.foodDot, styles.foodDot2, { opacity: dot2Anim }]} />
+                  <Animated.View style={[styles.foodDot, styles.foodDot3, { opacity: dot3Anim }]} />
+                  <Animated.View style={[styles.foodDot, styles.foodDot4, { opacity: dot4Anim }]} />
+                  <Animated.View style={[styles.foodDot, styles.foodDot5, { opacity: dot5Anim }]} />
+                </View>
               </View>
             )}
 
@@ -1325,7 +1330,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundElevated,
     marginHorizontal: Spacing.base,
     marginBottom: Spacing.sm,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.base,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
@@ -1434,14 +1439,16 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     backgroundColor: Colors.backgroundElevated,
     maxHeight: 100,
+    minHeight: 44,
   },
   sendButton: {
     backgroundColor: Colors.accent,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.base,
     borderRadius: BorderRadius.base,
     alignItems: 'center',
     justifyContent: 'center',
+    height: 44,
     ...Shadows.sm,
   },
   refiningContainer: {

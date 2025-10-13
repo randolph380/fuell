@@ -635,7 +635,7 @@ const CameraScreen = ({ navigation, route }) => {
           {/* Text Input */}
           <View style={styles.inputMethod}>
             <Text style={styles.methodTitle}>Describe your meal</Text>
-            <Text style={styles.methodSubtitle}>Include details like: specific ingredients, weights/amounts, brands, cooking methods, or portion sizes (e.g., "200g grilled chicken breast, 1 cup brown rice, Chobani plain yogurt")</Text>
+            <Text style={styles.methodSubtitle}>Include specific ingredients, weights, brands, cooking methods, and portion sizes for accurate analysis.</Text>
             <TextInput
               style={styles.textInput}
               placeholder="Describe your meal..."
@@ -654,7 +654,7 @@ const CameraScreen = ({ navigation, route }) => {
           {/* Photo Input */}
           <View style={styles.inputMethod}>
             <Text style={styles.methodTitle}>Upload photos of your meal</Text>
-            <Text style={styles.methodSubtitle}>Take photos of: meal, ingredients, nutrition labels, preparation steps, packaging, or receipts</Text>
+            <Text style={styles.methodSubtitle}>Capture images of your meal, ingredients, nutrition labels, preparation steps, packaging, or receipts.</Text>
             
             {imageUri ? (
               <View>
@@ -1078,28 +1078,28 @@ const styles = StyleSheet.create({
     letterSpacing: Typography.letterSpacingNormal,
   },
   inputMethods: {
-    padding: 20,
-    paddingTop: 10,
+    padding: 16,
+    paddingTop: 8,
   },
   inputMethod: {
     backgroundColor: Colors.backgroundElevated,
     borderRadius: BorderRadius.md,
-    padding: Spacing.base,
-    marginBottom: Spacing.base,
+    padding: 10,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: Colors.border,
   },
   methodTitle: {
     fontSize: Typography.base,
     fontWeight: '600',
-    marginBottom: Spacing.sm,
+    marginBottom: 6,
     color: Colors.textPrimary,
     letterSpacing: Typography.letterSpacingNormal,
   },
   methodSubtitle: {
     fontSize: Typography.sm * 0.7,
     color: Colors.textSecondary,
-    marginBottom: Spacing.base,
+    marginBottom: 8,
     letterSpacing: Typography.letterSpacingNormal,
     lineHeight: Typography.sm * 0.7 * 1.4,
   },
@@ -1107,29 +1107,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: BorderRadius.base,
-    padding: Spacing.md,
+    padding: 8,
     fontSize: Typography.base,
     color: Colors.textPrimary,
-    minHeight: 60,
+    minHeight: 48,
     textAlignVertical: 'top',
   },
   uploadSection: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginTop: 10,
+    marginTop: 8,
   },
   uploadButton: {
     alignItems: 'center',
-    padding: Spacing.lg,
+    padding: 12,
     borderWidth: 1.5,
     borderColor: Colors.accent,
     borderRadius: BorderRadius.base,
     borderStyle: 'dashed',
     flex: 1,
-    marginHorizontal: 5,
+    marginHorizontal: 4,
   },
   uploadText: {
-    marginTop: Spacing.sm,
+    marginTop: 6,
     fontSize: Typography.sm,
     color: Colors.accent,
     fontWeight: '500',
@@ -1137,50 +1137,50 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     position: 'relative',
-    marginTop: 10,
+    marginTop: 8,
   },
   imagePreview: {
     width: '100%',
-    height: 80,
+    height: 64,
     borderRadius: BorderRadius.base,
   },
   removeImageButton: {
     position: 'absolute',
-    top: 10,
-    right: 10,
+    top: 8,
+    right: 8,
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 10,
   },
   additionalImagesContainer: {
-    marginTop: Spacing.sm,
-    paddingTop: Spacing.sm,
+    marginTop: 6,
+    paddingTop: 6,
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
   },
   additionalImagesLabel: {
     fontSize: Typography.xs - 1,
     color: Colors.textTertiary,
-    marginBottom: Spacing.xs,
+    marginBottom: 3,
     fontWeight: '500',
     letterSpacing: Typography.letterSpacingNormal,
   },
   addMorePhotosSection: {
     flexDirection: 'row',
-    gap: Spacing.sm,
-    marginTop: Spacing.md,
+    gap: 6,
+    marginTop: 10,
   },
   addMoreButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
     borderRadius: BorderRadius.base,
     borderWidth: 1,
     borderColor: Colors.accent,
     backgroundColor: Colors.backgroundElevated,
-    gap: Spacing.xs,
+    gap: 3,
   },
   addMoreText: {
     fontSize: Typography.sm,
@@ -1192,40 +1192,40 @@ const styles = StyleSheet.create({
   },
   additionalImageWrapper: {
     position: 'relative',
-    marginRight: 10,
+    marginRight: 8,
   },
   additionalImage: {
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
     borderColor: '#e0e0e0',
   },
   removeAdditionalImageButton: {
     position: 'absolute',
-    top: -5,
-    right: -5,
+    top: -4,
+    right: -4,
     backgroundColor: '#fff',
-    borderRadius: 10,
+    borderRadius: 8,
   },
   actionButtonsRow: {
     flexDirection: 'row',
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.base,
-    gap: Spacing.sm,
+    marginHorizontal: 12,
+    marginTop: 6,
+    marginBottom: 8,
+    gap: 6,
   },
   halfButton: {
     flex: 1,
   },
   analyzeButton: {
     backgroundColor: Colors.primary,
-    paddingVertical: Spacing.base,
+    paddingVertical: 10,
     borderRadius: BorderRadius.base,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    gap: Spacing.xs,
+    gap: 3,
     ...Shadows.sm,
   },
   analyzeButtonText: {
@@ -1236,12 +1236,12 @@ const styles = StyleSheet.create({
   },
   quickLogButton: {
     backgroundColor: Colors.accent,
-    paddingVertical: Spacing.base,
+    paddingVertical: 10,
     borderRadius: BorderRadius.base,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    gap: Spacing.xs,
+    gap: 3,
     ...Shadows.sm,
   },
   quickLogButtonText: {

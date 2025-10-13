@@ -1287,13 +1287,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.sm,
-    height: 20,
+    height: 25,
   },
   foodDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 3,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginHorizontal: 4,
   },
   foodDot1: {
     backgroundColor: '#FF6B6B', // Red
@@ -1316,7 +1316,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   loadingText: {
-    fontSize: Typography.sm,
+    fontSize: Typography.base,
     color: Colors.textPrimary,
     fontWeight: '500',
     letterSpacing: Typography.letterSpacingNormal,

@@ -51,17 +51,19 @@ const DateNavigator = ({ currentDate, onDateChange, navigation }) => {
     <View style={styles.container}>
       <HamburgerMenu navigation={navigation} />
       
-      <TouchableOpacity style={styles.button} onPress={goToPreviousDay} activeOpacity={0.7}>
-        <Ionicons name="chevron-back" size={20} color={Colors.textSecondary} />
-      </TouchableOpacity>
-      
       <View style={styles.dateContainer}>
         <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
       </View>
       
-      <TouchableOpacity style={styles.button} onPress={goToNextDay} activeOpacity={0.7}>
-        <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
-      </TouchableOpacity>
+      <View style={styles.arrowButtons}>
+        <TouchableOpacity style={styles.button} onPress={goToPreviousDay} activeOpacity={0.7}>
+          <Ionicons name="chevron-back" size={20} color={Colors.textSecondary} />
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.button} onPress={goToNextDay} activeOpacity={0.7}>
+          <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -96,6 +98,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textPrimary,
     letterSpacing: Typography.letterSpacingWide,
+  },
+  arrowButtons: {
+    flexDirection: 'row',
+    gap: 8,
   },
 });
 

@@ -1,5 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import React from 'react';
+import { Text, View } from 'react-native';
 import { ClerkWrapper } from './src/components/ClerkWrapper';
 import { Colors } from './src/constants/colors';
 import CameraScreen from './src/screens/CameraScreen';
@@ -35,7 +38,15 @@ function AppNavigator() {
         <Stack.Screen 
           name="Home" 
           component={HomeScreen}
-          options={{ title: 'Fuell' }}
+          options={{ 
+            title: 'Fuell',
+            headerTitle: () => (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={{ color: Colors.textInverse, fontSize: 17, fontWeight: '600', letterSpacing: -0.4 }}>Fuell</Text>
+                <Ionicons name="flash" size={16} color={Colors.textInverse} style={{ marginLeft: 6 }} />
+              </View>
+            )
+          }}
         />
         <Stack.Screen 
           name="Camera" 

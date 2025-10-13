@@ -1,0 +1,161 @@
+# Fuel App - Architecture Documentation
+
+## Overview
+The Fuel app is a React Native macro tracking application with a focus on clinical, professional design and robust data management.
+
+## Tech Stack
+- **Framework**: React Native with Expo
+- **Navigation**: React Navigation
+- **Authentication**: Clerk
+- **Storage**: AsyncStorage (local) + Cloud backup
+- **State Management**: React hooks + Context
+- **Styling**: StyleSheet with design system
+
+## Folder Structure
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ClerkWrapper.js  # Authentication wrapper
+│   └── MealCard.js      # Meal display component
+├── screens/             # Screen components
+│   └── SimpleBackupScreen.js
+├── services/            # Business logic and data
+│   ├── storage.js       # Local storage service
+│   └── simpleBackup.js  # Backup/restore service
+├── constants/           # Design system and constants
+│   └── colors.js        # Colors, typography, spacing
+└── docs/               # Development documentation
+```
+
+## Component Architecture
+
+### Authentication Layer
+- **ClerkWrapper**: Handles authentication state and user management
+- **User-specific storage**: All data is scoped to authenticated users
+- **Session management**: Automatic login/logout handling
+
+### Data Layer
+- **StorageService**: Centralized data management
+- **User-scoped keys**: All storage keys prefixed with user ID
+- **Data types**: Meals, daily macros, saved meals, preferences
+
+### UI Layer
+- **Design system**: Consistent colors, typography, spacing
+- **Component patterns**: Cards, buttons, forms follow established patterns
+- **Responsive design**: Works across different screen sizes
+
+## Data Flow
+
+### User Authentication
+1. User logs in via Clerk
+2. ClerkWrapper sets user ID in StorageService
+3. All subsequent data operations are user-scoped
+
+### Data Operations
+1. User performs action (add meal, update preferences)
+2. Component calls StorageService method
+3. StorageService updates AsyncStorage with user-scoped key
+4. UI updates reflect changes
+
+### Backup/Restore
+1. User initiates backup
+2. SimpleBackup collects all user data
+3. Data exported as JSON (full backup) or CSV (meals only)
+4. Import restores data to user's account
+
+## Key Patterns
+
+### Component Structure
+```javascript
+import { Colors, Typography, Spacing } from '../constants/colors';
+
+const Component = ({ prop1, prop2 }) => {
+  // State and effects
+  const [state, setState] = useState();
+  
+  // Event handlers
+  const handleAction = () => {};
+  
+  // Render
+  return (
+    <View style={styles.container}>
+      {/* Component content */}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: Colors.background,
+    padding: Spacing.base,
+  },
+});
+```
+
+### Service Pattern
+```javascript
+class ServiceName {
+  static async methodName(params) {
+    try {
+      // Implementation
+      return result;
+    } catch (error) {
+      console.error('Error in methodName:', error);
+      throw error;
+    }
+  }
+}
+```
+
+## Design Principles
+
+### Consistency
+- All components follow the design system
+- Consistent spacing, colors, and typography
+- Standardized component patterns
+
+### User Experience
+- Clinical, professional aesthetic
+- Clear data hierarchy
+- Intuitive navigation
+
+### Data Integrity
+- User-scoped data isolation
+- Robust error handling
+- Backup/restore capabilities
+
+## Security Considerations
+
+### Data Isolation
+- User data is completely isolated by user ID
+- No cross-user data access possible
+- Secure authentication via Clerk
+
+### Local Storage
+- Sensitive data stored locally only
+- No cloud sync by default
+- User controls backup/export
+
+## Performance Considerations
+
+### Storage Efficiency
+- Minimal data duplication
+- Efficient key structure
+- Lazy loading where appropriate
+
+### UI Performance
+- Optimized re-renders
+- Efficient list rendering
+- Proper state management
+
+## Future Considerations
+
+### Scalability
+- Architecture supports additional features
+- Service layer can be extended
+- Component system is modular
+
+### Maintenance
+- Clear separation of concerns
+- Consistent patterns
+- Comprehensive documentation

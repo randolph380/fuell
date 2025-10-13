@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import { Colors, Spacing, Typography } from '../constants/colors';
+import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../constants/colors';
 import SimpleBackup from '../services/simpleBackup';
 import StorageService from '../services/storage';
 
@@ -43,11 +43,11 @@ export default function SimpleBackupScreen({ navigation }) {
       [
         { text: 'Cancel', style: 'cancel' },
         { 
-          text: 'JSON (Full Backup)', 
+          text: 'JSON (Complete Backup)', 
           onPress: () => exportWithFormat('json')
         },
         { 
-          text: 'CSV (Spreadsheet)', 
+          text: 'CSV (Meals Only)', 
           onPress: () => exportWithFormat('csv')
         }
       ]
@@ -184,194 +184,334 @@ export default function SimpleBackupScreen({ navigation }) {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Backup & Restore</Text>
-      <Text style={styles.description}>
-        Create backups of your Fuel app data for safekeeping or transferring to another device.
-      </Text>
+      {/* Header Section */}
+      <View style={styles.headerSection}>
+        <Text style={styles.title}>Data Management</Text>
+        <Text style={styles.subtitle}>
+          Backup, restore, and manage your nutrition data
+        </Text>
+      </View>
 
-      <View style={styles.statsContainer}>
-        <Text style={styles.statsTitle}>Your Data</Text>
-        <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Total Meals:</Text>
-          <Text style={styles.statValue}>{stats.totalMeals}</Text>
+      {/* Data Overview Card */}
+      <View style={styles.overviewCard}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="analytics-outline" size={24} color={Colors.accent} />
+          <Text style={styles.cardTitle}>Your Data Overview</Text>
         </View>
-        <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Saved Meal Templates:</Text>
-          <Text style={styles.statValue}>{stats.savedMeals}</Text>
-        </View>
-        <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Daily Records:</Text>
-          <Text style={styles.statValue}>{stats.dailyRecords}</Text>
-        </View>
-        <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Preferences Set:</Text>
-          <Text style={styles.statValue}>{stats.hasPreferences ? 'Yes' : 'No'}</Text>
+        
+        <View style={styles.statsGrid}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{stats.totalMeals}</Text>
+            <Text style={styles.statLabel}>Total Meals</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{stats.savedMeals}</Text>
+            <Text style={styles.statLabel}>Saved Templates</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{stats.dailyRecords}</Text>
+            <Text style={styles.statLabel}>Daily Records</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{stats.hasPreferences ? '✓' : '○'}</Text>
+            <Text style={styles.statLabel}>Preferences</Text>
+          </View>
         </View>
       </View>
 
-      <TouchableOpacity
-        style={[styles.button, styles.exportButton]}
-        onPress={handleExportBackup}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color={Colors.textInverse} />
-        ) : (
-          <Ionicons name="cloud-upload-outline" size={24} color={Colors.textInverse} />
-        )}
-        <Text style={styles.buttonText}>
-          {isLoading ? 'Creating Backup...' : 'Export Backup'}
-        </Text>
-      </TouchableOpacity>
+      {/* Action Buttons */}
+      <View style={styles.actionsSection}>
+        <Text style={styles.sectionTitle}>Backup & Export</Text>
+        
+        <TouchableOpacity
+          style={[styles.actionButton, styles.primaryButton]}
+          onPress={handleExportBackup}
+          disabled={isLoading}
+        >
+          <View style={styles.buttonContent}>
+            <Ionicons 
+              name={isLoading ? "hourglass-outline" : "cloud-upload-outline"} 
+              size={20} 
+              color={Colors.textInverse} 
+            />
+            <View style={styles.buttonTextContainer}>
+              <Text style={styles.buttonTitle}>
+                {isLoading ? 'Creating Backup...' : 'Export Data'}
+              </Text>
+              <Text style={styles.buttonSubtitle}>
+                Choose JSON (complete) or CSV (analysis)
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textInverse} />
+          </View>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.button, styles.importButton]}
-        onPress={handleImportBackup}
-        disabled={isLoading}
-      >
-        <Ionicons name="cloud-download-outline" size={24} color={Colors.primary} />
-        <Text style={[styles.buttonText, styles.importButtonText]}>Import Backup</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.secondaryButton]}
+          onPress={handleImportBackup}
+          disabled={isLoading}
+        >
+          <View style={styles.buttonContent}>
+            <Ionicons name="cloud-download-outline" size={20} color={Colors.accent} />
+            <View style={styles.buttonTextContainer}>
+              <Text style={[styles.buttonTitle, styles.secondaryButtonTitle]}>
+                Import Backup
+              </Text>
+              <Text style={[styles.buttonSubtitle, styles.secondaryButtonSubtitle]}>
+                Restore from JSON backup file
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.accent} />
+          </View>
+        </TouchableOpacity>
+      </View>
 
-      <TouchableOpacity
-        style={[styles.button, styles.clearButton]}
-        onPress={handleClearAllData}
-        disabled={isLoading}
-      >
-        <Ionicons name="trash-outline" size={24} color={Colors.textInverse} />
-        <Text style={styles.buttonText}>
-          {isLoading ? 'Clearing...' : 'Clear All Data'}
-        </Text>
-      </TouchableOpacity>
+      {/* Danger Zone */}
+      <View style={styles.dangerSection}>
+        <Text style={styles.sectionTitle}>Danger Zone</Text>
+        
+        <TouchableOpacity
+          style={[styles.actionButton, styles.dangerButton]}
+          onPress={handleClearAllData}
+          disabled={isLoading}
+        >
+          <View style={styles.buttonContent}>
+            <Ionicons 
+              name={isLoading ? "hourglass-outline" : "trash-outline"} 
+              size={20} 
+              color={Colors.textInverse} 
+            />
+            <View style={styles.buttonTextContainer}>
+              <Text style={styles.buttonTitle}>
+                {isLoading ? 'Clearing Data...' : 'Clear All Data'}
+              </Text>
+              <Text style={styles.buttonSubtitle}>
+                Permanently delete all your data
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textInverse} />
+          </View>
+        </TouchableOpacity>
+      </View>
 
-      <View style={styles.infoBox}>
-        <Text style={styles.infoTitle}>How it works:</Text>
-        <Text style={styles.infoText}>
-          • <Text style={styles.bold}>Export:</Text> Choose JSON (full backup) or CSV (spreadsheet)
-        </Text>
-        <Text style={styles.infoText}>
-          • <Text style={styles.bold}>Share:</Text> Send the backup file to yourself or another device
-        </Text>
-        <Text style={styles.infoText}>
-          • <Text style={styles.bold}>Import:</Text> Select JSON or CSV backup files from your device
-        </Text>
-        <Text style={styles.infoText}>
-          • <Text style={styles.bold}>Account-specific:</Text> Backups are tied to your user account
-        </Text>
-        <Text style={styles.infoText}>
-          • <Text style={styles.bold}>Clear Data:</Text> Wipe all data to test backup/restore functionality
-        </Text>
+      {/* Information Card */}
+      <View style={styles.infoCard}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="information-circle-outline" size={20} color={Colors.textSecondary} />
+          <Text style={styles.cardTitle}>How It Works</Text>
+        </View>
+        
+        <View style={styles.infoContent}>
+          <View style={styles.infoItem}>
+            <View style={styles.infoIcon}>
+              <Ionicons name="document-text-outline" size={16} color={Colors.accent} />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoTitle}>JSON Export</Text>
+              <Text style={styles.infoDescription}>
+                Complete backup with all data. Can be imported to restore everything.
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.infoItem}>
+            <View style={styles.infoIcon}>
+              <Ionicons name="grid-outline" size={16} color={Colors.accent} />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoTitle}>CSV Export</Text>
+              <Text style={styles.infoDescription}>
+                Meals data only for analysis and plotting in spreadsheet apps.
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.infoItem}>
+            <View style={styles.infoIcon}>
+              <Ionicons name="share-outline" size={16} color={Colors.accent} />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoTitle}>Sharing</Text>
+              <Text style={styles.infoDescription}>
+                Send backup files to yourself or transfer to another device.
+              </Text>
+            </View>
+          </View>
+        </View>
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  // Container
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A', // Dark background like Oura
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    backgroundColor: Colors.background,
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.base,
+  },
+
+  // Header Section
+  headerSection: {
+    marginBottom: Spacing.lg,
   },
   title: {
-    fontSize: 28,
+    fontSize: Typography.xl,
     fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 8,
-    letterSpacing: -0.5,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+    letterSpacing: Typography.letterSpacingTight,
   },
-  description: {
-    fontSize: 16,
-    color: '#8E8E93',
-    marginBottom: 32,
-    lineHeight: 22,
+  subtitle: {
+    fontSize: Typography.base,
+    color: Colors.textSecondary,
+    lineHeight: Typography.lineHeightNormal * Typography.base,
   },
-  statsContainer: {
-    backgroundColor: '#1C1C1E',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#2C2C2E',
+
+  // Overview Card
+  overviewCard: {
+    backgroundColor: Colors.backgroundElevated,
+    borderRadius: BorderRadius.base,
+    padding: Spacing.base,
+    marginBottom: Spacing.lg,
+    ...Shadows.base,
   },
-  statsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 16,
-  },
-  statRow: {
+  cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#2C2C2E',
+    marginBottom: Spacing.base,
   },
-  statLabel: {
-    fontSize: 15,
-    color: '#8E8E93',
+  cardTitle: {
+    fontSize: Typography.base,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginLeft: Spacing.sm,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  statItem: {
+    width: '48%',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   statValue: {
-    fontSize: 15,
-    color: '#FFFFFF',
-    fontWeight: '600',
+    fontSize: Typography.xl,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
   },
-  button: {
+  statLabel: {
+    fontSize: Typography.xs,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+
+  // Section Titles
+  sectionTitle: {
+    fontSize: Typography.base,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.base,
+  },
+
+  // Action Buttons
+  actionsSection: {
+    marginBottom: Spacing.base,
+  },
+  actionButton: {
+    backgroundColor: Colors.backgroundElevated,
+    borderRadius: BorderRadius.base,
+    marginBottom: Spacing.sm,
+    ...Shadows.base,
+  },
+  primaryButton: {
+    backgroundColor: Colors.accent,
+  },
+  secondaryButton: {
+    backgroundColor: Colors.backgroundElevated,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  dangerButton: {
+    backgroundColor: Colors.error,
+  },
+  buttonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    padding: Spacing.base,
   },
-  exportButton: {
-    backgroundColor: '#007AFF',
+  buttonTextContainer: {
+    flex: 1,
+    marginLeft: Spacing.sm,
+    marginRight: Spacing.sm,
   },
-  importButton: {
-    backgroundColor: '#1C1C1E',
-    borderWidth: 1,
-    borderColor: '#2C2C2E',
-  },
-  clearButton: {
-    backgroundColor: '#FF3B30',
-  },
-  buttonText: {
-    fontSize: 16,
+  buttonTitle: {
+    fontSize: Typography.sm,
     fontWeight: '600',
-    color: '#FFFFFF',
-    marginLeft: 8,
+    color: Colors.textInverse,
+    marginBottom: Spacing.xs,
   },
-  importButtonText: {
-    color: '#007AFF',
+  buttonSubtitle: {
+    fontSize: Typography.xs,
+    color: Colors.textInverse,
+    opacity: 0.8,
   },
-  infoBox: {
-    backgroundColor: '#1C1C1E',
-    borderRadius: 16,
-    padding: 20,
-    marginTop: 24,
-    borderWidth: 1,
-    borderColor: '#2C2C2E',
+  secondaryButtonTitle: {
+    color: Colors.accent,
+  },
+  secondaryButtonSubtitle: {
+    color: Colors.textSecondary,
+  },
+
+  // Danger Section
+  dangerSection: {
+    marginBottom: Spacing.lg,
+  },
+
+  // Information Card
+  infoCard: {
+    backgroundColor: Colors.backgroundElevated,
+    borderRadius: BorderRadius.base,
+    padding: Spacing.base,
+    marginBottom: Spacing.lg,
+    ...Shadows.base,
+  },
+  infoContent: {
+    marginTop: Spacing.sm,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: Spacing.base,
+  },
+  infoIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.backgroundSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+  },
+  infoTextContainer: {
+    flex: 1,
   },
   infoTitle: {
-    fontSize: 18,
+    fontSize: Typography.sm,
     fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 12,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
   },
-  infoText: {
-    fontSize: 14,
-    color: '#8E8E93',
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  bold: {
-    fontWeight: '600',
-    color: '#FFFFFF',
+  infoDescription: {
+    fontSize: Typography.xs,
+    color: Colors.textSecondary,
+    lineHeight: Typography.lineHeightNormal * Typography.xs,
   },
 });

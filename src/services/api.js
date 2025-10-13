@@ -6,7 +6,7 @@ class ClaudeAPI {
     this.apiKey = apiKey;
   }
 
-  async analyzeMealImage(imageData, foodDescription = '', additionalImages = [], isMultipleDishes = false) {
+  async analyzeMealImage(imageData, foodDescription = '', additionalImages = [], isMultipleDishes = false, mealPreparation = null) {
     try {
       // Build context-specific instructions based on user's selection
       const multiImageInstructions = isMultipleDishes ? 
@@ -78,9 +78,39 @@ The images provide DIFFERENT INFORMATION about ONE food item:
 - Image 3: Just yogurt on scale showing 214g
 - **Analysis**: Yogurt (214g) + berries (146g) = ONE item with combined macros`;
 
+      // Build meal preparation context
+      const preparationContext = mealPreparation ? 
+        `**MEAL PREPARATION CONTEXT:**
+The user indicated this meal was: **${mealPreparation.toUpperCase()}**
+
+${mealPreparation === 'prepackaged' ? 
+  `**PRE-PACKAGED MEAL ANALYSIS:**
+- This is a pre-made, packaged food item
+- Look for nutrition labels on packaging
+- Consider typical processing levels of packaged foods
+- May have preservatives, additives, or processing agents
+- Portion sizes are often standardized by manufacturers` :
+mealPreparation === 'restaurant' ?
+  `**RESTAURANT MEAL ANALYSIS:**
+- This meal was prepared in a restaurant/kitchen setting
+- Consider restaurant cooking methods (often more oil, butter, salt)
+- Portion sizes may be larger than home-cooked equivalents
+- May include hidden ingredients (cooking oils, sauces, seasonings)
+- Quality and preparation methods vary by restaurant type` :
+  `**HOME-MADE MEAL ANALYSIS:**
+- This meal was prepared from scratch at home
+- Likely uses fresh, whole ingredients
+- Cooking methods are typically healthier (less oil, more control)
+- Portion sizes are more controlled
+- Minimal processing, closer to NOVA 1 classification`}
+
+Use this context to inform your macro estimates and processing level assessments.` : '';
+
       const initialPrompt = `Let's analyze this meal! I'll give you my best estimate.
 
 ${multiImageInstructions}
+
+${preparationContext}
 
 **SCALE/WEIGHT ASSUMPTION:**
 - ASSUME the scale is TARED (zeroed) - the weight shown is ONLY the food, not the container

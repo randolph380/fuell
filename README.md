@@ -4,6 +4,17 @@ A nutrition tracking app built with React Native and Expo. Track your macros wit
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
+## 📚 Documentation
+
+All development documentation is organized in the [`docs/`](./docs/) folder:
+
+- **[Development Documentation](./docs/README.md)** - Complete development guide
+- **[Design System](./docs/UX_DESIGN_SYSTEM.md)** - UI/UX guidelines and components
+- **[Architecture](./docs/ARCHITECTURE.md)** - App structure and patterns
+- **[Component Guidelines](./docs/COMPONENT_GUIDELINES.md)** - Development standards
+- **[Data Models](./docs/DATA_MODELS.md)** - Data structures and schemas
+- **[Backup System](./docs/BACKUP_SYSTEM.md)** - Export/import functionality
+
 ## Get started
 
 1. Install dependencies

@@ -34,7 +34,7 @@ const CameraScreen = ({ navigation, route }) => {
   const [isRefining, setIsRefining] = useState(false);
   const [mealTitle, setMealTitle] = useState('');
   const [isMultipleDishes, setIsMultipleDishes] = useState(false);
-  const [showExtendedOutput, setShowExtendedOutput] = useState(false);
+  const [mealPreparation, setMealPreparation] = useState(null); // null, 'prepackaged', 'restaurant', 'homemade'
   const [showMacroEditor, setShowMacroEditor] = useState(false);
   const [editedMacros, setEditedMacros] = useState(null);
   const [portionSize, setPortionSize] = useState('1');
@@ -148,7 +148,7 @@ const CameraScreen = ({ navigation, route }) => {
         );
       }
 
-      const result = await claudeAPI.analyzeMealImage(base64Image, foodDescription, base64AdditionalImages, isMultipleDishes);
+      const result = await claudeAPI.analyzeMealImage(base64Image, foodDescription, base64AdditionalImages, isMultipleDishes, mealPreparation);
       
       // Store macros, extended metrics, and title FIRST (before cleaning)
       // Only update if macros were successfully parsed
@@ -181,22 +181,20 @@ const CameraScreen = ({ navigation, route }) => {
         }
       }
       
-      // Clean the response text for display (unless extended output is enabled)
+      // Clean the response text for display
       let cleanedResponse = result.response || 'Analysis complete';
       
-      if (!showExtendedOutput) {
-        // Strip **Title:** line
-        cleanedResponse = cleanedResponse.replace(/\*\*Title:\*\*[^\n]*\n+/i, '');
-        
-        // Strip **NUTRITION_DATA:** and the entire JSON code block
-        cleanedResponse = cleanedResponse.replace(/\*\*NUTRITION_DATA:\*\*\s*```(?:json)?\s*\{[\s\S]*?\}\s*```/i, '');
-        
-        // Clean up extra whitespace
-        cleanedResponse = cleanedResponse.trim();
-        
-        // Add helpful hint at the end
-        cleanedResponse += '\n\nFeel free to share any other details.';
-      }
+      // Strip **Title:** line
+      cleanedResponse = cleanedResponse.replace(/\*\*Title:\*\*[^\n]*\n+/i, '');
+      
+      // Strip **NUTRITION_DATA:** and the entire JSON code block
+      cleanedResponse = cleanedResponse.replace(/\*\*NUTRITION_DATA:\*\*\s*```(?:json)?\s*\{[\s\S]*?\}\s*```/i, '');
+      
+      // Clean up extra whitespace
+      cleanedResponse = cleanedResponse.trim();
+      
+      // Add helpful hint at the end
+      cleanedResponse += '\n\nFeel free to share any other details.';
       
       // Add to conversation
       const newConversation = [
@@ -346,19 +344,17 @@ const CameraScreen = ({ navigation, route }) => {
         }
       }
       
-      // Clean the response text for display (unless extended output is enabled)
+      // Clean the response text for display
       let cleanedResponse = result.response || 'Analysis updated';
       
-      if (!showExtendedOutput) {
-        // Strip **Title:** line
-        cleanedResponse = cleanedResponse.replace(/\*\*Title:\*\*[^\n]*\n+/i, '');
-        
-        // Strip **NUTRITION_DATA:** and the entire JSON code block
-        cleanedResponse = cleanedResponse.replace(/\*\*NUTRITION_DATA:\*\*\s*```(?:json)?\s*\{[\s\S]*?\}\s*```/i, '');
-        
-        // Clean up extra whitespace
-        cleanedResponse = cleanedResponse.trim();
-      }
+      // Strip **Title:** line
+      cleanedResponse = cleanedResponse.replace(/\*\*Title:\*\*[^\n]*\n+/i, '');
+      
+      // Strip **NUTRITION_DATA:** and the entire JSON code block
+      cleanedResponse = cleanedResponse.replace(/\*\*NUTRITION_DATA:\*\*\s*```(?:json)?\s*\{[\s\S]*?\}\s*```/i, '');
+      
+      // Clean up extra whitespace
+      cleanedResponse = cleanedResponse.trim();
       
       const assistantMessage = {
         role: 'assistant',
@@ -553,7 +549,7 @@ const CameraScreen = ({ navigation, route }) => {
           
           {/* Image Type Toggle - Always visible at top */}
           <View style={styles.toggleContainer}>
-            <Text style={styles.toggleLabel}>What did you photograph?</Text>
+            <Text style={styles.toggleLabel}>How many items in your meal?</Text>
             <View style={styles.toggleButtons}>
               <TouchableOpacity 
                 style={[styles.toggleButton, !isMultipleDishes && styles.toggleButtonActive]}
@@ -566,8 +562,7 @@ const CameraScreen = ({ navigation, route }) => {
                   style={styles.toggleIcon}
                 />
                 <Text style={[styles.toggleButtonText, !isMultipleDishes && styles.toggleButtonTextActive]}>
-                  One item{'\n'}
-                  <Text style={styles.toggleSubtext}>(labels, scale, angles)</Text>
+                  One item
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity 
@@ -581,28 +576,61 @@ const CameraScreen = ({ navigation, route }) => {
                   style={styles.toggleIcon}
                 />
                 <Text style={[styles.toggleButtonText, isMultipleDishes && styles.toggleButtonTextActive]}>
-                  Multiple items{'\n'}
-                  <Text style={styles.toggleSubtext}>(sum for this meal)</Text>
+                  Multiple items
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Debug Toggle - Show Extended Output */}
-          <View style={styles.debugToggleContainer}>
-            <TouchableOpacity 
-              style={styles.debugToggle}
-              onPress={() => setShowExtendedOutput(!showExtendedOutput)}
-              activeOpacity={0.7}
-            >
-              <Ionicons 
-                name={showExtendedOutput ? "checkbox" : "square-outline"} 
-                size={20} 
-                color={showExtendedOutput ? Colors.accent : Colors.textTertiary} 
-              />
-              <Text style={styles.debugToggleText}>Show extended output (debug)</Text>
-            </TouchableOpacity>
+          {/* Meal Preparation Toggle */}
+          <View style={styles.toggleContainer}>
+            <Text style={styles.toggleLabel}>How was your meal prepped?</Text>
+            <View style={styles.toggleButtons}>
+              <TouchableOpacity 
+                style={[styles.toggleButton, mealPreparation === 'prepackaged' && styles.toggleButtonActive]}
+                onPress={() => setMealPreparation(mealPreparation === 'prepackaged' ? null : 'prepackaged')}
+              >
+                <Ionicons 
+                  name="cube-outline" 
+                  size={16} 
+                  color={mealPreparation === 'prepackaged' ? Colors.textInverse : Colors.textSecondary} 
+                  style={styles.toggleIcon}
+                />
+                <Text style={[styles.toggleButtonText, mealPreparation === 'prepackaged' && styles.toggleButtonTextActive]}>
+                  Pre-packaged
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.toggleButton, mealPreparation === 'restaurant' && styles.toggleButtonActive]}
+                onPress={() => setMealPreparation(mealPreparation === 'restaurant' ? null : 'restaurant')}
+              >
+                <Ionicons 
+                  name="restaurant-outline" 
+                  size={16} 
+                  color={mealPreparation === 'restaurant' ? Colors.textInverse : Colors.textSecondary}
+                  style={styles.toggleIcon}
+                />
+                <Text style={[styles.toggleButtonText, mealPreparation === 'restaurant' && styles.toggleButtonTextActive]}>
+                  Restaurant
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.toggleButton, mealPreparation === 'homemade' && styles.toggleButtonActive]}
+                onPress={() => setMealPreparation(mealPreparation === 'homemade' ? null : 'homemade')}
+              >
+                <Ionicons 
+                  name="home-outline" 
+                  size={16} 
+                  color={mealPreparation === 'homemade' ? Colors.textInverse : Colors.textSecondary}
+                  style={styles.toggleIcon}
+                />
+                <Text style={[styles.toggleButtonText, mealPreparation === 'homemade' && styles.toggleButtonTextActive]}>
+                  Home made
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
+
           
           {/* Text Input */}
           <View style={styles.inputMethod}>
@@ -700,11 +728,9 @@ const CameraScreen = ({ navigation, route }) => {
               <View style={styles.uploadSection}>
                 <TouchableOpacity style={styles.uploadButton} onPress={takePicture}>
                   <Ionicons name="camera" size={32} color={Colors.accent} />
-                  <Text style={styles.uploadText}>Take Photo</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
                   <Ionicons name="image" size={32} color={Colors.accent} />
-                  <Text style={styles.uploadText}>Choose from Gallery</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -1064,7 +1090,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   methodTitle: {
-    fontSize: Typography.lg,
+    fontSize: Typography.base,
     fontWeight: '600',
     marginBottom: Spacing.sm,
     color: Colors.textPrimary,
@@ -1592,7 +1618,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   toggleLabel: {
-    fontSize: Typography.sm,
+    fontSize: Typography.base,
     fontWeight: '600',
     color: Colors.textPrimary,
     marginBottom: Spacing.sm,
@@ -1636,22 +1662,6 @@ const styles = StyleSheet.create({
     color: 'inherit',
     fontWeight: '400',
     opacity: 0.8,
-  },
-  debugToggleContainer: {
-    marginBottom: Spacing.base,
-    paddingHorizontal: Spacing.xs,
-  },
-  debugToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingVertical: Spacing.xs,
-  },
-  debugToggleText: {
-    fontSize: Typography.xs,
-    color: Colors.textSecondary,
-    letterSpacing: Typography.letterSpacingNormal,
-    fontWeight: '500',
   },
 });
 

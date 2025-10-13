@@ -1024,9 +1024,10 @@ const CameraScreen = ({ navigation, route }) => {
       {isAnalyzing && (
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingContent}>
-            <ActivityIndicator size="large" color={Colors.accent} />
-            <Text style={styles.loadingText}>Analyzing your meal...</Text>
-            <Text style={styles.loadingSubtext}>This may take a few moments</Text>
+            <View style={styles.loadingSpinner}>
+              <ActivityIndicator size="small" color={Colors.accent} />
+            </View>
+            <Text style={styles.loadingText}>Analyzing meal</Text>
           </View>
         </View>
       )}
@@ -1218,31 +1219,27 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
   },
   loadingContent: {
     backgroundColor: Colors.backgroundElevated,
-    paddingHorizontal: Spacing.xxl,
-    paddingVertical: Spacing.xl,
-    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.md,
     alignItems: 'center',
-    ...Shadows.lg,
-    minWidth: 200,
+    ...Shadows.md,
+    minWidth: 120,
+  },
+  loadingSpinner: {
+    marginBottom: Spacing.sm,
   },
   loadingText: {
-    marginTop: Spacing.base,
-    fontSize: Typography.lg,
-    color: Colors.textPrimary,
-    fontWeight: '600',
-    letterSpacing: Typography.letterSpacingNormal,
-  },
-  loadingSubtext: {
-    marginTop: Spacing.xs,
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: Colors.textPrimary,
+    fontWeight: '500',
     letterSpacing: Typography.letterSpacingNormal,
   },
   macrosCardSticky: {

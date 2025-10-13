@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     ActivityIndicator,
     Alert,
+    Animated,
     Image,
     Keyboard,
     KeyboardAvoidingView,
@@ -40,10 +41,54 @@ const CameraScreen = ({ navigation, route }) => {
   const [portionSize, setPortionSize] = useState('1');
   const scrollViewRef = React.useRef(null);
   
+  // Animation refs for food dots
+  const dot1Anim = useRef(new Animated.Value(1)).current;
+  const dot2Anim = useRef(new Animated.Value(1)).current;
+  const dot3Anim = useRef(new Animated.Value(1)).current;
+  const dot4Anim = useRef(new Animated.Value(1)).current;
+  const dot5Anim = useRef(new Animated.Value(1)).current;
+  
   // Get the target date from navigation params (defaults to today)
   const targetDate = route.params?.targetDate ? new Date(route.params.targetDate) : new Date();
 
   const claudeAPI = new ClaudeAPI(); // No API key needed - using your Flask server
+
+  // Food animation effect
+  useEffect(() => {
+    if (isAnalyzing) {
+      const createPulseAnimation = (animValue, delay = 0) => {
+        return Animated.loop(
+          Animated.sequence([
+            Animated.delay(delay),
+            Animated.timing(animValue, {
+              toValue: 0.3,
+              duration: 600,
+              useNativeDriver: true,
+            }),
+            Animated.timing(animValue, {
+              toValue: 1,
+              duration: 600,
+              useNativeDriver: true,
+            }),
+          ])
+        );
+      };
+
+      const animations = [
+        createPulseAnimation(dot1Anim, 0),
+        createPulseAnimation(dot2Anim, 150),
+        createPulseAnimation(dot3Anim, 300),
+        createPulseAnimation(dot4Anim, 450),
+        createPulseAnimation(dot5Anim, 600),
+      ];
+
+      animations.forEach(anim => anim.start());
+
+      return () => {
+        animations.forEach(anim => anim.stop());
+      };
+    }
+  }, [isAnalyzing]);
 
   const takePicture = async () => {
     // Request permission
@@ -1024,8 +1069,12 @@ const CameraScreen = ({ navigation, route }) => {
       {isAnalyzing && (
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingContent}>
-            <View style={styles.loadingSpinner}>
-              <ActivityIndicator size="small" color={Colors.accent} />
+            <View style={styles.foodAnimation}>
+              <Animated.View style={[styles.foodDot, styles.foodDot1, { opacity: dot1Anim }]} />
+              <Animated.View style={[styles.foodDot, styles.foodDot2, { opacity: dot2Anim }]} />
+              <Animated.View style={[styles.foodDot, styles.foodDot3, { opacity: dot3Anim }]} />
+              <Animated.View style={[styles.foodDot, styles.foodDot4, { opacity: dot4Anim }]} />
+              <Animated.View style={[styles.foodDot, styles.foodDot5, { opacity: dot5Anim }]} />
             </View>
             <Text style={styles.loadingText}>Analyzing meal</Text>
           </View>
@@ -1233,8 +1282,38 @@ const styles = StyleSheet.create({
     ...Shadows.md,
     minWidth: 120,
   },
-  loadingSpinner: {
+  foodAnimation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: Spacing.sm,
+    height: 20,
+  },
+  foodDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 3,
+  },
+  foodDot1: {
+    backgroundColor: '#FF6B6B', // Red
+    opacity: 0.8,
+  },
+  foodDot2: {
+    backgroundColor: '#FFD93D', // Yellow
+    opacity: 0.8,
+  },
+  foodDot3: {
+    backgroundColor: '#6BCF7F', // Green
+    opacity: 0.8,
+  },
+  foodDot4: {
+    backgroundColor: '#4D96FF', // Blue
+    opacity: 0.8,
+  },
+  foodDot5: {
+    backgroundColor: '#9B59B6', // Purple
+    opacity: 0.8,
   },
   loadingText: {
     fontSize: Typography.sm,

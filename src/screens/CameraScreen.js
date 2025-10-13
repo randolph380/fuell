@@ -53,6 +53,31 @@ const CameraScreen = ({ navigation, route }) => {
 
   const claudeAPI = new ClaudeAPI(); // No API key needed - using your Flask server
 
+  // Function to parse text and bold questions
+  const parseTextWithQuestions = (text) => {
+    // Split text by sentences ending with ?
+    const parts = text.split(/([^.!?]*\?)/g);
+    
+    return parts.map((part, index) => {
+      // Check if this part is a question (ends with ? and has content)
+      const isQuestion = part.trim().endsWith('?') && part.trim().length > 2;
+      
+      if (isQuestion) {
+        return (
+          <Text key={index} style={styles.questionText}>
+            {part}
+          </Text>
+        );
+      } else {
+        return (
+          <Text key={index} style={styles.normalText}>
+            {part}
+          </Text>
+        );
+      }
+    });
+  };
+
   // Food animation effect
   useEffect(() => {
     if (isAnalyzing || isRefining) {
@@ -817,7 +842,7 @@ const CameraScreen = ({ navigation, route }) => {
                     styles.messageText,
                     message.role === 'user' ? styles.userMessageText : styles.assistantMessageText
                   ]}>
-                    {displayText}
+                    {message.role === 'assistant' ? parseTextWithQuestions(displayText) : displayText}
                   </Text>
                 </View>
               );
@@ -1408,6 +1433,13 @@ const styles = StyleSheet.create({
   },
   assistantMessageText: {
     color: Colors.textPrimary,
+  },
+  questionText: {
+    fontWeight: '600',
+    color: Colors.accent,
+  },
+  normalText: {
+    fontWeight: '400',
   },
   macrosPreview: {
     marginTop: 10,

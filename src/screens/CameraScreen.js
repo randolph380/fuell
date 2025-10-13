@@ -898,10 +898,10 @@ const CameraScreen = ({ navigation, route }) => {
             {/* Action Buttons */}
             <View style={styles.actionButtons}>
               <TouchableOpacity style={styles.editButton} onPress={() => setShowMacroEditor(true)}>
-                <Text style={styles.editButtonText}>Edit Meal</Text>
+                <Text style={styles.editButtonText}>Edit meal</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.logButton} onPress={logMeal}>
-                <Text style={styles.logButtonText}>Log This Meal</Text>
+                <Text style={styles.logButtonText}>Log meal</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1467,7 +1467,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginHorizontal: 15,
-    marginBottom: 15,
+    marginBottom: 30,
     gap: 10,
   },
   logButton: {

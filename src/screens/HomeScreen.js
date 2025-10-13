@@ -24,11 +24,13 @@ import StorageService from '../services/storage';
 import DateHelpers from '../utils/dateHelpers';
 import { calculateAggregatedProcessed, calculateAggregatedUltraProcessed } from '../utils/extendedMetrics';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation, route }) => {
   const { signOut } = useAuth();
   const { user } = useUser();
   
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // Get target date from route params or default to today
+  const initialDate = route.params?.targetDate ? new Date(route.params.targetDate) : new Date();
+  const [currentDate, setCurrentDate] = useState(initialDate);
   const [meals, setMeals] = useState([]);
   const [dailyMacros, setDailyMacros] = useState({
     calories: 0,
@@ -52,6 +54,15 @@ const HomeScreen = ({ navigation }) => {
       loadMeals();
     }
   }, [currentDate, user?.id]);
+
+  // Handle route params changes (when returning from CameraScreen with target date)
+  useEffect(() => {
+    if (route.params?.targetDate) {
+      const newDate = new Date(route.params.targetDate);
+      console.log('DEBUG - Route params changed, setting date to:', newDate.toDateString());
+      setCurrentDate(newDate);
+    }
+  }, [route.params?.targetDate]);
 
   // Reload meals when screen comes into focus (e.g., after logging a meal)
   useFocusEffect(

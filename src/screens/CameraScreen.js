@@ -430,7 +430,7 @@ const CameraScreen = ({ navigation, route }) => {
       // Log the meal immediately
       await StorageService.saveMeal(meal);
       Alert.alert('Success', `${extractedTitle} logged successfully!`, [
-        { text: 'OK', onPress: () => navigation.goBack() }
+        { text: 'OK', onPress: () => navigation.navigate('Home', { targetDate: targetDate.toISOString() }) }
       ]);
     } catch (error) {
       console.error('Error quick logging meal:', error);
@@ -473,7 +473,7 @@ const CameraScreen = ({ navigation, route }) => {
 
       await StorageService.saveMeal(meal);
       Alert.alert('Success', 'Meal logged successfully!', [
-        { text: 'OK', onPress: () => navigation.goBack() }
+        { text: 'OK', onPress: () => navigation.navigate('Home', { targetDate: targetDate.toISOString() }) }
       ]);
     } catch (error) {
       console.error('Error logging meal:', error);

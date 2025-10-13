@@ -93,10 +93,22 @@ ${mealPreparation === 'prepackaged' ?
 mealPreparation === 'restaurant' ?
   `**RESTAURANT MEAL ANALYSIS:**
 - This meal was prepared in a restaurant/kitchen setting
-- Consider restaurant cooking methods (often more oil, butter, salt)
-- Portion sizes may be larger than home-cooked equivalents
-- May include hidden ingredients (cooking oils, sauces, seasonings)
-- Quality and preparation methods vary by restaurant type` :
+- **RESTAURANT IDENTIFICATION:** Try to identify the restaurant chain or type from visual cues
+- Look for: logos, packaging, distinctive plating, menu items, restaurant-specific dishes
+- **ASK THE USER:** "What restaurant is this from?" if you can't identify it
+- **RESTAURANT-SPECIFIC KNOWLEDGE:** Use your knowledge of restaurant chains and their typical:
+  * Portion sizes (restaurant portions are often 1.5-2x larger than home servings)
+  * Cooking methods (more oil, butter, salt, sugar than home cooking)
+  * Hidden ingredients (cooking oils, sauces, seasonings, marinades)
+  * Menu item variations and typical preparations
+- **COMMON RESTAURANT PATTERNS:**
+  * Fast food: High sodium, processed ingredients, large portions
+  * Casual dining: Generous portions, rich sauces, hidden calories
+  * Fine dining: Rich preparations, multiple components, generous portions
+  * Asian restaurants: Often more oil, sodium, and sugar than home cooking
+  * Italian restaurants: Heavy on cheese, oil, and large pasta portions
+- **PORTION SIZE ADJUSTMENT:** Restaurant portions are typically 25-50% larger than standard servings
+- **HIDDEN CALORIES:** Account for cooking oils, butter, sauces, and seasonings not visible in photos` :
   `**HOME-MADE MEAL ANALYSIS:**
 - This meal was prepared from scratch at home
 - Likely uses fresh, whole ingredients
@@ -138,6 +150,7 @@ ${preparationContext}
 - Use short sentences and bullet points
 - Skip unnecessary elaboration
 - Focus on the key facts and calculations
+- **FOR RESTAURANT MEALS:** If you can't identify the restaurant, ask: "What restaurant is this from? This will help me give you more accurate macro estimates."
 
 **PROCESSED FOOD CLASSIFICATION:**
 Use the NOVA classification system to estimate processed food percentage. Ask yourself these questions:

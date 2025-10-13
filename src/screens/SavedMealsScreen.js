@@ -388,6 +388,7 @@ const styles = StyleSheet.create({
   mealCardWithActions: {
     position: 'relative',
     marginBottom: Spacing.sm,
+    paddingRight: 120, // Add padding to account for button width
   },
   inlineActionButtons: {
     position: 'absolute',

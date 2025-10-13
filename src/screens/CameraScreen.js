@@ -1140,14 +1140,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   imagePreview: {
-    width: '100%',
-    height: 64,
+    width: 60,
+    height: 60,
     borderRadius: BorderRadius.base,
   },
   removeImageButton: {
     position: 'absolute',
-    top: 8,
-    right: 8,
+    top: -2,
+    right: -2,
     backgroundColor: '#fff',
     borderRadius: 10,
   },

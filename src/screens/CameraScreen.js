@@ -70,7 +70,7 @@ const CameraScreen = ({ navigation, route }) => {
         } else {
           // First photo - set as main image
           setImageUri(newPhotoUri);
-          setFoodDescription('');
+          // Don't clear foodDescription - user can have both text and images
           setConversation([]);
           setCurrentMacros(null);
           setCurrentExtendedMetrics(null);
@@ -113,7 +113,7 @@ const CameraScreen = ({ navigation, route }) => {
           setAdditionalImages([]);
         }
         
-        setFoodDescription('');
+        // Don't clear foodDescription - user can have both text and images
         setConversation([]);
         setCurrentMacros(null);
         setCurrentExtendedMetrics(null);

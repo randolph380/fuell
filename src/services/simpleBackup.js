@@ -1,5 +1,6 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import StorageService from './storage';
 
 /**
@@ -122,33 +123,31 @@ class SimpleBackup {
       // Clear existing data
       await StorageService.clearAllData();
 
-      // Import data
+      // Import data directly to avoid duplicates and ensure correct structure
       const { meals, dailyMacros, savedMeals, preferences } = backupData.data;
 
-      // Import meals
+      // Import meals directly
       if (meals && Array.isArray(meals)) {
-        for (const meal of meals) {
-          await StorageService.saveMeal(meal);
-        }
+        const mealsKey = await StorageService.getUserKey(StorageService.KEYS.MEALS);
+        await AsyncStorage.setItem(mealsKey, JSON.stringify(meals));
       }
 
-      // Import daily macros
+      // Import daily macros directly
       if (dailyMacros && typeof dailyMacros === 'object') {
-        for (const [date, macros] of Object.entries(dailyMacros)) {
-          await StorageService.saveDailyMacros(date, macros);
-        }
+        const dailyMacrosKey = await StorageService.getUserKey(StorageService.KEYS.DAILY_MACROS);
+        await AsyncStorage.setItem(dailyMacrosKey, JSON.stringify(dailyMacros));
       }
 
-      // Import saved meals
+      // Import saved meals directly
       if (savedMeals && Array.isArray(savedMeals)) {
-        for (const savedMeal of savedMeals) {
-          await StorageService.saveMealTemplate(savedMeal);
-        }
+        const savedMealsKey = await StorageService.getUserKey(StorageService.KEYS.SAVED_MEALS);
+        await AsyncStorage.setItem(savedMealsKey, JSON.stringify(savedMeals));
       }
 
-      // Import preferences
+      // Import preferences directly
       if (preferences && typeof preferences === 'object') {
-        await StorageService.saveUserPreferences(preferences);
+        const preferencesKey = await StorageService.getUserKey(StorageService.KEYS.USER_PREFERENCES);
+        await AsyncStorage.setItem(preferencesKey, JSON.stringify(preferences));
       }
 
       console.log('Backup imported successfully');

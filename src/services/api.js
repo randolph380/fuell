@@ -124,21 +124,92 @@ ${multiImageInstructions}
 
 ${preparationContext}
 
+**PER-ITEM FOOD IDENTIFICATION & DATABASE RETRIEVAL:**
+- **MANDATORY:** Identify each food item individually before calculating macros
+- **NO GUESSING:** For each food item, attempt to match against known databases:
+  * USDA FoodData Central (FDC) - primary source for whole foods
+  * Open Food Facts - for packaged/branded items
+  * Restaurant chain databases - for branded menu items
+  * Brand-specific nutrition data when visible
+- **MATCHING PROCESS:**
+  1. Identify food item clearly (e.g., "Grilled Chicken Breast", "White Rice", "Broccoli")
+  2. Attempt database lookup for exact match
+  3. If exact match found: use database values with high confidence
+  4. If no match found: mark as "unmatched" with higher uncertainty
+- **UNMATCHED ITEMS:** When no database match is found:
+  * Clearly state "No database match found for [item]"
+  * Use estimated values with lower confidence
+  * Flag for user verification
+- **SOURCE ATTRIBUTION:** Always cite your data source:
+  * "USDA FDC: Grilled Chicken Breast (100g)"
+  * "Open Food Facts: Brand X Pasta"
+  * "Restaurant Menu: McDonald's Big Mac"
+  * "Estimated: No database match"
+
+**ENHANCED PORTION ESTIMATION:**
+- **REFERENCE OBJECTS REQUIRED:** Look for size references in every image:
+  * Credit card (standard 3.375" × 2.125")
+  * Fork (standard 7-8 inches)
+  * Standard dinner plate (10-12 inches)
+  * Hand/palm for protein portions
+- **MULTI-ANGLE ANALYSIS:** If multiple images provided:
+  * Use different angles to triangulate portion size
+  * Cross-reference measurements between images
+  * Use depth perception cues for 3D volume estimation
+- **DENSITY CONVERSION TABLE:** Use food class → density mapping:
+  * Proteins: 0.8-1.0 g/cm³ (chicken, beef, fish)
+  * Starches: 0.6-0.8 g/cm³ (rice, pasta, bread)
+  * Vegetables: 0.3-0.5 g/cm³ (leafy greens, broccoli)
+  * Fats: 0.9-1.0 g/cm³ (oils, butter, cheese)
+- **VOLUME TO WEIGHT CONVERSION:**
+  * Estimate volume using reference objects
+  * Apply density multiplier based on food class
+  * Convert to grams: Volume(cm³) × Density(g/cm³) = Weight(g)
+
+**RECIPE DECOMPOSITION FOR COMPLEX MEALS:**
+- **INGREDIENT BREAKDOWN:** For multi-component dishes:
+  * Identify base ingredients (rice, chicken, vegetables)
+  * Identify cooking method (fried, steamed, grilled, sautéed)
+  * Identify added fats/oils (visible or typical for cooking method)
+- **COOKING METHOD MULTIPLIERS:**
+  * **Frying:** +15-25% oil absorption, +5-10% water loss
+  * **Grilling:** +5-10% oil absorption, +10-15% water loss
+  * **Steaming:** No oil, +5-10% water gain
+  * **Sautéing:** +10-15% oil absorption, +5-10% water loss
+- **DEFAULT TEMPLATES:** Use common dish templates when identifiable:
+  * "Fried Rice": Base rice + vegetables + protein + 2-3 tbsp oil
+  * "Stir-fry": Base vegetables + protein + 1-2 tbsp oil
+  * "Pasta with sauce": Base pasta + sauce ingredients + cooking oil
+- **USER OVERRIDES:** Allow user to specify cooking method if unclear
+
+**HARD CONSISTENCY CHECKS - ATWATER CONSTRAINTS:**
+- **MANDATORY VALIDATION:** Every estimate must pass Atwater energy constraints:
+  * Formula: |calories - (4×carbs + 4×protein + 9×fat)| ≤ 10 calories
+  * If constraint violated: identify least certain macro and rescale
+- **RESCALING LOGIC:**
+  * If carbs most uncertain: rescale carbs to fit constraint
+  * If protein most uncertain: rescale protein to fit constraint  
+  * If fat most uncertain: rescale fat to fit constraint
+- **CLARIFICATION REQUESTS:** If rescaling >20% of any macro:
+  * Ask user: "The portion seems larger/smaller than typical. Is this a [small/medium/large] portion?"
+  * Request specific clarification on most uncertain component
+
+**CONFIDENCE & ACTIVE QUERY SYSTEM:**
+- **PER-ITEM CONFIDENCE:** Rate each food item separately (0-1 scale):
+  * 0.9-1.0: Exact database match with precise portion
+  * 0.7-0.8: Good database match with estimated portion
+  * 0.5-0.6: No database match, visual estimation only
+  * 0.0-0.4: High uncertainty, multiple possible interpretations
+- **OVERALL CERTAINTY:** Calculate weighted average of all items
+- **ACTIVE QUERIES:** If overall certainty <0.6, ask ONE targeted question:
+  * "Is this white rice or fried rice?" (changes fat content significantly)
+  * "Was this cooked with oil or steamed?" (changes fat content)
+  * "Is this a small or large portion?" (changes all macros proportionally)
+- **SOURCE TRACKING:** Always provide data sources and confidence levels
+
 **SCALE/WEIGHT ASSUMPTION:**
 - ASSUME the scale is TARED (zeroed) - the weight shown is ONLY the food, not the container
 - ALWAYS ask the user to confirm if the scale was tared when you see a scale
-
-**PORTION SIZE ESTIMATION (CRITICAL):**
-- COUNT individual pieces when visible: "4 dumplings", "6 shrimp", "3 slices of bread"
-- Estimate WEIGHT, not volume: thin meat slices ≠ thick steaks, small bowls ≠ large bowls
-- Use visual references to calibrate portion sizes:
-  * Compare to utensils, plates, hands visible in frame
-  * Small appetizer plate (6-8 inches): typically 100-250 calories
-  * Standard dinner plate (10-12 inches): typically 400-800 calories
-  * Palm-sized protein: ~100-150g meat/fish
-  * Fist-sized carbs: ~150-200g cooked grain/pasta
-- For multiple small plates or courses, note portion context: "appetizer-sized", "side portion", "shared plate"
-- When estimating without scales, be specific: "~100g" not "a serving", "1/2 cup" not "some"
 
 **PORTION RATIO HANDLING:**
 - If user mentions eating a fraction in description (e.g., "had half this bread", "ate 1/3", "quarter of this"), apply that exact ratio to ALL macros
@@ -146,11 +217,6 @@ ${preparationContext}
 - Always show the math: "Full portion: 300 cal → Half portion: 300 × 0.5 = 150 cal"
 - Apply ratio to ALL metrics: calories, protein, carbs, fat, fiber, caffeine, etc.
 - If user says "I ate half" during chat, apply 0.5 ratio to your current estimate
-
-**CALORIE ESTIMATION ACCURACY:**
-- Use exact data when available (labels, scales, measurements)
-- For hidden ingredients (cooking oils, butter, sauces), add reasonable amounts based on cooking method
-- When portion size is ambiguous, express uncertainty rather than defaulting to large portions
 
 **RESPONSE STYLE:**
 - Be concise but informative - get to the point quickly
@@ -266,7 +332,37 @@ If certainty is 6 or below, ask 1-2 brief clarifying questions to improve accura
   "ultraProcessed": {
     "percent": ##,
     "calories": ###
-  }
+  },
+  "foodItems": [
+    {
+      "name": "Grilled Chicken Breast",
+      "weight": 150,
+      "calories": 250,
+      "protein": 46,
+      "carbs": 0,
+      "fat": 5,
+      "confidence": 0.9,
+      "source": "USDA FDC: Grilled Chicken Breast (100g)",
+      "matched": true
+    },
+    {
+      "name": "White Rice",
+      "weight": 200,
+      "calories": 260,
+      "protein": 5,
+      "carbs": 56,
+      "fat": 0.5,
+      "confidence": 0.7,
+      "source": "Estimated: No database match",
+      "matched": false
+    }
+  ],
+  "atwaterCheck": {
+    "passed": true,
+    "calculatedCalories": 510,
+    "difference": 0
+  },
+  "activeQuery": null
 }
 \`\`\`
 
@@ -383,7 +479,10 @@ ${initialPrompt}`;
         macros: nutritionData.macros,
         extendedMetrics: nutritionData.extendedMetrics,
         title: nutritionData.title,
-        certainty: nutritionData.certainty
+        certainty: nutritionData.certainty,
+        foodItems: nutritionData.foodItems,
+        atwaterCheck: nutritionData.atwaterCheck,
+        activeQuery: nutritionData.activeQuery
       };
     } catch (error) {
       console.error('Error analyzing meal image:', error);
@@ -414,12 +513,28 @@ IMPORTANT:
 - If you have exact label data + scale weights, you should have HIGH certainty
 - SCALE ASSUMPTION: If tared, use weight as-is. If NOT tared, subtract container weight.
 
+**ENHANCED REFINEMENT WITH DATABASE MATCHING:**
+- **RE-EVALUATE FOOD ITEMS:** With new information, attempt to match items against databases:
+  * USDA FDC for whole foods
+  * Open Food Facts for packaged items
+  * Restaurant/brand databases for menu items
+- **UPDATE CONFIDENCE:** Increase confidence for database matches, maintain lower confidence for estimates
+- **SOURCE ATTRIBUTION:** Update source citations based on new information
+- **ATWATER VALIDATION:** Re-check energy constraints: |calories - (4×carbs + 4×protein + 9×fat)| ≤ 10
+
 **PORTION RATIO HANDLING:**
 - If user mentions eating a fraction (e.g., "1/2", "half", "quarter", "1/3", "2/3"), apply that exact ratio to ALL macros
 - Examples: "I ate half" = multiply all values by 0.5, "I had 1/3" = multiply by 0.33, "I ate 2/3" = multiply by 0.67
 - If user says "had half this bread" in description, calculate full portion from image then apply 0.5 ratio
 - Always show the math: "Full portion: 300 cal → Half portion: 300 × 0.5 = 150 cal"
 - Apply ratio to ALL metrics: calories, protein, carbs, fat, fiber, caffeine, etc.
+
+**COOKING METHOD REFINEMENT:**
+- If user clarifies cooking method, apply appropriate multipliers:
+  * Frying: +15-25% oil absorption, +5-10% water loss
+  * Grilling: +5-10% oil absorption, +10-15% water loss
+  * Steaming: No oil, +5-10% water gain
+  * Sautéing: +10-15% oil absorption, +5-10% water loss
 
 CALORIE ESTIMATION:
 - With new info, recalculate for ACCURACY
@@ -469,7 +584,26 @@ Example: "Perfect! Scale was tared, so 200g is yogurt weight. Math: (200/170) ×
   "ultraProcessed": {
     "percent": ##,
     "calories": ###
-  }
+  },
+  "foodItems": [
+    {
+      "name": "Updated Food Item",
+      "weight": 150,
+      "calories": 250,
+      "protein": 46,
+      "carbs": 0,
+      "fat": 5,
+      "confidence": 0.9,
+      "source": "USDA FDC: Updated match",
+      "matched": true
+    }
+  ],
+  "atwaterCheck": {
+    "passed": true,
+    "calculatedCalories": 510,
+    "difference": 0
+  },
+  "activeQuery": null
 }
 \`\`\`
 
@@ -504,7 +638,10 @@ CRITICAL:
         macros: nutritionData.macros,
         extendedMetrics: nutritionData.extendedMetrics,
         title: nutritionData.title,
-        certainty: nutritionData.certainty
+        certainty: nutritionData.certainty,
+        foodItems: nutritionData.foodItems,
+        atwaterCheck: nutritionData.atwaterCheck,
+        activeQuery: nutritionData.activeQuery
       };
     } catch (error) {
       console.error('Error refining analysis:', error);
@@ -613,6 +750,26 @@ CRITICAL:
       } else {
         console.warn('⚠️ No valid extended metrics found in JSON');
       }
+
+      // Extract new enhanced data if present
+      let foodItems = null;
+      let atwaterCheck = null;
+      let activeQuery = null;
+      
+      if (Array.isArray(data.foodItems)) {
+        foodItems = data.foodItems;
+        console.log('🍎 Extracted food items:', foodItems);
+      }
+      
+      if (data.atwaterCheck && typeof data.atwaterCheck.passed === 'boolean') {
+        atwaterCheck = data.atwaterCheck;
+        console.log('⚖️ Atwater constraint check:', atwaterCheck);
+      }
+      
+      if (typeof data.activeQuery === 'string' && data.activeQuery.trim()) {
+        activeQuery = data.activeQuery.trim();
+        console.log('❓ Active query:', activeQuery);
+      }
       
       console.log('✅ Successfully extracted nutrition data from JSON:');
       console.log('  Title:', title);
@@ -621,8 +778,25 @@ CRITICAL:
       if (extendedMetrics) {
         console.log('  Extended metrics:', extendedMetrics);
       }
+      if (foodItems) {
+        console.log('  Food items:', foodItems.length, 'items');
+      }
+      if (atwaterCheck) {
+        console.log('  Atwater check:', atwaterCheck.passed ? 'PASSED' : 'FAILED');
+      }
+      if (activeQuery) {
+        console.log('  Active query:', activeQuery);
+      }
       
-      return { macros, extendedMetrics, title, certainty };
+      return { 
+        macros, 
+        extendedMetrics, 
+        title, 
+        certainty, 
+        foodItems, 
+        atwaterCheck, 
+        activeQuery 
+      };
       
     } catch (error) {
       console.error('❌ JSON parsing failed:', error.message);

@@ -296,15 +296,20 @@ const HomeScreen = ({ navigation, route }) => {
       {/* Daily Totals */}
       <MacroDisplay macros={dailyMacros} processedPercent={dailyProcessedPercent} ultraProcessedPercent={dailyUltraProcessedPercent} fiber={dailyFiber} caffeine={dailyCaffeine} freshProduce={dailyFreshProduce} />
 
-      {/* Add Meal Button - Now available for all dates */}
-      <TouchableOpacity style={styles.addMealButton} onPress={navigateToCamera}>
-        <Ionicons name="camera" size={24} color="#fff" />
-        <Text style={styles.addMealText}>
-          {isToday ? 'Add Meal' : `Add Meal to ${DateHelpers.formatDate(currentDate, 'short')}`}
-        </Text>
-      </TouchableOpacity>
-
-      {/* Navigation Buttons */}
+      {/* Action Buttons Row */}
+      <View style={styles.actionButtonsRow}>
+        <TouchableOpacity style={styles.addNewMealButton} onPress={navigateToCamera}>
+          <Ionicons name="camera" size={20} color="#fff" />
+          <Text style={styles.addNewMealText}>
+            {isToday ? 'Add New Meal' : `Add New Meal`}
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.savedMealsButton} onPress={() => navigation.navigate('SavedMeals')}>
+          <Ionicons name="bookmark" size={20} color={Colors.primary} />
+          <Text style={styles.savedMealsText}>Saved Meals</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Meals List */}
       <View style={styles.mealsSection}>
@@ -502,6 +507,48 @@ const styles = StyleSheet.create({
   addMealText: {
     color: Colors.textInverse,
     fontSize: Typography.base,
+    fontWeight: '500',
+    letterSpacing: Typography.letterSpacingNormal,
+    marginLeft: Spacing.sm,
+  },
+  actionButtonsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.base,
+    marginVertical: Spacing.md,
+    gap: Spacing.sm,
+  },
+  addNewMealButton: {
+    backgroundColor: Colors.primary,
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.base,
+    borderRadius: BorderRadius.base,
+    ...Shadows.sm,
+  },
+  addNewMealText: {
+    color: Colors.textInverse,
+    fontSize: Typography.sm,
+    fontWeight: '500',
+    letterSpacing: Typography.letterSpacingNormal,
+    marginLeft: Spacing.sm,
+  },
+  savedMealsButton: {
+    backgroundColor: Colors.backgroundElevated,
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.base,
+    borderRadius: BorderRadius.base,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.sm,
+  },
+  savedMealsText: {
+    color: Colors.primary,
+    fontSize: Typography.sm,
     fontWeight: '500',
     letterSpacing: Typography.letterSpacingNormal,
     marginLeft: Spacing.sm,

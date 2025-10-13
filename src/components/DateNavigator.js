@@ -2,8 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BorderRadius, Colors, Spacing, Typography } from '../constants/colors';
+import HamburgerMenu from './HamburgerMenu';
 
-const DateNavigator = ({ currentDate, onDateChange }) => {
+const DateNavigator = ({ currentDate, onDateChange, navigation }) => {
   const formatDate = (date) => {
     const today = new Date();
     const yesterday = new Date(today);
@@ -48,6 +49,8 @@ const DateNavigator = ({ currentDate, onDateChange }) => {
 
   return (
     <View style={styles.container}>
+      <HamburgerMenu navigation={navigation} />
+      
       <TouchableOpacity style={styles.button} onPress={goToPreviousDay} activeOpacity={0.7}>
         <Ionicons name="chevron-back" size={20} color={Colors.textSecondary} />
       </TouchableOpacity>

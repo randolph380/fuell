@@ -274,27 +274,11 @@ const HomeScreen = ({ navigation }) => {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
       >
-      {/* User Info Bar */}
-      <View style={styles.userBar}>
-        <HamburgerMenu navigation={navigation} />
-        <View style={styles.userInfo}>
-          <Text style={styles.userName}>
-            {user?.firstName || user?.emailAddresses?.[0]?.emailAddress || 'User'}
-          </Text>
-          <Text style={styles.userEmail}>
-            {user?.emailAddresses?.[0]?.emailAddress}
-          </Text>
-        </View>
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <Ionicons name="log-out-outline" size={20} color="#ff4444" />
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Date Navigator */}
+      {/* Date Navigator with Hamburger Menu */}
       <DateNavigator 
         currentDate={currentDate} 
-        onDateChange={handleDateChange} 
+        onDateChange={handleDateChange}
+        navigation={navigation}
       />
 
       {/* Daily Totals */}
@@ -473,47 +457,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-  },
-  userBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.backgroundElevated,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: Typography.base,
-    fontWeight: '500',
-    color: Colors.textPrimary,
-    letterSpacing: Typography.letterSpacingTight,
-    marginBottom: 2,
-  },
-  userEmail: {
-    fontSize: Typography.xs,
-    color: Colors.textTertiary,
-    letterSpacing: Typography.letterSpacingNormal,
-  },
-  signOutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.sm,
-    borderWidth: 1,
-    borderColor: Colors.error,
-    gap: Spacing.xs,
-  },
-  signOutText: {
-    fontSize: Typography.sm,
-    fontWeight: '500',
-    color: Colors.error,
-    letterSpacing: Typography.letterSpacingNormal,
   },
   header: {
     backgroundColor: Colors.primary,

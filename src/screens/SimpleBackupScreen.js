@@ -36,13 +36,32 @@ export default function SimpleBackupScreen({ navigation }) {
     }
   };
 
-  const handleExportBackup = async () => {
+  const handleExportBackup = () => {
+    Alert.alert(
+      'Export Format',
+      'Choose your preferred export format:',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'JSON (Full Backup)', 
+          onPress: () => exportWithFormat('json')
+        },
+        { 
+          text: 'CSV (Spreadsheet)', 
+          onPress: () => exportWithFormat('csv')
+        }
+      ]
+    );
+  };
+
+  const exportWithFormat = async (format) => {
     setIsLoading(true);
     try {
-      const filePath = await SimpleBackup.exportToFile();
+      const filePath = await SimpleBackup.exportToFile(format);
+      const formatName = format.toUpperCase();
       Alert.alert(
         'Backup Created',
-        `Your data has been backed up to:\n${filePath}\n\nWould you like to share it?`,
+        `Your data has been exported as ${formatName}:\n${filePath}\n\nWould you like to share it?`,
         [
           { text: 'Cancel', style: 'cancel' },
           { 
@@ -68,9 +87,9 @@ export default function SimpleBackupScreen({ navigation }) {
   const handleImportBackup = async () => {
     setIsLoading(true);
     try {
-      // Open document picker to select backup file
+      // Open document picker to select backup file (JSON or CSV)
       const result = await DocumentPicker.getDocumentAsync({
-        type: 'application/json',
+        type: ['application/json', 'text/csv', 'application/csv'],
         copyToCacheDirectory: true,
       });
 
@@ -228,13 +247,13 @@ export default function SimpleBackupScreen({ navigation }) {
       <View style={styles.infoBox}>
         <Text style={styles.infoTitle}>How it works:</Text>
         <Text style={styles.infoText}>
-          • <Text style={styles.bold}>Export:</Text> Creates a JSON file with all your data
+          • <Text style={styles.bold}>Export:</Text> Choose JSON (full backup) or CSV (spreadsheet)
         </Text>
         <Text style={styles.infoText}>
           • <Text style={styles.bold}>Share:</Text> Send the backup file to yourself or another device
         </Text>
         <Text style={styles.infoText}>
-          • <Text style={styles.bold}>Import:</Text> Select a backup JSON file from your device
+          • <Text style={styles.bold}>Import:</Text> Select JSON or CSV backup files from your device
         </Text>
         <Text style={styles.infoText}>
           • <Text style={styles.bold}>Account-specific:</Text> Backups are tied to your user account
@@ -250,88 +269,109 @@ export default function SimpleBackupScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: Spacing.medium,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0A0A0A', // Dark background like Oura
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   title: {
-    ...Typography.header,
-    color: Colors.text,
-    marginBottom: Spacing.small,
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    letterSpacing: -0.5,
   },
   description: {
-    ...Typography.body,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.large,
+    fontSize: 16,
+    color: '#8E8E93',
+    marginBottom: 32,
+    lineHeight: 22,
   },
   statsContainer: {
-    backgroundColor: Colors.cardBackground,
-    borderRadius: 8,
-    padding: Spacing.medium,
-    marginBottom: Spacing.large,
+    backgroundColor: '#1C1C1E',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#2C2C2E',
   },
   statsTitle: {
-    ...Typography.subHeader,
-    color: Colors.text,
-    marginBottom: Spacing.small,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 16,
   },
   statRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 4,
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2C2C2E',
   },
   statLabel: {
-    ...Typography.body,
-    color: Colors.textSecondary,
+    fontSize: 15,
+    color: '#8E8E93',
   },
   statValue: {
-    ...Typography.body,
-    color: Colors.text,
+    fontSize: 15,
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.medium,
-    borderRadius: 8,
-    marginBottom: Spacing.medium,
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   exportButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#007AFF',
   },
   importButton: {
-    backgroundColor: Colors.background,
+    backgroundColor: '#1C1C1E',
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: '#2C2C2E',
   },
   clearButton: {
-    backgroundColor: '#dc3545', // Red color for destructive action
+    backgroundColor: '#FF3B30',
   },
   buttonText: {
-    ...Typography.button,
-    color: Colors.textInverse,
-    marginLeft: Spacing.tiny,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginLeft: 8,
   },
   importButtonText: {
-    color: Colors.primary,
+    color: '#007AFF',
   },
   infoBox: {
-    backgroundColor: Colors.cardBackground,
-    borderRadius: 8,
-    padding: Spacing.medium,
-    marginTop: Spacing.large,
+    backgroundColor: '#1C1C1E',
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 24,
+    borderWidth: 1,
+    borderColor: '#2C2C2E',
   },
   infoTitle: {
-    ...Typography.subHeader,
-    color: Colors.text,
-    marginBottom: Spacing.small,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 12,
   },
   infoText: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.tiny,
+    fontSize: 14,
+    color: '#8E8E93',
+    marginBottom: 8,
+    lineHeight: 20,
   },
   bold: {
     fontWeight: '600',
+    color: '#FFFFFF',
   },
 });

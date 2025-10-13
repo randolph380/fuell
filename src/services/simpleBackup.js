@@ -54,32 +54,113 @@ class SimpleBackup {
 
   /**
    * Export backup to file
+   * @param {string} format - 'json' or 'csv'
    * @returns {Promise<string>} File path
    */
-  static async exportToFile() {
+  static async exportToFile(format = 'json') {
     try {
       const backupData = await this.createBackup();
-      const fileName = `fuel_backup_${backupData.userId}_${Date.now()}.json`;
-      const filePath = `${this.BACKUP_DIR}${fileName}`;
+      const timestamp = Date.now();
       
-      // Ensure backup directory exists
-      const dirInfo = await FileSystem.getInfoAsync(this.BACKUP_DIR);
-      if (!dirInfo.exists) {
-        await FileSystem.makeDirectoryAsync(this.BACKUP_DIR, { intermediates: true });
+      if (format === 'csv') {
+        const fileName = `fuel_backup_${backupData.userId}_${timestamp}.csv`;
+        const filePath = `${this.BACKUP_DIR}${fileName}`;
+        
+        // Ensure backup directory exists
+        const dirInfo = await FileSystem.getInfoAsync(this.BACKUP_DIR);
+        if (!dirInfo.exists) {
+          await FileSystem.makeDirectoryAsync(this.BACKUP_DIR, { intermediates: true });
+        }
+        
+        // Convert to CSV
+        const csvContent = this.convertToCSV(backupData);
+        await FileSystem.writeAsStringAsync(filePath, csvContent);
+        
+        console.log('CSV backup exported to:', filePath);
+        return filePath;
+      } else {
+        const fileName = `fuel_backup_${backupData.userId}_${timestamp}.json`;
+        const filePath = `${this.BACKUP_DIR}${fileName}`;
+        
+        // Ensure backup directory exists
+        const dirInfo = await FileSystem.getInfoAsync(this.BACKUP_DIR);
+        if (!dirInfo.exists) {
+          await FileSystem.makeDirectoryAsync(this.BACKUP_DIR, { intermediates: true });
+        }
+        
+        // Write JSON backup file
+        await FileSystem.writeAsStringAsync(
+          filePath, 
+          JSON.stringify(backupData, null, 2)
+        );
+        
+        console.log('JSON backup exported to:', filePath);
+        return filePath;
       }
-      
-      // Write backup file
-      await FileSystem.writeAsStringAsync(
-        filePath, 
-        JSON.stringify(backupData, null, 2)
-      );
-      
-      console.log('Backup exported to:', filePath);
-      return filePath;
     } catch (error) {
       console.error('Error exporting backup:', error);
       throw error;
     }
+  }
+
+  /**
+   * Convert backup data to CSV format
+   * @param {Object} backupData - Backup data object
+   * @returns {string} CSV content
+   */
+  static convertToCSV(backupData) {
+    const { meals, dailyMacros, savedMeals, preferences } = backupData.data;
+    
+    let csvContent = '';
+    
+    // Add metadata
+    csvContent += 'Data Type,Field,Value\n';
+    csvContent += `Metadata,Version,${backupData.version}\n`;
+    csvContent += `Metadata,Timestamp,${backupData.timestamp}\n`;
+    csvContent += `Metadata,User ID,${backupData.userId}\n`;
+    csvContent += '\n';
+    
+    // Add meals
+    csvContent += 'Meals\n';
+    csvContent += 'ID,Name,Calories,Protein,Carbs,Fat,Date,Timestamp\n';
+    if (meals && Array.isArray(meals)) {
+      meals.forEach(meal => {
+        const date = new Date(meal.timestamp || meal.date).toISOString().split('T')[0];
+        csvContent += `${meal.id},${meal.name || ''},${meal.calories || 0},${meal.protein || 0},${meal.carbs || 0},${meal.fat || 0},${date},${meal.timestamp || ''}\n`;
+      });
+    }
+    csvContent += '\n';
+    
+    // Add daily macros
+    csvContent += 'Daily Macros\n';
+    csvContent += 'Date,Calories,Protein,Carbs,Fat\n';
+    if (dailyMacros && typeof dailyMacros === 'object') {
+      Object.entries(dailyMacros).forEach(([date, macros]) => {
+        csvContent += `${date},${macros.calories || 0},${macros.protein || 0},${macros.carbs || 0},${macros.fat || 0}\n`;
+      });
+    }
+    csvContent += '\n';
+    
+    // Add saved meals
+    csvContent += 'Saved Meal Templates\n';
+    csvContent += 'ID,Name,Calories,Protein,Carbs,Fat\n';
+    if (savedMeals && Array.isArray(savedMeals)) {
+      savedMeals.forEach(meal => {
+        csvContent += `${meal.id},${meal.name || ''},${meal.calories || 0},${meal.protein || 0},${meal.carbs || 0},${meal.fat || 0}\n`;
+      });
+    }
+    csvContent += '\n';
+    
+    // Add preferences
+    csvContent += 'User Preferences\n';
+    csvContent += 'Setting,Value\n';
+    if (preferences && typeof preferences === 'object') {
+      Object.entries(preferences).forEach(([key, value]) => {
+        csvContent += `${key},${value}\n`;
+      });
+    }
+    
+    return csvContent;
   }
 
   /**

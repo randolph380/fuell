@@ -140,6 +140,13 @@ ${preparationContext}
 - For multiple small plates or courses, note portion context: "appetizer-sized", "side portion", "shared plate"
 - When estimating without scales, be specific: "~100g" not "a serving", "1/2 cup" not "some"
 
+**PORTION RATIO HANDLING:**
+- If user mentions eating a fraction in description (e.g., "had half this bread", "ate 1/3", "quarter of this"), apply that exact ratio to ALL macros
+- Examples: "had half this bread" = calculate full bread portion from image, then multiply by 0.5
+- Always show the math: "Full portion: 300 cal → Half portion: 300 × 0.5 = 150 cal"
+- Apply ratio to ALL metrics: calories, protein, carbs, fat, fiber, caffeine, etc.
+- If user says "I ate half" during chat, apply 0.5 ratio to your current estimate
+
 **CALORIE ESTIMATION ACCURACY:**
 - Use exact data when available (labels, scales, measurements)
 - For hidden ingredients (cooking oils, butter, sauces), add reasonable amounts based on cooking method
@@ -406,6 +413,13 @@ IMPORTANT:
 - REMEMBER: If you saw multiple images (label, scale, etc.), use ALL that data
 - If you have exact label data + scale weights, you should have HIGH certainty
 - SCALE ASSUMPTION: If tared, use weight as-is. If NOT tared, subtract container weight.
+
+**PORTION RATIO HANDLING:**
+- If user mentions eating a fraction (e.g., "1/2", "half", "quarter", "1/3", "2/3"), apply that exact ratio to ALL macros
+- Examples: "I ate half" = multiply all values by 0.5, "I had 1/3" = multiply by 0.33, "I ate 2/3" = multiply by 0.67
+- If user says "had half this bread" in description, calculate full portion from image then apply 0.5 ratio
+- Always show the math: "Full portion: 300 cal → Half portion: 300 × 0.5 = 150 cal"
+- Apply ratio to ALL metrics: calories, protein, carbs, fat, fiber, caffeine, etc.
 
 CALORIE ESTIMATION:
 - With new info, recalculate for ACCURACY

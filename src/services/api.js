@@ -1,5 +1,5 @@
 // Claude API service for macro analysis
-const API_BASE_URL = 'http://192.168.5.171:5000/api';
+const API_BASE_URL = 'http://192.168.5.173:5000/api';
 
 class ClaudeAPI {
   constructor(apiKey) {
@@ -10,36 +10,63 @@ class ClaudeAPI {
     try {
       // Build context-specific instructions based on user's selection
       const multiImageInstructions = isMultipleDishes ? 
-        `**YOU ARE ANALYZING: MULTIPLE SEPARATE DISHES**
+        `**USER INDICATED: MULTIPLE ITEMS (sum for this meal)**
 
-The user has indicated these images show DIFFERENT, SEPARATE meals/dishes:
+The user photographed MULTIPLE different food items that should be ADDED TOGETHER:
+
+**Common scenarios:**
+- Hot pot: multiple small plates
+- Buffet: photo of each item taken
+- Tapas or small plates dining
+- Meal components photographed separately
+- Multiple items in one sitting (e.g., coffee + pastry)
 
 **How to analyze:**
-1. Look at EACH image independently
-2. Identify what food is in EACH image (e.g., Image 1: grilled chicken, Image 2: rice bowl, Image 3: salad)
-3. Calculate macros for EACH dish separately
-4. Show your breakdown for each individual dish
-5. Then ADD all macros together for the final total
+1. Look at EACH image as a SEPARATE food item
+2. Identify and estimate each item independently
+3. For small plates, use visual cues to determine portion size (plate size, utensil references)
+4. Calculate macros for EACH item separately
+5. In your response, LIST OUT each item with its calorie estimate (transparency for user to verify)
+6. Then ADD all macros together for the final total
 
-**Example approach:**
-- Image 1 (Chicken breast): 200g grilled chicken = 330 cal, 62g protein, 0g carbs, 7g fat
-- Image 2 (Rice): 150g white rice = 195 cal, 4g protein, 43g carbs, 0g fat  
-- Image 3 (Salad): Mixed greens with dressing = 80 cal, 2g protein, 8g carbs, 5g fat
-- **TOTAL: 605 cal, 68g protein, 51g carbs, 12g fat**` 
+**CRITICAL - Show your itemized breakdown in your response:**
+In your conversational analysis, list each item like this:
+- Item 1: [description] → ~[calories] cal
+- Item 2: [description] → ~[calories] cal
+- Item 3: [description] → ~[calories] cal
+Total: [sum] calories
+
+**Example response format:**
+"Looking at your hot pot plates:
+- Small plate of noodles (~80g) → 120 cal
+- 6 thin beef slices (~60g) → 150 cal  
+- Mixed vegetables (~100g) → 40 cal
+Total: 310 calories. Mostly NOVA 1 (fresh ingredients) with minimal processing."
+
+**Full macro example for internal calculation:**
+- Image 1 (Small plate of noodles): ~80g noodles = 120 cal, 4g protein, 24g carbs, 1g fat
+- Image 2 (6 thin beef slices): ~60g beef = 150 cal, 18g protein, 0g carbs, 8g fat
+- Image 3 (Vegetables): ~100g mixed veg = 40 cal, 2g protein, 8g carbs, 0g fat
+- **TOTAL IN JSON: 310 cal, 24g protein, 32g carbs, 9g fat**` 
         : 
-        `**YOU ARE ANALYZING: ONE SINGLE DISH**
+        `**USER INDICATED: ONE ITEM (with labels, scale, or multiple angles)**
 
-The user has indicated these images all relate to the SAME meal:
+The images provide DIFFERENT INFORMATION about ONE food item:
+
+**Common scenarios:**
+- Nutrition label + the actual food
+- Scale showing weight + the plated food
+- Front and back of package
+- Different angles to show portion size
+- Ingredients list + prepared dish
 
 **How to analyze:**
-1. Look at ALL images together - they provide different information about ONE dish
-2. Images might show:
-   - Nutrition label of an ingredient
-   - Scale measurement showing weight
-   - The assembled dish
-   - Individual components or additions
-3. COMBINE all information from all images to analyze THIS ONE MEAL
-4. If you see multiple scale readings with DIFFERENT weights, this means:
+1. Look at ALL images together - they describe ONE thing
+2. Use nutrition labels for exact macros when visible
+3. Use scale measurements for precise portions
+4. Multiple angles help you see the full portion size
+5. COMBINE all information to analyze THIS ONE ITEM
+6. If you see multiple scale readings with DIFFERENT weights:
    - LARGER weight = TOTAL combined weight
    - SMALLER weight = ONE component measured separately
    - SUBTRACT smaller from larger to find the other component
@@ -49,7 +76,7 @@ The user has indicated these images all relate to the SAME meal:
 - Image 1: Bowl on scale showing 360g total
 - Image 2: Yogurt nutrition label (120 cal per 170g serving)
 - Image 3: Just yogurt on scale showing 214g
-- **Analysis**: Yogurt (214g) + berries (360g - 214g = 146g) = ONE dish with combined macros`;
+- **Analysis**: Yogurt (214g) + berries (146g) = ONE item with combined macros`;
 
       const initialPrompt = `Let's analyze this meal! I'll give you my best estimate.
 
@@ -59,10 +86,22 @@ ${multiImageInstructions}
 - ASSUME the scale is TARED (zeroed) - the weight shown is ONLY the food, not the container
 - ALWAYS ask the user to confirm if the scale was tared when you see a scale
 
-**CALORIE ESTIMATION PHILOSOPHY:**
-- Strive for ACCURACY - use exact data when available (labels, scales, measurements)
-- When uncertain about portions or hidden ingredients (oils, butter, sauces), err 5-10% higher rather than under
-- Examples: If chicken looks 6-7 oz, estimate 7 oz. If oil was likely used, include it.
+**PORTION SIZE ESTIMATION (CRITICAL):**
+- COUNT individual pieces when visible: "4 dumplings", "6 shrimp", "3 slices of bread"
+- Estimate WEIGHT, not volume: thin meat slices ≠ thick steaks, small bowls ≠ large bowls
+- Use visual references to calibrate portion sizes:
+  * Compare to utensils, plates, hands visible in frame
+  * Small appetizer plate (6-8 inches): typically 100-250 calories
+  * Standard dinner plate (10-12 inches): typically 400-800 calories
+  * Palm-sized protein: ~100-150g meat/fish
+  * Fist-sized carbs: ~150-200g cooked grain/pasta
+- For multiple small plates or courses, note portion context: "appetizer-sized", "side portion", "shared plate"
+- When estimating without scales, be specific: "~100g" not "a serving", "1/2 cup" not "some"
+
+**CALORIE ESTIMATION ACCURACY:**
+- Use exact data when available (labels, scales, measurements)
+- For hidden ingredients (cooking oils, butter, sauces), add reasonable amounts based on cooking method
+- When portion size is ambiguous, express uncertainty rather than defaulting to large portions
 
 **RESPONSE STYLE:**
 - Be concise but informative - get to the point quickly
@@ -71,11 +110,46 @@ ${multiImageInstructions}
 - Focus on the key facts and calculations
 
 **PROCESSED FOOD CLASSIFICATION:**
-Use the NOVA classification system to estimate processed food percentage:
-- NOVA 1 (0% processed): Unprocessed/minimally processed foods
-- NOVA 2 (100% processed): Processed culinary ingredients  
-- NOVA 3 (70% processed): Processed foods
-- NOVA 4 (100% processed): Ultra-processed foods
+Use the NOVA classification system to estimate processed food percentage. Ask yourself these questions:
+
+**NOVA 1 (0% processed) - Unprocessed/Minimally Processed:**
+- Can you make this at home with basic cooking (boiling, grilling, steaming)?
+- Examples: fresh fruit, plain rice, grilled chicken, steamed vegetables, plain yogurt
+- Key test: ONE ingredient + basic preparation
+
+**NOVA 2 (100% processed) - Processed Culinary Ingredients:**
+- Pure extracted/refined ingredients used in cooking
+- Examples: sugar, oil, butter, salt, flour
+- Key test: Extracted FROM food, not a complete food itself
+
+**NOVA 3 (70% processed) - Processed Foods:**
+- Made by ADDING NOVA 2 ingredients to NOVA 1 foods
+- Requires commercial/industrial preparation methods
+- Examples: canned vegetables, cheese, bread, packaged tofu, **mochi**, dumplings, pasta
+- Key test: Could a home cook make this? If "technically yes but rarely do" → NOVA 3
+- Red flags: Shaped into forms (balls, cubes, sheets), requires molding/pressing, sold in packages
+
+**NOVA 4 (100% processed) - Ultra-Processed:**
+- Industrial formulations with 5+ ingredients including additives
+- Contains substances NEVER used in home cooking
+- Examples: sodas, chips, instant noodles, packaged snacks, shelf-stable desserts
+- Key test: Look for modified starches, emulsifiers, stabilizers, flavor enhancers, preservatives, artificial colors
+- **Important distinction:** Fresh bakery bread with 4 simple ingredients = NOVA 3. Packaged "fresh" bread with 15 ingredients including preservatives = NOVA 4
+- If it lists ingredients you don't recognize or wouldn't buy at a grocery store → NOVA 4
+
+**Critical thinking for edge cases:**
+- "Is this just cooked food?" → NOVA 1
+- "Was this shaped/molded in a factory?" → At least NOVA 3
+- "Does it have added sugar/salt/oil?" → At least NOVA 3
+- "Would I need industrial equipment to make this?" → NOVA 3 or 4
+
+**Default assumptions when details are unclear:**
+- **Packaged desserts/sweets** (cookies, mochi, cakes, pastries): Default to NOVA 4 unless clearly homemade or artisan
+- **Packaged snacks** (chips, crackers, bars): Default to NOVA 4
+- **Beverages** (sodas, energy drinks, flavored drinks): Default to NOVA 4
+- **Packaged savory items** (frozen meals, instant foods): Default to NOVA 4
+- **Fresh/homemade appearance** (visible fresh ingredients, rustic presentation): Can assume NOVA 1-3
+- **When in doubt between NOVA 3 and 4:** Choose NOVA 4 for packaged commercial products
 
 For each component, assign the appropriate NOVA group and calculate the weighted processed calories.
 
@@ -107,16 +181,27 @@ Estimate total grams of fresh fruits and vegetables (combined).
 **CRITICAL FORMATTING REQUIREMENTS:**
 YOU MUST format your response EXACTLY as shown below:
 
+**Analyzing:** [State what you received - e.g., "2 images + text description", "3 images", "text description only"]
+
 [Your brief conversational analysis - 2-3 sentences max. Mention NOVA classification naturally.]
 
-I have [low/medium/high] certainty on this estimate.
+**CERTAINTY RATING:**
+Rate your confidence in this estimate (0-10 scale):
+- 8-10: Exact data available (nutrition labels, precise weights, clear portions)
+- 6-7: Good visual clarity, standard portions, familiar foods
+- 4-5: Partial ambiguity (hidden ingredients, unclear portions, unfamiliar preparation)
+- 0-3: High uncertainty (blurry images, unusual foods, no size reference)
 
-[Optional: ONE question if critical info missing]
+If certainty is 6 or below, ask 1-2 brief clarifying questions to improve accuracy:
+- Portion size: "Is this a small appetizer portion or a full entree?"
+- Preparation: "Was this cooked with oil/butter?"
+- Context: "Are these separate meals or different angles of the same dish?"
 
 **NUTRITION_DATA:**
 \`\`\`json
 {
   "title": "[EXACTLY 2 words - e.g. Chocolate Cookie, Grilled Chicken, Yogurt Berries]",
+  "certainty": #,
   "calories": ###,
   "protein": ###,
   "fat": ###,
@@ -240,14 +325,15 @@ ${initialPrompt}`;
       const data = await response.json();
       const assistantMessage = data.content[0].text;
       
-      // Parse nutrition data (macros + extended metrics + title) from response
+      // Parse nutrition data (macros + extended metrics + title + certainty) from response
       const nutritionData = this.extractNutritionData(assistantMessage);
       
       return {
         response: assistantMessage,
         macros: nutritionData.macros,
         extendedMetrics: nutritionData.extendedMetrics,
-        title: nutritionData.title
+        title: nutritionData.title,
+        certainty: nutritionData.certainty
       };
     } catch (error) {
       console.error('Error analyzing meal image:', error);
@@ -297,11 +383,13 @@ PROCESSED FOOD (NOVA):
 **CRITICAL FORMATTING REQUIREMENTS:**
 YOU MUST format your response EXACTLY as shown below:
 
+**Update based on:** [State the new information you received - e.g., "user clarified portion size", "confirmed scale was tared", "added cooking method details"]
+
 [Your brief update - acknowledge new info, show key math if needed. 2-3 sentences max.]
 
 Example: "Perfect! Scale was tared, so 200g is yogurt weight. Math: (200/170) × 150 = 176 cal. Plus 30 cal berries = 206 total."
 
-I have [low/medium/high] certainty on this estimate.
+**CERTAINTY RATING:** (provide your updated confidence 0-10 - should increase with more info)
 
 [ONE question only if critical detail missing, otherwise skip entirely]
 
@@ -309,6 +397,7 @@ I have [low/medium/high] certainty on this estimate.
 \`\`\`json
 {
   "title": "[Keep same 2-word title from before]",
+  "certainty": #,
   "calories": ###,
   "protein": ###,
   "fat": ###,
@@ -350,14 +439,15 @@ CRITICAL:
       const data = await response.json();
       const assistantMessage = data.content[0].text;
       
-      // Parse nutrition data (macros + extended metrics + title) from response
+      // Parse nutrition data (macros + extended metrics + title + certainty) from response
       const nutritionData = this.extractNutritionData(assistantMessage);
       
       return {
         response: assistantMessage,
         macros: nutritionData.macros,
         extendedMetrics: nutritionData.extendedMetrics,
-        title: nutritionData.title
+        title: nutritionData.title,
+        certainty: nutritionData.certainty
       };
     } catch (error) {
       console.error('Error refining analysis:', error);
@@ -413,6 +503,12 @@ CRITICAL:
         }
       }
       
+      // Extract certainty rating
+      const certainty = typeof data.certainty === 'number' ? data.certainty : null;
+      if (certainty !== null) {
+        console.log(`🎯 Certainty rating: ${certainty}/10`);
+      }
+      
       // Build response
       const macros = {
         calories: data.calories,
@@ -463,12 +559,13 @@ CRITICAL:
       
       console.log('✅ Successfully extracted nutrition data from JSON:');
       console.log('  Title:', title);
+      console.log('  Certainty:', certainty);
       console.log('  Macros:', macros);
       if (extendedMetrics) {
         console.log('  Extended metrics:', extendedMetrics);
       }
       
-      return { macros, extendedMetrics, title };
+      return { macros, extendedMetrics, title, certainty };
       
     } catch (error) {
       console.error('❌ JSON parsing failed:', error.message);

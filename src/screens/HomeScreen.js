@@ -309,23 +309,6 @@ const HomeScreen = ({ navigation }) => {
       </TouchableOpacity>
 
       {/* Navigation Buttons */}
-      <View style={styles.navigationButtons}>
-        <TouchableOpacity 
-          style={styles.navButton} 
-          onPress={() => navigation.navigate('Trends')}
-        >
-          <Ionicons name="analytics" size={20} color={Colors.accent} />
-          <Text style={styles.navButtonText}>Trends</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.navButton} 
-          onPress={() => navigation.navigate('SavedMeals')}
-        >
-          <Ionicons name="bookmark" size={20} color={Colors.accent} />
-          <Text style={styles.navButtonText}>Saved Meals</Text>
-        </TouchableOpacity>
-      </View>
 
       {/* Meals List */}
       <View style={styles.mealsSection}>
@@ -608,33 +591,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.sm,
     fontWeight: '500',
     letterSpacing: Typography.letterSpacingNormal,
-  },
-  navigationButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.base,
-    marginVertical: Spacing.sm,
-    gap: Spacing.md,
-  },
-  navButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.backgroundElevated,
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.base,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    flex: 1,
-    justifyContent: 'center',
-    ...Shadows.sm,
-  },
-  navButtonText: {
-    color: Colors.accent,
-    fontSize: Typography.sm,
-    fontWeight: '500',
-    letterSpacing: Typography.letterSpacingNormal,
-    marginLeft: Spacing.sm,
   },
   mealContainer: {
     marginBottom: Spacing.md,

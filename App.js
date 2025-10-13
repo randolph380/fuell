@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { ClerkWrapper } from './src/components/ClerkWrapper';
 import { Colors } from './src/constants/colors';
 import CameraScreen from './src/screens/CameraScreen';
+import EditTargetsScreen from './src/screens/EditTargetsScreen';
 import TrendsScreen from './src/screens/HistoryScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import SavedMealsScreen from './src/screens/SavedMealsScreen';
@@ -49,6 +50,11 @@ function AppNavigator() {
           name="SavedMeals" 
           component={SavedMealsScreen}
           options={{ title: 'Saved Meals' }}
+        />
+        <Stack.Screen 
+          name="EditTargets" 
+          component={EditTargetsScreen}
+          options={{ title: 'Edit Targets' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

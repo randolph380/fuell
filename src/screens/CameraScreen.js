@@ -379,6 +379,71 @@ const CameraScreen = ({ navigation, route }) => {
     }
   };
 
+  const quickLogMeal = async () => {
+    if (!imageUri && !foodDescription.trim()) {
+      Alert.alert('Input Required', 'Please take a photo or describe your meal');
+      return;
+    }
+
+    setIsAnalyzing(true);
+
+    try {
+      // Convert images to base64
+      let base64Image = null;
+      if (imageUri) {
+        base64Image = await convertImageToBase64(imageUri);
+      }
+
+      let base64AdditionalImages = [];
+      if (additionalImages.length > 0) {
+        base64AdditionalImages = await Promise.all(
+          additionalImages.map(uri => convertImageToBase64(uri))
+        );
+      }
+
+      // Analyze the meal
+      const result = await claudeAPI.analyzeMealImage(base64Image, foodDescription, base64AdditionalImages, isMultipleDishes);
+      
+      if (!result.macros) {
+        throw new Error('Failed to analyze meal');
+      }
+
+      // Extract title
+      const extractedTitle = result.title?.trim() || 'Meal';
+
+      // Create meal object
+      const now = new Date();
+      const mealDate = new Date(targetDate);
+      mealDate.setHours(now.getHours());
+      mealDate.setMinutes(now.getMinutes());
+      mealDate.setSeconds(now.getSeconds());
+      mealDate.setMilliseconds(now.getMilliseconds());
+      
+      const meal = {
+        id: Date.now().toString(),
+        name: extractedTitle,
+        calories: result.macros.calories,
+        protein: result.macros.protein,
+        carbs: result.macros.carbs,
+        fat: result.macros.fat,
+        timestamp: mealDate.getTime(),
+        date: mealDate.toDateString(),
+        extendedMetrics: result.extendedMetrics || null
+      };
+
+      // Log the meal immediately
+      await StorageService.saveMeal(meal);
+      Alert.alert('Success', `${extractedTitle} logged successfully!`, [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
+    } catch (error) {
+      console.error('Error quick logging meal:', error);
+      Alert.alert('Error', 'Failed to log meal. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const logMeal = async () => {
     if (!currentMacros) return;
 
@@ -488,21 +553,36 @@ const CameraScreen = ({ navigation, route }) => {
           
           {/* Image Type Toggle - Always visible at top */}
           <View style={styles.toggleContainer}>
+            <Text style={styles.toggleLabel}>What did you photograph?</Text>
             <View style={styles.toggleButtons}>
               <TouchableOpacity 
                 style={[styles.toggleButton, !isMultipleDishes && styles.toggleButtonActive]}
                 onPress={() => setIsMultipleDishes(false)}
               >
+                <Ionicons 
+                  name="document-text-outline" 
+                  size={16} 
+                  color={!isMultipleDishes ? Colors.textInverse : Colors.textSecondary} 
+                  style={styles.toggleIcon}
+                />
                 <Text style={[styles.toggleButtonText, !isMultipleDishes && styles.toggleButtonTextActive]}>
-                  Single dish
+                  One item{'\n'}
+                  <Text style={styles.toggleSubtext}>(labels, scale, angles)</Text>
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.toggleButton, isMultipleDishes && styles.toggleButtonActive]}
                 onPress={() => setIsMultipleDishes(true)}
               >
+                <Ionicons 
+                  name="restaurant-outline" 
+                  size={16} 
+                  color={isMultipleDishes ? Colors.textInverse : Colors.textSecondary}
+                  style={styles.toggleIcon}
+                />
                 <Text style={[styles.toggleButtonText, isMultipleDishes && styles.toggleButtonTextActive]}>
-                  Multiple dishes
+                  Multiple items{'\n'}
+                  <Text style={styles.toggleSubtext}>(sum for this meal)</Text>
                 </Text>
               </TouchableOpacity>
             </View>
@@ -527,7 +607,7 @@ const CameraScreen = ({ navigation, route }) => {
           {/* Text Input */}
           <View style={styles.inputMethod}>
             <Text style={styles.methodTitle}>Describe your meal</Text>
-            <Text style={styles.methodSubtitle}>Type what you ate (e.g., "grilled chicken breast, 200g")</Text>
+            <Text style={styles.methodSubtitle}>Include details like: specific ingredients, weights/amounts, brands, cooking methods, or portion sizes (e.g., "200g grilled chicken breast, 1 cup brown rice, Chobani plain yogurt")</Text>
             <TextInput
               style={styles.textInput}
               placeholder="Describe your meal..."
@@ -545,8 +625,8 @@ const CameraScreen = ({ navigation, route }) => {
 
           {/* Photo Input */}
           <View style={styles.inputMethod}>
-            <Text style={styles.methodTitle}>Share photos of your meal</Text>
-            <Text style={styles.methodSubtitle}>Take a photo or select multiple from gallery (e.g., meal + nutrition labels)</Text>
+            <Text style={styles.methodTitle}>Upload photos of your meal</Text>
+            <Text style={styles.methodSubtitle}>Take photos of: meal, ingredients, nutrition labels, preparation steps, packaging, or receipts</Text>
             
             {imageUri ? (
               <View>
@@ -634,13 +714,25 @@ const CameraScreen = ({ navigation, route }) => {
 
         {/* Analyze Button - hide after analysis starts */}
         {!conversation.length && (imageUri || foodDescription.trim()) && (
-          <TouchableOpacity 
-            style={styles.analyzeButton} 
-            onPress={analyzeFood}
-            disabled={isAnalyzing}
-          >
-            <Text style={styles.analyzeButtonText}>Analyze Food</Text>
-          </TouchableOpacity>
+          <View style={styles.actionButtonsRow}>
+            <TouchableOpacity 
+              style={[styles.analyzeButton, styles.halfButton]} 
+              onPress={analyzeFood}
+              disabled={isAnalyzing}
+            >
+              <Ionicons name="chatbubbles-outline" size={18} color={Colors.textInverse} />
+              <Text style={styles.analyzeButtonText}>Analyze & Chat</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.quickLogButton, styles.halfButton]} 
+              onPress={quickLogMeal}
+              disabled={isAnalyzing}
+            >
+              <Ionicons name="checkmark-circle-outline" size={18} color={Colors.textInverse} />
+              <Text style={styles.quickLogButtonText}>Quick Log</Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         {/* Conversation */}
@@ -705,14 +797,6 @@ const CameraScreen = ({ navigation, route }) => {
             {/* Input Section */}
             {showInput && (
               <View>
-                {/* Add Photo Button */}
-                <View style={styles.addPhotoSection}>
-                  <TouchableOpacity style={styles.addPhotoButton} onPress={pickImage}>
-                    <Ionicons name="add-circle" size={20} color={Colors.accent} />
-                    <Text style={styles.addPhotoText}>Add Photo</Text>
-                  </TouchableOpacity>
-                </View>
-                
                 <View style={styles.inputSection}>
                   <TextInput
                     style={styles.messageInput}
@@ -726,6 +810,7 @@ const CameraScreen = ({ navigation, route }) => {
                       Keyboard.dismiss();
                     }}
                   />
+                  
                   <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
                     <Ionicons name="send" size={20} color={Colors.textInverse} />
                   </TouchableOpacity>
@@ -986,10 +1071,11 @@ const styles = StyleSheet.create({
     letterSpacing: Typography.letterSpacingNormal,
   },
   methodSubtitle: {
-    fontSize: Typography.sm,
+    fontSize: Typography.sm * 0.7,
     color: Colors.textSecondary,
     marginBottom: Spacing.base,
     letterSpacing: Typography.letterSpacingNormal,
+    lineHeight: Typography.sm * 0.7 * 1.4,
   },
   textInput: {
     borderWidth: 1,
@@ -1096,19 +1182,45 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 10,
   },
-  analyzeButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: Spacing.base,
+  actionButtonsRow: {
+    flexDirection: 'row',
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.sm,
     marginBottom: Spacing.base,
+    gap: Spacing.sm,
+  },
+  halfButton: {
+    flex: 1,
+  },
+  analyzeButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.base,
     borderRadius: BorderRadius.base,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: Spacing.xs,
     ...Shadows.sm,
   },
   analyzeButtonText: {
     color: Colors.textInverse,
-    fontSize: Typography.base,
+    fontSize: Typography.sm,
+    fontWeight: '600',
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  quickLogButton: {
+    backgroundColor: Colors.accent,
+    paddingVertical: Spacing.base,
+    borderRadius: BorderRadius.base,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: Spacing.xs,
+    ...Shadows.sm,
+  },
+  quickLogButtonText: {
+    color: Colors.textInverse,
+    fontSize: Typography.sm,
     fontWeight: '600',
     letterSpacing: Typography.letterSpacingNormal,
   },
@@ -1239,42 +1351,24 @@ const styles = StyleSheet.create({
     color: Colors.accent,
     fontWeight: '600',
   },
-  addPhotoSection: {
-    paddingHorizontal: 15,
-    paddingTop: 10,
-    paddingBottom: 5,
-  },
-  addPhotoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.base,
-    borderWidth: 1,
-    borderColor: Colors.accent,
-    backgroundColor: Colors.backgroundElevated,
-    gap: Spacing.xs,
-  },
-  addPhotoText: {
-    fontSize: Typography.sm,
-    color: Colors.accent,
-    fontWeight: '500',
-  },
   inputSection: {
     flexDirection: 'row',
-    paddingHorizontal: 15,
-    paddingBottom: 10,
+    paddingHorizontal: Spacing.base,
+    paddingBottom: Spacing.sm,
+    paddingTop: Spacing.sm,
     alignItems: 'flex-end',
+    gap: Spacing.sm,
   },
   messageInput: {
     flex: 1,
-    borderWidth: 2,
-    borderColor: '#e0e0e0',
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 14,
-    marginRight: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.base,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    fontSize: Typography.sm,
+    color: Colors.textPrimary,
+    backgroundColor: Colors.backgroundElevated,
     maxHeight: 100,
   },
   sendButton: {
@@ -1492,38 +1586,56 @@ const styles = StyleSheet.create({
   toggleContainer: {
     backgroundColor: Colors.backgroundElevated,
     borderRadius: BorderRadius.base,
-    padding: Spacing.sm,
+    padding: Spacing.md,
     marginBottom: Spacing.base,
     borderWidth: 1,
     borderColor: Colors.border,
   },
+  toggleLabel: {
+    fontSize: Typography.sm,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
   toggleButtons: {
     flexDirection: 'row',
-    gap: Spacing.xs,
+    gap: Spacing.sm,
   },
   toggleButton: {
     flex: 1,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.xs,
-    borderRadius: BorderRadius.sm,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.base,
     borderWidth: 1.5,
     borderColor: Colors.border,
     backgroundColor: Colors.backgroundElevated,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   toggleButtonActive: {
     borderColor: Colors.accent,
-    backgroundColor: Colors.accentLight + '15',
+    backgroundColor: Colors.accent,
+  },
+  toggleIcon: {
+    marginBottom: Spacing.xs,
   },
   toggleButtonText: {
     fontSize: Typography.xs,
+    textAlign: 'center',
     color: Colors.textSecondary,
     fontWeight: '500',
     letterSpacing: Typography.letterSpacingNormal,
   },
   toggleButtonTextActive: {
-    color: Colors.accent,
+    color: Colors.textInverse,
     fontWeight: '600',
+  },
+  toggleSubtext: {
+    fontSize: Typography.xs * 0.85,
+    color: 'inherit',
+    fontWeight: '400',
+    opacity: 0.8,
   },
   debugToggleContainer: {
     marginBottom: Spacing.base,

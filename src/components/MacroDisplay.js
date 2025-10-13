@@ -1,25 +1,46 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
 
-// Health Guidelines (Default targets)
-const GUIDELINES = {
-  calories: { target: 2000, label: 'Daily target' },
-  protein: { min: 100, label: 'Minimum' },
-  carbs: { min: 225, max: 325, label: 'Range' },
-  fat: { min: 44, max: 78, label: 'Range' },
-  // Limits (warning when exceeded)
-  processedPercent: { limit: 20, label: 'Limit' },
-  ultraProcessedPercent: { limit: 15, label: 'Limit' },
-  caffeine: { limit: 400, label: 'Safe limit' },
-  // Targets (encourage to reach)
-  fiber: { min: 30, label: 'Daily target' },
-  freshProduce: { min: 400, optimal: 800, label: 'Minimum/Optimal' },
+const STORAGE_KEY = '@macro_targets';
+
+// Default targets (WHO Recommendations - matching EditTargetsScreen)
+const DEFAULT_TARGETS = {
+  calories: { enabled: true, min: null, max: 2000, type: 'target', hasTarget: true },
+  protein: { enabled: true, min: 50, max: null, type: 'target', hasTarget: true },
+  carbs: { enabled: true, min: 225, max: 325, type: 'info', hasTarget: true },
+  fat: { enabled: true, min: 44, max: 78, type: 'info', hasTarget: true },
+  processedPercent: { enabled: true, min: null, max: 10, type: 'limit', hasTarget: true },
+  ultraProcessedPercent: { enabled: true, min: null, max: 10, type: 'limit', hasTarget: true },
+  caffeine: { enabled: true, min: null, max: 400, type: 'limit', hasTarget: true },
+  fiber: { enabled: true, min: 25, max: null, type: 'target', hasTarget: true },
+  freshProduce: { enabled: true, min: 400, max: 800, type: 'target', hasTarget: true },
 };
 
 const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber, caffeine, freshProduce }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [targets, setTargets] = useState(DEFAULT_TARGETS);
+
+  // Load targets from storage when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadTargets();
+    }, [])
+  );
+
+  const loadTargets = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setTargets(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Error loading targets:', error);
+    }
+  };
   
   const formatNumber = (num) => {
     return num ? Math.round(num).toLocaleString() : '0';
@@ -44,6 +65,64 @@ const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber, 
     if (percent >= 100) return { color: '#2d8659', status: 'achieved' };
     if (percent >= 75) return { color: '#4a9fa8', status: 'close' };
     return { color: '#6c757d', status: 'progress' };
+  };
+
+  // Universal function to generate status text for any metric
+  const getStatusText = (current, min, max, unit = '', isLimit = false) => {
+    const curr = current || 0;
+    
+    // Both min and max specified
+    if (min && max) {
+      if (isLimit) {
+        // For limits (like processed, ultra-processed, caffeine as limit)
+        if (curr > max) {
+          return { text: `Over ${formatNumber(max)}${unit} limit`, style: 'warning' };
+        } else if (curr >= min) {
+          return { text: `${formatNumber(min)}-${formatNumber(max)}${unit} range`, style: 'achieved' };
+        } else {
+          return { text: `${formatNumber(min)}-${formatNumber(max)}${unit} range`, style: 'status' };
+        }
+      } else {
+        // For targets (like fiber, fruits & veg)
+        if (curr >= max) {
+          return { text: `${formatNumber(min)}-${formatNumber(max)}${unit} range (optimal reached)`, style: 'achieved' };
+        } else if (curr >= min) {
+          return { text: `${formatNumber(min)}-${formatNumber(max)}${unit} range (minimum met)`, style: 'achieved' };
+        } else {
+          return { text: `${formatNumber(min)}-${formatNumber(max)}${unit} range`, style: 'status' };
+        }
+      }
+    }
+    
+    // Only max specified
+    if (max) {
+      if (isLimit) {
+        // Limit: stay under max
+        if (curr > max) {
+          return { text: `Over ${formatNumber(max)}${unit} limit`, style: 'warning' };
+        } else {
+          return { text: `${formatNumber(curr)}/${formatNumber(max)}${unit}${curr <= max ? ' ✓' : ''}`, style: 'status' };
+        }
+      } else {
+        // Target: reach max
+        if (curr >= max) {
+          return { text: `${formatNumber(max)}${unit} target met`, style: 'achieved' };
+        } else {
+          return { text: `${formatNumber(curr)}/${formatNumber(max)}${unit}`, style: 'status' };
+        }
+      }
+    }
+    
+    // Only min specified
+    if (min) {
+      if (curr >= min) {
+        return { text: `${formatNumber(min)}${unit} target met`, style: 'achieved' };
+      } else {
+        return { text: `${formatNumber(curr)}/${formatNumber(min)}${unit}`, style: 'status' };
+      }
+    }
+    
+    return { text: '', style: 'status' };
   };
 
   // Progress bar component
@@ -72,52 +151,96 @@ const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber, 
       {/* Main Macros Section */}
       <View style={styles.mainMacrosSection}>
         {/* Calories - Left Half */}
-        <View style={styles.calorieSection}>
-          <Text style={styles.calorieValue}>{formatNumber(macros.calories)}</Text>
-          <Text style={styles.calorieLabel}>Calories</Text>
-          <ProgressBar 
-            current={macros.calories || 0} 
-            target={GUIDELINES.calories.target}
-            color={Colors.primary}
-          />
-          <Text style={styles.progressText}>
-            {formatNumber(macros.calories)}/{formatNumber(GUIDELINES.calories.target)}
-          </Text>
-        </View>
+        {targets.calories.enabled && (
+          <View style={styles.calorieSection}>
+            <Text style={styles.calorieValue}>{formatNumber(macros.calories)}</Text>
+            <Text style={styles.calorieLabel}>Calories</Text>
+            {targets.calories.hasTarget && (targets.calories.min || targets.calories.max) && (() => {
+              const statusInfo = getStatusText(macros.calories, targets.calories.min, targets.calories.max, '');
+              return (
+                <>
+                  <ProgressBar 
+                    current={macros.calories || 0} 
+                    target={targets.calories.max || targets.calories.min}
+                    color={Colors.primary}
+                  />
+                  <Text style={styles.progressText}>{statusInfo.text}</Text>
+                </>
+              );
+            })()}
+          </View>
+        )}
 
         {/* Other Macros - Right Half Stacked */}
         <View style={styles.rightMacrosSection}>
           {/* Protein */}
-          <View style={styles.macroRow}>
-            <View style={styles.macroRowContent}>
-              <Text style={styles.macroRowLabel}>Protein</Text>
-              <Text style={styles.macroRowValue}>{formatNumber(macros.protein)}g</Text>
+          {targets.protein.enabled && (
+            <View style={styles.macroRow}>
+              <View style={styles.macroRowContent}>
+                <Text style={styles.macroRowLabel}>Protein</Text>
+                <Text style={styles.macroRowValue}>{formatNumber(macros.protein)}g</Text>
+              </View>
+              {targets.protein.hasTarget && (targets.protein.min || targets.protein.max) && (() => {
+                const statusInfo = getStatusText(macros.protein, targets.protein.min, targets.protein.max, 'g');
+                return (
+                  <>
+                    <ProgressBar 
+                      current={macros.protein || 0} 
+                      target={targets.protein.max || targets.protein.min}
+                      color={Colors.dataProtein}
+                    />
+                    <Text style={styles.macroRowProgress}>{statusInfo.text}</Text>
+                  </>
+                );
+              })()}
             </View>
-            <ProgressBar 
-              current={macros.protein || 0} 
-              target={GUIDELINES.protein.min}
-              color={Colors.dataProtein}
-            />
-            <Text style={styles.macroRowProgress}>
-              {formatNumber(macros.protein)}/{GUIDELINES.protein.min}g
-            </Text>
-          </View>
+          )}
 
           {/* Net Carbs */}
-          <View style={styles.macroRow}>
-            <View style={styles.macroRowContent}>
-              <Text style={styles.macroRowLabel}>Net Carbs</Text>
-              <Text style={styles.macroRowValue}>{formatNumber(macros.carbs)}g</Text>
+          {targets.carbs.enabled && (
+            <View style={styles.macroRow}>
+              <View style={styles.macroRowContent}>
+                <Text style={styles.macroRowLabel}>Net Carbs</Text>
+                <Text style={styles.macroRowValue}>{formatNumber(macros.carbs)}g</Text>
+              </View>
+              {targets.carbs.hasTarget && (targets.carbs.min || targets.carbs.max) && (() => {
+                const statusInfo = getStatusText(macros.carbs, targets.carbs.min, targets.carbs.max, 'g');
+                return (
+                  <>
+                    <ProgressBar 
+                      current={macros.carbs || 0} 
+                      target={targets.carbs.max || targets.carbs.min}
+                      color={Colors.dataCarbs}
+                    />
+                    <Text style={styles.macroRowProgress}>{statusInfo.text}</Text>
+                  </>
+                );
+              })()}
             </View>
-          </View>
+          )}
 
           {/* Fat */}
-          <View style={styles.macroRow}>
-            <View style={styles.macroRowContent}>
-              <Text style={styles.macroRowLabel}>Fat</Text>
-              <Text style={styles.macroRowValue}>{formatNumber(macros.fat)}g</Text>
+          {targets.fat.enabled && (
+            <View style={styles.macroRow}>
+              <View style={styles.macroRowContent}>
+                <Text style={styles.macroRowLabel}>Fat</Text>
+                <Text style={styles.macroRowValue}>{formatNumber(macros.fat)}g</Text>
+              </View>
+              {targets.fat.hasTarget && (targets.fat.min || targets.fat.max) && (() => {
+                const statusInfo = getStatusText(macros.fat, targets.fat.min, targets.fat.max, 'g');
+                return (
+                  <>
+                    <ProgressBar 
+                      current={macros.fat || 0} 
+                      target={targets.fat.max || targets.fat.min}
+                      color={Colors.dataFat}
+                    />
+                    <Text style={styles.macroRowProgress}>{statusInfo.text}</Text>
+                  </>
+                );
+              })()}
             </View>
-          </View>
+          )}
         </View>
       </View>
 
@@ -126,8 +249,8 @@ const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber, 
         <Text style={styles.expandText}>Additional Metrics</Text>
         <Ionicons 
           name={isExpanded ? "chevron-up" : "chevron-down"} 
-          size={18} 
-          color={Colors.textTertiary} 
+          size={20} 
+          color={Colors.textSecondary} 
         />
       </View>
 
@@ -135,134 +258,174 @@ const MacroDisplay = ({ macros, processedPercent, ultraProcessedPercent, fiber, 
       {isExpanded && (
         <View style={styles.additionalMetricsSection}>
           {/* LIMITS SECTION */}
-          <Text style={styles.sectionHeader}>Limits</Text>
+          {(targets.processedPercent.enabled || targets.ultraProcessedPercent.enabled || targets.caffeine.enabled) && (
+            <Text style={styles.sectionHeader}>Limits</Text>
+          )}
           
           {/* Processed Calories */}
-          <View style={styles.metricCard}>
-            <View style={styles.metricHeader}>
-              <Text style={styles.metricLabel}>Processed calories</Text>
-              <Text style={[
-                styles.metricValue,
-                { color: getLimitStatus(processedPercent || 0, GUIDELINES.processedPercent.limit).color }
-              ]}>
-                {processedPercent ?? 0}%
-              </Text>
+          {targets.processedPercent.enabled && (
+            <View style={styles.metricCard}>
+              <View style={styles.metricHeader}>
+                <Text style={styles.metricLabel}>Processed calories</Text>
+                <Text style={[
+                  styles.metricValue,
+                  targets.processedPercent.hasTarget && targets.processedPercent.max
+                    ? { color: getLimitStatus(processedPercent || 0, targets.processedPercent.max).color }
+                    : { color: Colors.textPrimary }
+                ]}>
+                  {processedPercent ?? 0}%
+                </Text>
+              </View>
+              {targets.processedPercent.hasTarget && (targets.processedPercent.min || targets.processedPercent.max) && (() => {
+                const statusInfo = getStatusText(processedPercent, targets.processedPercent.min, targets.processedPercent.max, '%', true);
+                return (
+                  <>
+                    <ProgressBar 
+                      current={processedPercent || 0} 
+                      target={targets.processedPercent.max || targets.processedPercent.min}
+                      color={getLimitStatus(processedPercent || 0, targets.processedPercent.max || targets.processedPercent.min).color}
+                    />
+                    <Text style={statusInfo.style === 'warning' ? styles.warningText : statusInfo.style === 'achieved' ? styles.achievedText : styles.statusText}>
+                      {statusInfo.text}
+                    </Text>
+                  </>
+                );
+              })()}
             </View>
-            <ProgressBar 
-              current={processedPercent || 0} 
-              target={GUIDELINES.processedPercent.limit}
-              color={getLimitStatus(processedPercent || 0, GUIDELINES.processedPercent.limit).color}
-            />
-            {(processedPercent || 0) > GUIDELINES.processedPercent.limit ? (
-              <Text style={styles.warningText}>Over {GUIDELINES.processedPercent.limit}% limit</Text>
-            ) : (
-              <Text style={styles.statusText}>
-                {formatNumber(GUIDELINES.processedPercent.limit - (processedPercent || 0))}% under limit
-              </Text>
-            )}
-          </View>
+          )}
 
           {/* Ultra-Processed Calories */}
-          <View style={styles.metricCard}>
-            <View style={styles.metricHeader}>
-              <Text style={styles.metricLabel}>Ultra-processed calories</Text>
-              <Text style={[
-                styles.metricValue,
-                { color: getLimitStatus(ultraProcessedPercent || 0, GUIDELINES.ultraProcessedPercent.limit).color }
-              ]}>
-                {ultraProcessedPercent ?? 0}%
-              </Text>
+          {targets.ultraProcessedPercent.enabled && (
+            <View style={styles.metricCard}>
+              <View style={styles.metricHeader}>
+                <Text style={styles.metricLabel}>Ultra-processed calories</Text>
+                <Text style={[
+                  styles.metricValue,
+                  targets.ultraProcessedPercent.hasTarget && targets.ultraProcessedPercent.max
+                    ? { color: getLimitStatus(ultraProcessedPercent || 0, targets.ultraProcessedPercent.max).color }
+                    : { color: Colors.textPrimary }
+                ]}>
+                  {ultraProcessedPercent ?? 0}%
+                </Text>
+              </View>
+              {targets.ultraProcessedPercent.hasTarget && (targets.ultraProcessedPercent.min || targets.ultraProcessedPercent.max) && (() => {
+                const statusInfo = getStatusText(ultraProcessedPercent, targets.ultraProcessedPercent.min, targets.ultraProcessedPercent.max, '%', true);
+                return (
+                  <>
+                    <ProgressBar 
+                      current={ultraProcessedPercent || 0} 
+                      target={targets.ultraProcessedPercent.max || targets.ultraProcessedPercent.min}
+                      color={getLimitStatus(ultraProcessedPercent || 0, targets.ultraProcessedPercent.max || targets.ultraProcessedPercent.min).color}
+                    />
+                    <Text style={statusInfo.style === 'warning' ? styles.warningText : statusInfo.style === 'achieved' ? styles.achievedText : styles.statusText}>
+                      {statusInfo.text}
+                    </Text>
+                  </>
+                );
+              })()}
             </View>
-            <ProgressBar 
-              current={ultraProcessedPercent || 0} 
-              target={GUIDELINES.ultraProcessedPercent.limit}
-              color={getLimitStatus(ultraProcessedPercent || 0, GUIDELINES.ultraProcessedPercent.limit).color}
-            />
-            {(ultraProcessedPercent || 0) > GUIDELINES.ultraProcessedPercent.limit ? (
-              <Text style={styles.warningText}>Over {GUIDELINES.ultraProcessedPercent.limit}% limit</Text>
-            ) : (
-              <Text style={styles.statusText}>
-                {formatNumber(GUIDELINES.ultraProcessedPercent.limit - (ultraProcessedPercent || 0))}% under limit
-              </Text>
-            )}
-          </View>
+          )}
 
           {/* Caffeine */}
-          <View style={styles.metricCard}>
-            <View style={styles.metricHeader}>
-              <Text style={styles.metricLabel}>Caffeine</Text>
-              <Text style={[
-                styles.metricValue,
-                { color: getLimitStatus(caffeine || 0, GUIDELINES.caffeine.limit).color }
-              ]}>
-                {formatNumber(caffeine)}mg
-              </Text>
+          {targets.caffeine.enabled && (
+            <View style={styles.metricCard}>
+              <View style={styles.metricHeader}>
+                <Text style={styles.metricLabel}>Caffeine</Text>
+                <Text style={[
+                  styles.metricValue,
+                  targets.caffeine.hasTarget && targets.caffeine.max
+                    ? { color: getLimitStatus(caffeine || 0, targets.caffeine.max).color }
+                    : { color: Colors.textPrimary }
+                ]}>
+                  {formatNumber(caffeine)}mg
+                </Text>
+              </View>
+              {targets.caffeine.hasTarget && (targets.caffeine.min || targets.caffeine.max) && (() => {
+                const statusInfo = getStatusText(caffeine, targets.caffeine.min, targets.caffeine.max, 'mg', true);
+                return (
+                  <>
+                    <ProgressBar 
+                      current={caffeine || 0} 
+                      target={targets.caffeine.max || targets.caffeine.min}
+                      color={getLimitStatus(caffeine || 0, targets.caffeine.max || targets.caffeine.min).color}
+                    />
+                    <Text style={statusInfo.style === 'warning' ? styles.warningText : statusInfo.style === 'achieved' ? styles.achievedText : styles.statusText}>
+                      {statusInfo.text}
+                    </Text>
+                  </>
+                );
+              })()}
             </View>
-            <ProgressBar 
-              current={caffeine || 0} 
-              target={GUIDELINES.caffeine.limit}
-              color={getLimitStatus(caffeine || 0, GUIDELINES.caffeine.limit).color}
-            />
-            <Text style={styles.statusText}>
-              {formatNumber(caffeine)}/{GUIDELINES.caffeine.limit}mg
-              {(caffeine || 0) <= GUIDELINES.caffeine.limit && ' ✓'}
-            </Text>
-          </View>
+          )}
 
           {/* TARGETS SECTION */}
-          <Text style={[styles.sectionHeader, { marginTop: Spacing.lg }]}>Targets</Text>
+          {(targets.fiber.enabled || targets.freshProduce.enabled) && (
+            <Text style={[styles.sectionHeader, { marginTop: Spacing.lg }]}>Targets</Text>
+          )}
           
           {/* Fiber */}
-          <View style={styles.metricCard}>
-            <View style={styles.metricHeader}>
-              <Text style={styles.metricLabel}>Fiber</Text>
-              <Text style={[
-                styles.metricValue,
-                { color: getTargetStatus(fiber || 0, GUIDELINES.fiber.min).color }
-              ]}>
-                {formatNumber(fiber)}g
-              </Text>
+          {targets.fiber.enabled && (
+            <View style={styles.metricCard}>
+              <View style={styles.metricHeader}>
+                <Text style={styles.metricLabel}>Fiber</Text>
+                <Text style={[
+                  styles.metricValue,
+                  targets.fiber.hasTarget && (targets.fiber.min || targets.fiber.max)
+                    ? { color: getTargetStatus(fiber || 0, targets.fiber.min || targets.fiber.max).color }
+                    : { color: Colors.textPrimary }
+                ]}>
+                  {formatNumber(fiber)}g
+                </Text>
+              </View>
+              {targets.fiber.hasTarget && (targets.fiber.min || targets.fiber.max) && (() => {
+                const statusInfo = getStatusText(fiber, targets.fiber.min, targets.fiber.max, 'g', false);
+                return (
+                  <>
+                    <ProgressBar 
+                      current={fiber || 0} 
+                      target={targets.fiber.max || targets.fiber.min}
+                      color={getTargetStatus(fiber || 0, targets.fiber.max || targets.fiber.min).color}
+                    />
+                    <Text style={statusInfo.style === 'achieved' ? styles.achievedText : styles.statusText}>
+                      {statusInfo.text}
+                    </Text>
+                  </>
+                );
+              })()}
             </View>
-            <ProgressBar 
-              current={fiber || 0} 
-              target={GUIDELINES.fiber.min}
-              color={getTargetStatus(fiber || 0, GUIDELINES.fiber.min).color}
-            />
-            {(fiber || 0) >= GUIDELINES.fiber.min ? (
-              <Text style={styles.achievedText}>✓ Target met</Text>
-            ) : (
-              <Text style={styles.statusText}>
-                {formatNumber(fiber)}/{GUIDELINES.fiber.min}g ({formatNumber(GUIDELINES.fiber.min - (fiber || 0))}g to go)
-              </Text>
-            )}
-          </View>
+          )}
 
           {/* Fruits & Vegetables */}
-          <View style={styles.metricCard}>
-            <View style={styles.metricHeader}>
-              <Text style={styles.metricLabel}>Fruits & vegetables</Text>
-              <Text style={[
-                styles.metricValue,
-                { color: getTargetStatus(freshProduce || 0, GUIDELINES.freshProduce.min).color }
-              ]}>
-                {formatNumber(freshProduce)}g
-              </Text>
+          {targets.freshProduce.enabled && (
+            <View style={styles.metricCard}>
+              <View style={styles.metricHeader}>
+                <Text style={styles.metricLabel}>Fruits & vegetables</Text>
+                <Text style={[
+                  styles.metricValue,
+                  targets.freshProduce.hasTarget && (targets.freshProduce.min || targets.freshProduce.max)
+                    ? { color: getTargetStatus(freshProduce || 0, targets.freshProduce.min || targets.freshProduce.max).color }
+                    : { color: Colors.textPrimary }
+                ]}>
+                  {formatNumber(freshProduce)}g
+                </Text>
+              </View>
+              {targets.freshProduce.hasTarget && (targets.freshProduce.min || targets.freshProduce.max) && (() => {
+                const statusInfo = getStatusText(freshProduce, targets.freshProduce.min, targets.freshProduce.max, 'g', false);
+                return (
+                  <>
+                    <ProgressBar 
+                      current={freshProduce || 0} 
+                      target={targets.freshProduce.max || targets.freshProduce.min}
+                      color={getTargetStatus(freshProduce || 0, targets.freshProduce.max || targets.freshProduce.min).color}
+                    />
+                    <Text style={statusInfo.style === 'achieved' ? styles.achievedText : styles.statusText}>
+                      {statusInfo.text}
+                    </Text>
+                  </>
+                );
+              })()}
             </View>
-            <ProgressBar 
-              current={freshProduce || 0} 
-              target={GUIDELINES.freshProduce.min}
-              color={getTargetStatus(freshProduce || 0, GUIDELINES.freshProduce.min).color}
-            />
-            {(freshProduce || 0) >= GUIDELINES.freshProduce.min ? (
-              <Text style={styles.achievedText}>
-                ✓ Minimum met ({formatNumber(GUIDELINES.freshProduce.optimal - (freshProduce || 0))}g to optimal)
-              </Text>
-            ) : (
-              <Text style={styles.statusText}>
-                {formatNumber(freshProduce)}/{GUIDELINES.freshProduce.min}g ({formatNumber(GUIDELINES.freshProduce.min - (freshProduce || 0))}g to minimum)
-              </Text>
-            )}
-          </View>
+          )}
         </View>
       )}
     </TouchableOpacity>
@@ -369,9 +532,9 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   expandText: {
-    fontSize: Typography.xs,
-    color: Colors.textTertiary,
-    fontWeight: '500',
+    fontSize: Typography.sm,
+    color: Colors.textPrimary,
+    fontWeight: '600',
     letterSpacing: 0.5,
   },
   additionalMetricsSection: {

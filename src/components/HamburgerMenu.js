@@ -63,6 +63,12 @@ export default function HamburgerMenu({ navigation }) {
 
   const menuItems = [
     {
+      id: 'edit-targets',
+      label: 'Edit Targets',
+      icon: 'settings-outline',
+      screen: 'EditTargets',
+    },
+    {
       id: 'trends',
       label: 'Trends',
       icon: 'trending-up',

@@ -122,11 +122,12 @@ class SimpleBackup {
     
     // Add meals
     csvContent += 'Meals\n';
-    csvContent += 'ID,Name,Calories,Protein,Carbs,Fat,Date,Timestamp\n';
+    csvContent += 'ID,Name,Calories,Protein,Carbs,Fat,Date,Timestamp,Processed%,Fiber,UltraProcessed%,Caffeine,FreshProduce,ProcessedCalories,UltraProcessedCalories\n';
     if (meals && Array.isArray(meals)) {
       meals.forEach(meal => {
         const date = new Date(meal.timestamp || meal.date).toISOString().split('T')[0];
-        csvContent += `${meal.id},${meal.name || ''},${meal.calories || 0},${meal.protein || 0},${meal.carbs || 0},${meal.fat || 0},${date},${meal.timestamp || ''}\n`;
+        const extended = meal.extendedMetrics || {};
+        csvContent += `${meal.id},${meal.name || ''},${meal.calories || 0},${meal.protein || 0},${meal.carbs || 0},${meal.fat || 0},${date},${meal.timestamp || ''},${extended.processedPercent || ''},${extended.fiber || ''},${extended.ultraProcessedPercent || ''},${extended.caffeine || ''},${extended.freshProduce || ''},${extended.processedCalories || ''},${extended.ultraProcessedCalories || ''}\n`;
       });
     }
     csvContent += '\n';
@@ -148,6 +149,30 @@ class SimpleBackup {
       savedMeals.forEach(meal => {
         csvContent += `${meal.id},${meal.name || ''},${meal.calories || 0},${meal.protein || 0},${meal.carbs || 0},${meal.fat || 0}\n`;
       });
+    }
+    csvContent += '\n';
+    
+    // Add extended metrics summary
+    csvContent += 'Extended Metrics Summary\n';
+    csvContent += 'Metric,Total Value,Average per Meal\n';
+    if (meals && Array.isArray(meals)) {
+      const totalFiber = meals.reduce((sum, meal) => sum + (meal.extendedMetrics?.fiber || 0), 0);
+      const totalCaffeine = meals.reduce((sum, meal) => sum + (meal.extendedMetrics?.caffeine || 0), 0);
+      const totalFreshProduce = meals.reduce((sum, meal) => sum + (meal.extendedMetrics?.freshProduce || 0), 0);
+      const totalProcessedCalories = meals.reduce((sum, meal) => sum + (meal.extendedMetrics?.processedCalories || 0), 0);
+      const totalUltraProcessedCalories = meals.reduce((sum, meal) => sum + (meal.extendedMetrics?.ultraProcessedCalories || 0), 0);
+      
+      const avgFiber = meals.length > 0 ? (totalFiber / meals.length).toFixed(2) : 0;
+      const avgCaffeine = meals.length > 0 ? (totalCaffeine / meals.length).toFixed(2) : 0;
+      const avgFreshProduce = meals.length > 0 ? (totalFreshProduce / meals.length).toFixed(2) : 0;
+      const avgProcessedCalories = meals.length > 0 ? (totalProcessedCalories / meals.length).toFixed(2) : 0;
+      const avgUltraProcessedCalories = meals.length > 0 ? (totalUltraProcessedCalories / meals.length).toFixed(2) : 0;
+      
+      csvContent += `Fiber (g),${totalFiber},${avgFiber}\n`;
+      csvContent += `Caffeine (mg),${totalCaffeine},${avgCaffeine}\n`;
+      csvContent += `Fresh Produce (g),${totalFreshProduce},${avgFreshProduce}\n`;
+      csvContent += `Processed Calories,${totalProcessedCalories},${avgProcessedCalories}\n`;
+      csvContent += `Ultra-Processed Calories,${totalUltraProcessedCalories},${avgUltraProcessedCalories}\n`;
     }
     csvContent += '\n';
     

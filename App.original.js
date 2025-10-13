@@ -2,13 +2,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { ClerkWrapper } from './src/components/ClerkWrapper';
 import { Colors } from './src/constants/colors';
+import BackupScreen from './src/screens/BackupScreen';
 import CameraScreen from './src/screens/CameraScreen';
 import EditTargetsScreen from './src/screens/EditTargetsScreen';
 import TrendsScreen from './src/screens/HistoryScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import SavedMealsScreen from './src/screens/SavedMealsScreen';
 import SignInScreen from './src/screens/SignInScreen';
-import SimpleBackupScreen from './src/screens/SimpleBackupScreen';
 
 const Stack = createStackNavigator();
 
@@ -59,7 +59,7 @@ function AppNavigator() {
         />
         <Stack.Screen 
           name="Backup" 
-          component={SimpleBackupScreen}
+          component={BackupScreen}
           options={{ title: 'Backup & Restore' }}
         />
       </Stack.Navigator>

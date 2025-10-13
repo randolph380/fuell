@@ -80,6 +80,12 @@ export default function HamburgerMenu({ navigation }) {
       icon: 'bookmark',
       screen: 'SavedMeals',
     },
+    {
+      id: 'backup',
+      label: 'Backup & Restore',
+      icon: 'cloud-upload-outline',
+      screen: 'Backup',
+    },
   ];
 
   return (

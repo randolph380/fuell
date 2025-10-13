@@ -1,0 +1,230 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  ActivityIndicator
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors, Spacing, Typography } from '../constants/colors';
+import SimpleBackup from '../services/simpleBackup';
+
+export default function SimpleBackupScreen({ navigation }) {
+  const [stats, setStats] = useState({
+    totalMeals: 0,
+    savedMeals: 0,
+    dailyRecords: 0,
+    hasPreferences: false
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const backupStats = await SimpleBackup.getBackupStats();
+      setStats(backupStats);
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
+
+  const handleExportBackup = async () => {
+    setIsLoading(true);
+    try {
+      const filePath = await SimpleBackup.exportToFile();
+      Alert.alert(
+        'Backup Created',
+        `Your data has been backed up to:\n${filePath}\n\nWould you like to share it?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Share', 
+            onPress: async () => {
+              try {
+                await SimpleBackup.shareBackup(filePath);
+              } catch (error) {
+                Alert.alert('Share Error', 'Failed to share backup file.');
+              }
+            }
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Export error:', error);
+      Alert.alert('Export Failed', `Failed to create backup: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleImportBackup = () => {
+    Alert.alert(
+      'Import Backup',
+      'To import a backup:\n\n1. Place your backup JSON file in the "backups" folder\n2. The file should be named like: fuel_backup_[userId]_[timestamp].json\n3. Restart the app to load the backup',
+      [
+        { text: 'OK', style: 'default' }
+      ]
+    );
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Backup & Restore</Text>
+      <Text style={styles.description}>
+        Create backups of your Fuel app data for safekeeping or transferring to another device.
+      </Text>
+
+      <View style={styles.statsContainer}>
+        <Text style={styles.statsTitle}>Your Data</Text>
+        <View style={styles.statRow}>
+          <Text style={styles.statLabel}>Total Meals:</Text>
+          <Text style={styles.statValue}>{stats.totalMeals}</Text>
+        </View>
+        <View style={styles.statRow}>
+          <Text style={styles.statLabel}>Saved Meal Templates:</Text>
+          <Text style={styles.statValue}>{stats.savedMeals}</Text>
+        </View>
+        <View style={styles.statRow}>
+          <Text style={styles.statLabel}>Daily Records:</Text>
+          <Text style={styles.statValue}>{stats.dailyRecords}</Text>
+        </View>
+        <View style={styles.statRow}>
+          <Text style={styles.statLabel}>Preferences Set:</Text>
+          <Text style={styles.statValue}>{stats.hasPreferences ? 'Yes' : 'No'}</Text>
+        </View>
+      </View>
+
+      <TouchableOpacity
+        style={[styles.button, styles.exportButton]}
+        onPress={handleExportBackup}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color={Colors.textInverse} />
+        ) : (
+          <Ionicons name="cloud-upload-outline" size={24} color={Colors.textInverse} />
+        )}
+        <Text style={styles.buttonText}>
+          {isLoading ? 'Creating Backup...' : 'Export Backup'}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.button, styles.importButton]}
+        onPress={handleImportBackup}
+        disabled={isLoading}
+      >
+        <Ionicons name="cloud-download-outline" size={24} color={Colors.primary} />
+        <Text style={[styles.buttonText, styles.importButtonText]}>Import Backup</Text>
+      </TouchableOpacity>
+
+      <View style={styles.infoBox}>
+        <Text style={styles.infoTitle}>How it works:</Text>
+        <Text style={styles.infoText}>
+          • <Text style={styles.bold}>Export:</Text> Creates a JSON file with all your data
+        </Text>
+        <Text style={styles.infoText}>
+          • <Text style={styles.bold}>Share:</Text> Send the backup file to yourself or another device
+        </Text>
+        <Text style={styles.infoText}>
+          • <Text style={styles.bold}>Import:</Text> Place the backup file in the "backups" folder
+        </Text>
+        <Text style={styles.infoText}>
+          • <Text style={styles.bold}>Account-specific:</Text> Backups are tied to your user account
+        </Text>
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: Spacing.medium,
+    backgroundColor: Colors.background,
+  },
+  title: {
+    ...Typography.header,
+    color: Colors.text,
+    marginBottom: Spacing.small,
+  },
+  description: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.large,
+  },
+  statsContainer: {
+    backgroundColor: Colors.cardBackground,
+    borderRadius: 8,
+    padding: Spacing.medium,
+    marginBottom: Spacing.large,
+  },
+  statsTitle: {
+    ...Typography.subHeader,
+    color: Colors.text,
+    marginBottom: Spacing.small,
+  },
+  statRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  statLabel: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+  },
+  statValue: {
+    ...Typography.body,
+    color: Colors.text,
+    fontWeight: '600',
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.medium,
+    borderRadius: 8,
+    marginBottom: Spacing.medium,
+  },
+  exportButton: {
+    backgroundColor: Colors.primary,
+  },
+  importButton: {
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  buttonText: {
+    ...Typography.button,
+    color: Colors.textInverse,
+    marginLeft: Spacing.tiny,
+  },
+  importButtonText: {
+    color: Colors.primary,
+  },
+  infoBox: {
+    backgroundColor: Colors.cardBackground,
+    borderRadius: 8,
+    padding: Spacing.medium,
+    marginTop: Spacing.large,
+  },
+  infoTitle: {
+    ...Typography.subHeader,
+    color: Colors.text,
+    marginBottom: Spacing.small,
+  },
+  infoText: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.tiny,
+  },
+  bold: {
+    fontWeight: '600',
+  },
+});

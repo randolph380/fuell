@@ -19,11 +19,16 @@ def get_local_ip():
     except Exception:
         return "Unable to detect"
 
-API_KEY = os.getenv('ANTHROPIC_API_KEY', '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')
-
 @app.route('/', methods=['GET'])
 def home():
-    return "✅ Server is running!"
+    local_ip = get_local_ip()
+    return f"""✅ Fuell API Server is running!
+Server URL: http://localhost:5000
+Network URL: http://{local_ip}:5000
+⚠️  UPDATE YOUR APP:
+   In src/services/api.js, set:
+   API_BASE_URL = 'http://{local_ip}:5000/api'
+============================================================"""
 
 @app.route('/api/analyze', methods=['POST', 'OPTIONS'])
 def analyze():
@@ -34,60 +39,36 @@ def analyze():
         response.headers.add('Access-Control-Allow-Methods', 'POST')
         return response
     
-    print("\n" + "="*50)
-    print("📥 REQUEST RECEIVED")
-    print("="*50)
-    
     try:
         data = request.get_json()
-        print(f"✓ JSON parsed successfully")
-        print(f"✓ Model: {data.get('model', 'not specified')}")
         
-        headers = {
-            'Content-Type': 'application/json',
-            'x-api-key': API_KEY,
-            'anthropic-version': '2023-06-01'
+        # For now, return a mock response to test the server
+        mock_response = {
+            "content": [
+                {
+                    "text": "🍎 Apple Analysis:\n\n**Macros per 100g:**\n- Calories: 52 kcal\n- Protein: 0.3g\n- Carbs: 14g\n- Fat: 0.2g\n- Fiber: 2.4g\n\n**Nutritional Benefits:**\n- High in fiber\n- Vitamin C\n- Antioxidants\n\n*This is a test response. Please update your API key for real analysis.*"
+                }
+            ],
+            "usage": {
+                "input_tokens": 10,
+                "output_tokens": 50
+            }
         }
         
-        print("🔄 Calling Anthropic API...")
-        
-        api_response = requests.post(
-            'https://api.anthropic.com/v1/messages',
-            headers=headers,
-            json=data,
-            timeout=60
-        )
-        
-        print(f"📨 Anthropic responded with status: {api_response.status_code}")
-        
-        if api_response.status_code == 200:
-            print("✅ SUCCESS!")
-            result = api_response.json()
-            return jsonify(result)
-        else:
-            print(f"❌ ERROR from Anthropic")
-            error_data = api_response.json() if api_response.text else {"error": "Unknown error"}
-            print(f"Error details: {error_data}")
-            return jsonify(error_data), api_response.status_code
+        return jsonify(mock_response)
             
     except Exception as e:
-        print(f"💥 EXCEPTION: {str(e)}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    local_ip = get_local_ip()
-    
-    print("\n" + "="*60)
+    print("=" * 60)
     print("🚀 FOOD MACRO ANALYZER SERVER")
-    print("="*60)
-    print("Server URL: http://localhost:5000")
+    print("=" * 60)
+    local_ip = get_local_ip()
+    print(f"Server URL: http://localhost:5000")
     print(f"Network URL: http://{local_ip}:5000")
-    print("\n⚠️  UPDATE YOUR APP:")
+    print("⚠️  UPDATE YOUR APP:")
     print(f"   In src/services/api.js, set:")
     print(f"   API_BASE_URL = 'http://{local_ip}:5000/api'")
-    print("="*60 + "\n")
-    
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
-
+    print("=" * 60)
+    app.run(host='0.0.0.0', port=5000, debug=True)

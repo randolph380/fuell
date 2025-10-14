@@ -1,7 +1,7 @@
 import { ClerkProvider, SignedIn, SignedOut, useUser } from '@clerk/clerk-expo';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect } from 'react';
-import HybridHybridStorageService from '../services/hybridStorage';
+import HybridStorageService from '../services/hybridStorage';
 
 // Cache for token
 const tokenCache = {

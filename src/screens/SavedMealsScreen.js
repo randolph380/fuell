@@ -93,7 +93,12 @@ const SavedMealsScreen = ({ navigation }) => {
       calories: meal.calories.toString(),
       protein: meal.protein.toString(),
       carbs: meal.carbs.toString(),
-      fat: meal.fat.toString()
+      fat: meal.fat.toString(),
+      fiber: meal.fiber?.toString() || '0',
+      caffeine: meal.caffeine?.toString() || '0',
+      freshProduce: meal.freshProduce?.toString() || '0',
+      processedPercent: meal.processedPercent?.toString() || '0',
+      ultraProcessedPercent: meal.ultraProcessedPercent?.toString() || '0'
     });
     setExpandedMealId(null);
   };
@@ -110,7 +115,12 @@ const SavedMealsScreen = ({ navigation }) => {
         calories: parseInt(editedValues.calories) || meal.calories,
         protein: parseInt(editedValues.protein) || meal.protein,
         carbs: parseInt(editedValues.carbs) || meal.carbs,
-        fat: parseInt(editedValues.fat) || meal.fat
+        fat: parseInt(editedValues.fat) || meal.fat,
+        fiber: parseFloat(editedValues.fiber) || meal.fiber || 0,
+        caffeine: parseFloat(editedValues.caffeine) || meal.caffeine || 0,
+        freshProduce: parseFloat(editedValues.freshProduce) || meal.freshProduce || 0,
+        processedPercent: parseFloat(editedValues.processedPercent) || meal.processedPercent || 0,
+        ultraProcessedPercent: parseFloat(editedValues.ultraProcessedPercent) || meal.ultraProcessedPercent || 0
       };
       
       await StorageService.updateSavedMeal(meal.id, updatedMeal);
@@ -197,12 +207,78 @@ const SavedMealsScreen = ({ navigation }) => {
                     />
                   </View>
                   
+                  {/* Secondary Metrics Section */}
+                  <View style={styles.secondaryMetricsSection}>
+                    <Text style={styles.secondaryMetricsTitle}>Secondary Metrics</Text>
+                    
+                    <View style={styles.editRow}>
+                      <Text style={styles.editLabel}>Fiber (g)</Text>
+                      <TextInput
+                        style={styles.editInput}
+                        value={editedValues.fiber}
+                        onChangeText={(text) => setEditedValues({...editedValues, fiber: text})}
+                        keyboardType="numeric"
+                        selectTextOnFocus
+                      />
+                    </View>
+                    
+                    <View style={styles.editRow}>
+                      <Text style={styles.editLabel}>Caffeine (mg)</Text>
+                      <TextInput
+                        style={styles.editInput}
+                        value={editedValues.caffeine}
+                        onChangeText={(text) => setEditedValues({...editedValues, caffeine: text})}
+                        keyboardType="numeric"
+                        selectTextOnFocus
+                      />
+                    </View>
+                    
+                    <View style={styles.editRow}>
+                      <Text style={styles.editLabel}>Fresh Produce (g)</Text>
+                      <TextInput
+                        style={styles.editInput}
+                        value={editedValues.freshProduce}
+                        onChangeText={(text) => setEditedValues({...editedValues, freshProduce: text})}
+                        keyboardType="numeric"
+                        selectTextOnFocus
+                      />
+                    </View>
+                    
+                    <View style={styles.editRow}>
+                      <Text style={styles.editLabel}>Processed %</Text>
+                      <TextInput
+                        style={styles.editInput}
+                        value={editedValues.processedPercent}
+                        onChangeText={(text) => setEditedValues({...editedValues, processedPercent: text})}
+                        keyboardType="numeric"
+                        selectTextOnFocus
+                      />
+                    </View>
+                    
+                    <View style={styles.editRow}>
+                      <Text style={styles.editLabel}>Ultra-processed %</Text>
+                      <TextInput
+                        style={styles.editInput}
+                        value={editedValues.ultraProcessedPercent}
+                        onChangeText={(text) => setEditedValues({...editedValues, ultraProcessedPercent: text})}
+                        keyboardType="numeric"
+                        selectTextOnFocus
+                      />
+                    </View>
+                  </View>
+                  
                   <View style={styles.editActions}>
                     <TouchableOpacity 
                       style={[styles.editActionButton, styles.cancelButton]} 
                       onPress={cancelEditing}
                     >
                       <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.editActionButton, styles.deleteEditButton]} 
+                      onPress={() => deleteSavedMeal(meal.id)}
+                    >
+                      <Text style={styles.deleteEditButtonText}>Delete</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
                       style={[styles.editActionButton, styles.saveEditButton]} 
@@ -356,6 +432,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: Spacing.base,
     justifyContent: 'space-between',
+    gap: Spacing.xs,
   },
   editActionButton: {
     flex: 1,
@@ -380,6 +457,29 @@ const styles = StyleSheet.create({
     ...Shadows.sm,
   },
   saveEditButtonText: {
+    fontSize: Typography.sm,
+    fontWeight: '500',
+    color: Colors.textInverse,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  secondaryMetricsSection: {
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  secondaryMetricsTitle: {
+    fontSize: Typography.sm,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+    letterSpacing: Typography.letterSpacingTight,
+  },
+  deleteEditButton: {
+    backgroundColor: Colors.error,
+    ...Shadows.sm,
+  },
+  deleteEditButtonText: {
     fontSize: Typography.sm,
     fontWeight: '500',
     color: Colors.textInverse,

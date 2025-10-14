@@ -129,6 +129,259 @@ def test_database():
             'timestamp': datetime.now().isoformat()
         }), 500
 
+# User Authentication Helper
+def get_user_id_from_request():
+    """Extract user ID from request headers or body"""
+    # For now, we'll get it from the request body
+    # Later we can add proper JWT token validation
+    data = request.get_json() or {}
+    return data.get('user_id')
+
+# User Meals Endpoints
+@app.route('/api/user/meals', methods=['GET'])
+def get_user_meals():
+    """Get all meals for a user"""
+    try:
+        # Try to get user_id from query parameters first, then from JSON body
+        user_id = request.args.get('user_id')
+        if not user_id:
+            user_id = get_user_id_from_request()
+        if not user_id:
+            return jsonify({'error': 'User ID required'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT * FROM meals 
+            WHERE user_id = ? 
+            ORDER BY date DESC, created_at DESC
+        ''', (user_id,))
+        
+        meals = []
+        for row in cursor.fetchall():
+            meal = dict(row)
+            meals.append(meal)
+        
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'meals': meals,
+            'count': len(meals)
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/user/meals', methods=['POST'])
+def create_meal():
+    """Create a new meal for a user"""
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return jsonify({'error': 'User ID required'}), 400
+        
+        # Extract meal data
+        meal_data = {
+            'user_id': user_id,
+            'date': data.get('date'),
+            'food_items': json.dumps(data.get('food_items', [])),
+            'calories': data.get('calories'),
+            'protein': data.get('protein'),
+            'carbs': data.get('carbs'),
+            'fat': data.get('fat'),
+            'processed_calories': data.get('processed_calories'),
+            'processed_percent': data.get('processed_percent'),
+            'ultra_processed_calories': data.get('ultra_processed_calories'),
+            'ultra_processed_percent': data.get('ultra_processed_percent'),
+            'fiber': data.get('fiber'),
+            'caffeine': data.get('caffeine'),
+            'fresh_produce': data.get('fresh_produce'),
+            'image_url': data.get('image_url')
+        }
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO meals (
+                user_id, date, food_items, calories, protein, carbs, fat,
+                processed_calories, processed_percent, ultra_processed_calories, ultra_processed_percent,
+                fiber, caffeine, fresh_produce, image_url
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            meal_data['user_id'], meal_data['date'], meal_data['food_items'],
+            meal_data['calories'], meal_data['protein'], meal_data['carbs'], meal_data['fat'],
+            meal_data['processed_calories'], meal_data['processed_percent'],
+            meal_data['ultra_processed_calories'], meal_data['ultra_processed_percent'],
+            meal_data['fiber'], meal_data['caffeine'], meal_data['fresh_produce'],
+            meal_data['image_url']
+        ))
+        
+        meal_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Meal created successfully',
+            'meal_id': meal_id
+        }), 201
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/user/meals/<int:meal_id>', methods=['PUT'])
+def update_meal(meal_id):
+    """Update an existing meal"""
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return jsonify({'error': 'User ID required'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if meal exists and belongs to user
+        cursor.execute('SELECT id FROM meals WHERE id = ? AND user_id = ?', (meal_id, user_id))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({'error': 'Meal not found'}), 404
+        
+        # Update meal data
+        cursor.execute('''
+            UPDATE meals SET
+                date = ?, food_items = ?, calories = ?, protein = ?, carbs = ?, fat = ?,
+                processed_calories = ?, processed_percent = ?, ultra_processed_calories = ?, ultra_processed_percent = ?,
+                fiber = ?, caffeine = ?, fresh_produce = ?, image_url = ?
+            WHERE id = ? AND user_id = ?
+        ''', (
+            data.get('date'), json.dumps(data.get('food_items', [])),
+            data.get('calories'), data.get('protein'), data.get('carbs'), data.get('fat'),
+            data.get('processed_calories'), data.get('processed_percent'),
+            data.get('ultra_processed_calories'), data.get('ultra_processed_percent'),
+            data.get('fiber'), data.get('caffeine'), data.get('fresh_produce'),
+            data.get('image_url'), meal_id, user_id
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Meal updated successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/user/meals/<int:meal_id>', methods=['DELETE'])
+def delete_meal(meal_id):
+    """Delete a meal"""
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return jsonify({'error': 'User ID required'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if meal exists and belongs to user
+        cursor.execute('SELECT id FROM meals WHERE id = ? AND user_id = ?', (meal_id, user_id))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({'error': 'Meal not found'}), 404
+        
+        # Delete meal
+        cursor.execute('DELETE FROM meals WHERE id = ? AND user_id = ?', (meal_id, user_id))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Meal deleted successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# User Targets Endpoints
+@app.route('/api/user/targets', methods=['GET'])
+def get_user_targets():
+    """Get user's macro targets"""
+    try:
+        # Try to get user_id from query parameters first, then from JSON body
+        user_id = request.args.get('user_id')
+        if not user_id:
+            user_id = get_user_id_from_request()
+        if not user_id:
+            return jsonify({'error': 'User ID required'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM targets WHERE user_id = ?', (user_id,))
+        target = cursor.fetchone()
+        
+        conn.close()
+        
+        if target:
+            return jsonify({
+                'status': 'success',
+                'targets': dict(target)
+            })
+        else:
+            return jsonify({
+                'status': 'success',
+                'targets': None
+            })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/user/targets', methods=['PUT'])
+def update_user_targets():
+    """Update user's macro targets"""
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return jsonify({'error': 'User ID required'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Insert or update targets
+        cursor.execute('''
+            INSERT OR REPLACE INTO targets (
+                user_id, calories, protein, carbs, fat,
+                processed_percent, fiber, caffeine, fresh_produce
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            user_id,
+            data.get('calories'), data.get('protein'), data.get('carbs'), data.get('fat'),
+            data.get('processed_percent'), data.get('fiber'), data.get('caffeine'), data.get('fresh_produce')
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Targets updated successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/analyze', methods=['POST', 'OPTIONS'])
 def analyze():
     if request.method == 'OPTIONS':

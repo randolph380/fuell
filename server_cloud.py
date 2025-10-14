@@ -8,7 +8,7 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route('/', methods=['GET'])
 def home():
-    return "✅ Fuell Cloud Server is running!"
+    return "✅ Fuell Cloud Server is running! (Updated)"
 
 @app.route('/api/analyze', methods=['POST', 'OPTIONS'])
 def analyze():

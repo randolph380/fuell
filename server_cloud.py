@@ -221,22 +221,23 @@ def create_meal():
         conn = get_db_connection()
         cursor = conn.cursor()
         
+        # Use the timestamp ID from the app if provided, otherwise generate one
+        meal_id = data.get('id', str(int(datetime.now().timestamp() * 1000)))
+        
         cursor.execute('''
             INSERT INTO meals (
-                user_id, date, name, food_items, calories, protein, carbs, fat,
+                id, user_id, date, name, food_items, calories, protein, carbs, fat,
                 processed_calories, processed_percent, ultra_processed_calories, ultra_processed_percent,
                 fiber, caffeine, fresh_produce, image_url
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-            meal_data['user_id'], meal_data['date'], meal_data['name'], meal_data['food_items'],
+            meal_id, meal_data['user_id'], meal_data['date'], meal_data['name'], meal_data['food_items'],
             meal_data['calories'], meal_data['protein'], meal_data['carbs'], meal_data['fat'],
             meal_data['processed_calories'], meal_data['processed_percent'],
             meal_data['ultra_processed_calories'], meal_data['ultra_processed_percent'],
             meal_data['fiber'], meal_data['caffeine'], meal_data['fresh_produce'],
             meal_data['image_url']
         ))
-        
-        meal_id = cursor.lastrowid
         conn.commit()
         conn.close()
         

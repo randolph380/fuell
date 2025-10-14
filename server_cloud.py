@@ -145,9 +145,14 @@ def init_database():
     print("✅ Database initialized successfully!")
 
 def get_db_connection():
-    """Get a database connection"""
-    conn = sqlite3.connect(DATABASE_PATH)
+    """Get a database connection with proper timeout and WAL mode"""
+    conn = sqlite3.connect(DATABASE_PATH, timeout=30.0)
     conn.row_factory = sqlite3.Row  # Enable column access by name
+    # Enable WAL mode for better concurrent access
+    conn.execute('PRAGMA journal_mode=WAL')
+    conn.execute('PRAGMA synchronous=NORMAL')
+    conn.execute('PRAGMA cache_size=1000')
+    conn.execute('PRAGMA temp_store=MEMORY')
     return conn
 
 # Initialize database on startup

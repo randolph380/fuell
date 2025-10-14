@@ -1,7 +1,7 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import HybridHybridStorageService from './hybridStorage';
+import HybridStorageService from './hybridStorage';
 
 /**
  * Simple Backup Service - No Cloud Sync
@@ -170,35 +170,32 @@ class SimpleBackup {
         throw new Error('Backup file is for a different user account');
       }
 
-      // Clear existing data
+      // Clear existing data (both local and server)
       await HybridStorageService.clearAllData();
 
-      // Import data directly to avoid duplicates and ensure correct structure
+      // Import data using HybridStorageService to ensure server sync
       const { meals, dailyMacros, savedMeals, preferences } = backupData.data;
 
-      // Import meals directly
+      // Import meals using HybridStorageService (will sync to server)
       if (meals && Array.isArray(meals)) {
-        const mealsKey = await HybridStorageService.getUserKey(HybridStorageService.KEYS.MEALS);
-        await AsyncStorage.setItem(mealsKey, JSON.stringify(meals));
+        for (const meal of meals) {
+          await HybridStorageService.saveMeal(meal);
+        }
       }
 
-      // Import daily macros directly
-      if (dailyMacros && typeof dailyMacros === 'object') {
-        const dailyMacrosKey = await HybridStorageService.getUserKey(HybridStorageService.KEYS.DAILY_MACROS);
-        await AsyncStorage.setItem(dailyMacrosKey, JSON.stringify(dailyMacros));
-      }
-
-      // Import saved meals directly
+      // Import saved meals (templates)
       if (savedMeals && Array.isArray(savedMeals)) {
-        const savedMealsKey = await HybridStorageService.getUserKey(HybridStorageService.KEYS.SAVED_MEALS);
-        await AsyncStorage.setItem(savedMealsKey, JSON.stringify(savedMeals));
+        for (const savedMeal of savedMeals) {
+          await HybridStorageService.saveMealTemplate(savedMeal);
+        }
       }
 
-      // Import preferences directly
+      // Import preferences (including targets)
       if (preferences && typeof preferences === 'object') {
-        const preferencesKey = await HybridStorageService.getUserKey(HybridStorageService.KEYS.USER_PREFERENCES);
-        await AsyncStorage.setItem(preferencesKey, JSON.stringify(preferences));
+        await HybridStorageService.saveUserPreferences(preferences);
       }
+
+      // Note: dailyMacros are calculated from meals, so no need to import separately
 
       console.log('Backup imported successfully');
       return true;

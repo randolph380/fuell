@@ -34,7 +34,7 @@ def init_database():
     # Create meals table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS meals (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id TEXT PRIMARY KEY,
             user_id TEXT NOT NULL,
             date TEXT NOT NULL,
             name TEXT NOT NULL DEFAULT 'Meal',
@@ -86,6 +86,56 @@ def init_database():
             print("✅ Name column already exists")
         else:
             print(f"⚠️ Could not add name column: {e}")
+    
+    # Migrate ID column from INTEGER to TEXT for timestamp IDs
+    try:
+        # Check if we need to migrate the ID column
+        cursor.execute("PRAGMA table_info(meals)")
+        columns = cursor.fetchall()
+        id_column = next((col for col in columns if col[1] == 'id'), None)
+        
+        if id_column and id_column[2] == 'INTEGER':
+            print("🔄 Migrating ID column from INTEGER to TEXT...")
+            
+            # Create new table with TEXT ID
+            cursor.execute('''
+                CREATE TABLE meals_new (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    date TEXT NOT NULL,
+                    name TEXT NOT NULL DEFAULT 'Meal',
+                    food_items TEXT NOT NULL,
+                    calories REAL,
+                    protein REAL,
+                    carbs REAL,
+                    fat REAL,
+                    processed_calories REAL,
+                    processed_percent REAL,
+                    ultra_processed_calories REAL,
+                    ultra_processed_percent REAL,
+                    fiber REAL,
+                    caffeine REAL,
+                    fresh_produce REAL,
+                    image_url TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(user_id)
+                )
+            ''')
+            
+            # Copy data from old table to new table
+            cursor.execute('''
+                INSERT INTO meals_new SELECT * FROM meals
+            ''')
+            
+            # Drop old table and rename new table
+            cursor.execute('DROP TABLE meals')
+            cursor.execute('ALTER TABLE meals_new RENAME TO meals')
+            
+            print("✅ Successfully migrated ID column to TEXT")
+        else:
+            print("✅ ID column already TEXT or table is new")
+    except Exception as e:
+        print(f"⚠️ Could not migrate ID column: {e}")
     
     conn.commit()
     conn.close()
@@ -246,7 +296,7 @@ def create_meal():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/user/meals/<int:meal_id>', methods=['PUT'])
+@app.route('/api/user/meals/<meal_id>', methods=['PUT'])
 def update_meal(meal_id):
     """Update an existing meal"""
     try:
@@ -259,7 +309,7 @@ def update_meal(meal_id):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Check if meal exists and belongs to user
+        # Check if meal exists and belongs to user (using timestamp ID)
         cursor.execute('SELECT id FROM meals WHERE id = ? AND user_id = ?', (meal_id, user_id))
         if not cursor.fetchone():
             conn.close()
@@ -292,7 +342,7 @@ def update_meal(meal_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/user/meals/<int:meal_id>', methods=['DELETE'])
+@app.route('/api/user/meals/<meal_id>', methods=['DELETE'])
 def delete_meal(meal_id):
     """Delete a meal"""
     try:

@@ -1,29 +1,17 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
-import socket
 import os
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-def get_local_ip():
-    """Get the local IP address of this machine"""
-    try:
-        # Create a socket to find the local IP
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))  # Connect to Google DNS (doesn't actually send data)
-        local_ip = s.getsockname()[0]
-        s.close()
-        return local_ip
-    except Exception:
-        return "Unable to detect"
-
-API_KEY = os.getenv('ANTHROPIC_API_KEY', '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')
+# Use environment variable for API key
+API_KEY = os.environ.get('ANTHROPIC_API_KEY', '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')
 
 @app.route('/', methods=['GET'])
 def home():
-    return "✅ Server is running!"
+    return "✅ Fuell Cloud Server is running!"
 
 @app.route('/api/analyze', methods=['POST', 'OPTIONS'])
 def analyze():
@@ -35,7 +23,7 @@ def analyze():
         return response
     
     print("\n" + "="*50)
-    print("📥 REQUEST RECEIVED")
+    print("📥 CLOUD REQUEST RECEIVED")
     print("="*50)
     
     try:
@@ -77,17 +65,11 @@ def analyze():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    local_ip = get_local_ip()
-    
     print("\n" + "="*60)
-    print("🚀 FOOD MACRO ANALYZER SERVER")
+    print("🚀 FUELL CLOUD SERVER")
     print("="*60)
-    print("Server URL: http://localhost:5000")
-    print(f"Network URL: http://{local_ip}:5000")
-    print("\n⚠️  UPDATE YOUR APP:")
-    print(f"   In src/services/api.js, set:")
-    print(f"   API_BASE_URL = 'http://{local_ip}:5000/api'")
+    print("Server URL: https://fuell.onrender.com")
+    print("API Key configured: " + ("✅" if API_KEY != 'your-api-key-here' else "❌"))
     print("="*60 + "\n")
     
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
-
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)

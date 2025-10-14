@@ -1,4 +1,4 @@
-import HybridHybridStorageService from '../services/hybridStorage';
+import HybridStorageService from '../services/hybridStorage';
 
 const sampleMeals = [
   // Breakfast options

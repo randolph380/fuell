@@ -6,13 +6,13 @@
  * Enables incremental migration from local-only to server-based storage
  */
 
-import StorageService from './storage';
 import ServerStorageService from './serverStorage';
+import StorageService from './storage';
 
 class HybridStorageService {
   
   // Configuration flags
-  static USE_SERVER_STORAGE = true;  // Toggle server storage on/off
+  static USE_SERVER_STORAGE = false;  // Toggle server storage on/off - TEMPORARILY DISABLED FOR DEBUGGING
   static SYNC_ON_LOGIN = true;        // Sync from server on login
   static SYNC_ON_SAVE = true;         // Sync to server on save
   static FALLBACK_TO_LOCAL = true;    // Use local storage if server fails
@@ -37,6 +37,13 @@ class HybridStorageService {
    */
   static async saveMeal(meal) {
     try {
+      console.log('🔄 HybridStorage saving meal:', {
+        id: meal.id,
+        name: meal.name,
+        hasName: !!meal.name,
+        nameLength: meal.name?.length
+      });
+
       // Always save to local storage first
       const localSuccess = await StorageService.saveMeal(meal);
       
@@ -48,7 +55,7 @@ class HybridStorageService {
       if (this.USE_SERVER_STORAGE && this.SYNC_ON_SAVE) {
         try {
           await ServerStorageService.saveMeal(meal);
-          console.log('✅ Meal saved to server');
+          console.log('✅ Meal saved to server with name:', meal.name);
         } catch (serverError) {
           console.warn('⚠️ Server save failed, using local storage only:', serverError);
           
@@ -74,7 +81,7 @@ class HybridStorageService {
       if (this.USE_SERVER_STORAGE) {
         try {
           const serverMeals = await ServerStorageService.getMeals();
-          console.log('✅ Meals loaded from server');
+          console.log('✅ Meals loaded from server:', serverMeals.map(m => ({ id: m.id, name: m.name })));
           return serverMeals;
         } catch (serverError) {
           console.warn('⚠️ Server load failed, using local storage:', serverError);
@@ -83,7 +90,7 @@ class HybridStorageService {
 
       // Fallback to local storage
       const localMeals = await StorageService.getMeals();
-      console.log('✅ Meals loaded from local storage');
+      console.log('✅ Meals loaded from local storage:', localMeals.map(m => ({ id: m.id, name: m.name })));
       return localMeals;
     } catch (error) {
       console.error('Error getting meals:', error);
@@ -110,14 +117,13 @@ class HybridStorageService {
    */
   static async updateMeal(mealId, updatedMeal) {
     try {
-      // Update in local storage
-      const allMeals = await StorageService.getMeals();
-      const updatedMeals = allMeals.map(m => m.id === mealId ? updatedMeal : m);
+      console.log('✏️ Updating meal:', mealId);
       
-      // Clear and re-save all meals to local storage
-      await StorageService.clearAllData();
-      for (const meal of updatedMeals) {
-        await StorageService.saveMeal(meal);
+      // Update in local storage
+      const localSuccess = await StorageService.updateMeal(mealId, updatedMeal);
+      
+      if (!localSuccess) {
+        throw new Error('Failed to update meal in local storage');
       }
 
       // Try to update on server if enabled
@@ -127,9 +133,14 @@ class HybridStorageService {
           console.log('✅ Meal updated on server');
         } catch (serverError) {
           console.warn('⚠️ Server update failed:', serverError);
+          
+          if (!this.FALLBACK_TO_LOCAL) {
+            throw serverError;
+          }
         }
       }
 
+      console.log('✅ Meal updated successfully');
       return true;
     } catch (error) {
       console.error('Error updating meal:', error);
@@ -142,14 +153,13 @@ class HybridStorageService {
    */
   static async deleteMeal(mealId) {
     try {
-      // Delete from local storage
-      const allMeals = await StorageService.getMeals();
-      const updatedMeals = allMeals.filter(m => m.id !== mealId);
+      console.log('🗑️ Deleting meal:', mealId);
       
-      // Clear and re-save remaining meals
-      await StorageService.clearAllData();
-      for (const meal of updatedMeals) {
-        await StorageService.saveMeal(meal);
+      // Delete from local storage first
+      const localSuccess = await StorageService.deleteMeal(mealId);
+      
+      if (!localSuccess) {
+        throw new Error('Failed to delete meal from local storage');
       }
 
       // Try to delete from server if enabled
@@ -159,9 +169,14 @@ class HybridStorageService {
           console.log('✅ Meal deleted from server');
         } catch (serverError) {
           console.warn('⚠️ Server delete failed:', serverError);
+          
+          if (!this.FALLBACK_TO_LOCAL) {
+            throw serverError;
+          }
         }
       }
 
+      console.log('✅ Meal deleted successfully');
       return true;
     } catch (error) {
       console.error('Error deleting meal:', error);

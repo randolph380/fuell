@@ -1,9 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
     Alert,
     Animated,
     Image,
@@ -491,6 +490,12 @@ const CameraScreen = ({ navigation, route }) => {
 
       // Extract title
       const extractedTitle = result.title?.trim() || 'Meal';
+      console.log('🍽️ Meal title extraction:', {
+        rawTitle: result.title,
+        extractedTitle: extractedTitle,
+        hasTitle: !!result.title,
+        titleLength: result.title?.length
+      });
 
       // Create meal object
       const now = new Date();
@@ -511,6 +516,12 @@ const CameraScreen = ({ navigation, route }) => {
         date: mealDate.toDateString(),
         extendedMetrics: result.extendedMetrics || null
       };
+
+      console.log('💾 Saving meal with title:', {
+        mealName: meal.name,
+        mealId: meal.id,
+        fullMeal: meal
+      });
 
       // Log the meal immediately
       await HybridStorageService.saveMeal(meal);
@@ -589,7 +600,7 @@ const CameraScreen = ({ navigation, route }) => {
                 extendedMetrics: currentExtendedMetrics
               };
 
-              await HybridHybridStorageService.saveMealTemplate(savedMeal);
+              await HybridStorageService.saveMealTemplate(savedMeal);
               Alert.alert('Success', 'Meal template saved! You can find it in the Saved Meals section.');
             } catch (error) {
               console.error('Error saving meal template:', error);

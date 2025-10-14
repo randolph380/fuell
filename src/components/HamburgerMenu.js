@@ -12,8 +12,8 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import { Colors, Spacing, Typography } from '../constants/colors';
-import HybridHybridStorageService from '../services/hybridStorage';
+import { Colors, Typography } from '../constants/colors';
+import HybridStorageService from '../services/hybridStorage';
 
 const { width, height } = Dimensions.get('window');
 

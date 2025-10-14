@@ -71,6 +71,7 @@ class ServerStorageService {
       const serverMeal = {
         user_id: userId,
         date: meal.date,
+        name: meal.name || 'Meal',
         food_items: meal.foodItems || [],
         calories: meal.calories,
         protein: meal.protein,
@@ -109,7 +110,7 @@ class ServerStorageService {
       // Convert server format to app format
       return result.meals.map(serverMeal => ({
         id: serverMeal.id.toString(),
-        name: serverMeal.food_items ? JSON.parse(serverMeal.food_items)[0]?.name || 'Meal' : 'Meal',
+        name: serverMeal.name || 'Meal',
         calories: serverMeal.calories,
         protein: serverMeal.protein,
         carbs: serverMeal.carbs,
@@ -146,6 +147,7 @@ class ServerStorageService {
       const serverMeal = {
         user_id: userId,
         date: meal.date,
+        name: meal.name || 'Meal',
         food_items: meal.foodItems || [],
         calories: meal.calories,
         protein: meal.protein,

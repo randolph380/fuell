@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ScrollView,
-  ActivityIndicator
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../constants/colors';
+import React, { useEffect, useState } from 'react';
+import {
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
+import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
+import HybridStorageService from '../services/hybridStorage';
 import SimpleBackup from '../services/simpleBackup';
-import HybridHybridStorageService from '../services/hybridStorage';
 
 export default function SimpleBackupScreen({ navigation }) {
   const [stats, setStats] = useState({

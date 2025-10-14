@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import MealCard from '../components/MealCard';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
-import HybridHybridStorageService from '../services/hybridStorage';
+import HybridStorageService from '../services/hybridStorage';
 
 const SavedMealsScreen = ({ navigation }) => {
   const [savedMeals, setSavedMeals] = useState([]);

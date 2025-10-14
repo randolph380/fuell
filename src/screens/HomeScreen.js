@@ -16,7 +16,6 @@ import {
     View
 } from 'react-native';
 import DateNavigator from '../components/DateNavigator';
-import HamburgerMenu from '../components/HamburgerMenu';
 import MacroDisplay from '../components/MacroDisplay';
 import MealCard from '../components/MealCard';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
@@ -73,6 +72,30 @@ const HomeScreen = ({ navigation, route }) => {
       }
     }, [user?.id]) // Remove currentDate dependency to ensure it always runs on focus
   );
+
+  const testStorageStatus = async () => {
+    try {
+      const status = HybridStorageService.getStorageStatus();
+      console.log('🔍 Storage Status:', status);
+      
+      const userId = await HybridStorageService.getUserId();
+      console.log('👤 User ID:', userId);
+      
+      const meals = await HybridStorageService.getMeals();
+      console.log('🍽️ Total Meals:', meals.length);
+      console.log('🍽️ Meal Names:', meals.map(m => m.name));
+      
+      Alert.alert('Storage Status', 
+        `Server: ${status.serverEnabled ? 'ON' : 'OFF'}\n` +
+        `User ID: ${userId || 'None'}\n` +
+        `Meals: ${meals.length}\n` +
+        `Meal Names: ${meals.map(m => m.name).join(', ')}`
+      );
+    } catch (error) {
+      console.error('❌ Storage test failed:', error);
+      Alert.alert('Error', 'Storage test failed: ' + error.message);
+    }
+  };
 
   const loadMeals = async () => {
     try {
@@ -147,8 +170,15 @@ const HomeScreen = ({ navigation, route }) => {
           text: 'Delete', 
           style: 'destructive',
           onPress: async () => {
-            await StorageService.deleteMeal(meal.id);
-            await loadMeals();
+            console.log('🗑️ UI: Deleting meal:', meal.id, meal.name);
+            const success = await HybridStorageService.deleteMeal(meal.id);
+            if (success) {
+              console.log('✅ UI: Meal deleted successfully');
+              await loadMeals();
+            } else {
+              console.error('❌ UI: Failed to delete meal');
+              Alert.alert('Error', 'Failed to delete meal. Please try again.');
+            }
           }
         }
       ]
@@ -165,7 +195,7 @@ const HomeScreen = ({ navigation, route }) => {
         carbs: meal.baseMacros?.carbs || meal.carbs,
         fat: meal.baseMacros?.fat || meal.fat
       };
-      await StorageService.saveMealTemplate(template);
+      await HybridStorageService.saveMealTemplate(template);
       Alert.alert('Success', 'Meal saved as template!');
     } catch (error) {
       console.error('Error saving meal template:', error);
@@ -248,7 +278,7 @@ const HomeScreen = ({ navigation, route }) => {
           text: 'Sign Out',
           style: 'destructive',
           onPress: async () => {
-            await StorageService.clearUserId();
+            await HybridStorageService.clearUserId();
             await signOut();
           }
         }
@@ -305,6 +335,14 @@ const HomeScreen = ({ navigation, route }) => {
           <Text style={styles.savedMealsText}>Saved Meals</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Storage Test Button (Debug) */}
+      <TouchableOpacity 
+        style={styles.testButton} 
+        onPress={testStorageStatus}
+      >
+        <Text style={styles.testButtonText}>🔍 Test Storage</Text>
+      </TouchableOpacity>
 
       {/* Meals List */}
       <View style={styles.mealsSection}>
@@ -547,6 +585,20 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     letterSpacing: Typography.letterSpacingNormal,
     marginLeft: Spacing.sm,
+  },
+  testButton: {
+    backgroundColor: Colors.secondary,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.base,
+    marginHorizontal: Spacing.base,
+    marginVertical: Spacing.sm,
+    borderRadius: BorderRadius.base,
+    alignItems: 'center',
+  },
+  testButtonText: {
+    color: Colors.textInverse,
+    fontSize: Typography.sm,
+    fontWeight: '500',
   },
   mealsSection: {
     paddingHorizontal: Spacing.base,

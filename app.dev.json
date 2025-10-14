@@ -1,20 +1,16 @@
 {
   "expo": {
-    "name": "Fuell",
-    "slug": "Fuell",
+    "name": "Fuell (Dev)",
+    "slug": "fuell-dev",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "fuell",
+    "scheme": "fuell-dev",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fuell.app",
-      "infoPlist": {
-        "NSCameraUsageDescription": "Fuell needs camera access to photograph your meals for macro analysis.",
-        "NSPhotoLibraryUsageDescription": "Fuell needs photo library access to select food images for macro analysis."
-      }
+      "bundleIdentifier": "com.fuell.dev"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,9 +18,7 @@
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      }
     },
     "web": {
       "output": "static",
@@ -46,8 +40,7 @@
       ]
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     }
   }
 }

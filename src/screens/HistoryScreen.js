@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
-import HybridHybridStorageService from '../services/hybridStorage';
+import HybridStorageService from '../services/hybridStorage';
 import { calculateAggregatedProcessed, calculateAggregatedUltraProcessed } from '../utils/extendedMetrics';
 
 // Metric configuration - add new metrics here!

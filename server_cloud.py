@@ -37,6 +37,7 @@ def init_database():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id TEXT NOT NULL,
             date TEXT NOT NULL,
+            name TEXT NOT NULL DEFAULT 'Meal',
             food_items TEXT NOT NULL,
             -- Main macros
             calories REAL,
@@ -75,6 +76,16 @@ def init_database():
             FOREIGN KEY (user_id) REFERENCES users(user_id)
         )
     ''')
+    
+    # Add name column to existing meals table if it doesn't exist
+    try:
+        cursor.execute('ALTER TABLE meals ADD COLUMN name TEXT DEFAULT "Meal"')
+        print("✅ Added name column to meals table")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" in str(e):
+            print("✅ Name column already exists")
+        else:
+            print(f"⚠️ Could not add name column: {e}")
     
     conn.commit()
     conn.close()
@@ -188,6 +199,7 @@ def create_meal():
         meal_data = {
             'user_id': user_id,
             'date': data.get('date'),
+            'name': data.get('name', 'Meal'),
             'food_items': json.dumps(data.get('food_items', [])),
             'calories': data.get('calories'),
             'protein': data.get('protein'),
@@ -208,12 +220,12 @@ def create_meal():
         
         cursor.execute('''
             INSERT INTO meals (
-                user_id, date, food_items, calories, protein, carbs, fat,
+                user_id, date, name, food_items, calories, protein, carbs, fat,
                 processed_calories, processed_percent, ultra_processed_calories, ultra_processed_percent,
                 fiber, caffeine, fresh_produce, image_url
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-            meal_data['user_id'], meal_data['date'], meal_data['food_items'],
+            meal_data['user_id'], meal_data['date'], meal_data['name'], meal_data['food_items'],
             meal_data['calories'], meal_data['protein'], meal_data['carbs'], meal_data['fat'],
             meal_data['processed_calories'], meal_data['processed_percent'],
             meal_data['ultra_processed_calories'], meal_data['ultra_processed_percent'],
@@ -256,12 +268,12 @@ def update_meal(meal_id):
         # Update meal data
         cursor.execute('''
             UPDATE meals SET
-                date = ?, food_items = ?, calories = ?, protein = ?, carbs = ?, fat = ?,
+                date = ?, name = ?, food_items = ?, calories = ?, protein = ?, carbs = ?, fat = ?,
                 processed_calories = ?, processed_percent = ?, ultra_processed_calories = ?, ultra_processed_percent = ?,
                 fiber = ?, caffeine = ?, fresh_produce = ?, image_url = ?
             WHERE id = ? AND user_id = ?
         ''', (
-            data.get('date'), json.dumps(data.get('food_items', [])),
+            data.get('date'), data.get('name', 'Meal'), json.dumps(data.get('food_items', [])),
             data.get('calories'), data.get('protein'), data.get('carbs'), data.get('fat'),
             data.get('processed_calories'), data.get('processed_percent'),
             data.get('ultra_processed_calories'), data.get('ultra_processed_percent'),

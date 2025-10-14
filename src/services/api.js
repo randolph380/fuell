@@ -666,6 +666,11 @@ CRITICAL:
       console.log('📦 Extracted JSON string:', jsonString);
       const data = JSON.parse(jsonString);
       console.log('📦 Parsed JSON data:', JSON.stringify(data, null, 2));
+      console.log('📦 Title field specifically:', {
+        title: data.title,
+        hasTitle: 'title' in data,
+        titleType: typeof data.title
+      });
       
       // Validate required fields
       if (typeof data.calories !== 'number' || 
@@ -678,6 +683,13 @@ CRITICAL:
       
       // Extract title if present and validate it
       let title = typeof data.title === 'string' ? data.title.trim() : null;
+      
+      console.log('🔍 Raw title from AI:', {
+        rawTitle: data.title,
+        type: typeof data.title,
+        length: data.title?.length,
+        trimmed: title
+      });
       
       // Filter out invalid titles (analysis instructions, etc.)
       const invalidPhrases = [
@@ -695,6 +707,8 @@ CRITICAL:
         } else {
           console.log('📝 Extracted title from JSON:', title);
         }
+      } else {
+        console.warn('📝 No title found in AI response');
       }
       
       // Extract certainty rating

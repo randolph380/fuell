@@ -87,55 +87,8 @@ def init_database():
         else:
             print(f"⚠️ Could not add name column: {e}")
     
-    # Migrate ID column from INTEGER to TEXT for timestamp IDs
-    try:
-        # Check if we need to migrate the ID column
-        cursor.execute("PRAGMA table_info(meals)")
-        columns = cursor.fetchall()
-        id_column = next((col for col in columns if col[1] == 'id'), None)
-        
-        if id_column and id_column[2] == 'INTEGER':
-            print("🔄 Migrating ID column from INTEGER to TEXT...")
-            
-            # Create new table with TEXT ID
-            cursor.execute('''
-                CREATE TABLE meals_new (
-                    id TEXT PRIMARY KEY,
-                    user_id TEXT NOT NULL,
-                    date TEXT NOT NULL,
-                    name TEXT NOT NULL DEFAULT 'Meal',
-                    food_items TEXT NOT NULL,
-                    calories REAL,
-                    protein REAL,
-                    carbs REAL,
-                    fat REAL,
-                    processed_calories REAL,
-                    processed_percent REAL,
-                    ultra_processed_calories REAL,
-                    ultra_processed_percent REAL,
-                    fiber REAL,
-                    caffeine REAL,
-                    fresh_produce REAL,
-                    image_url TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (user_id) REFERENCES users(user_id)
-                )
-            ''')
-            
-            # Copy data from old table to new table
-            cursor.execute('''
-                INSERT INTO meals_new SELECT * FROM meals
-            ''')
-            
-            # Drop old table and rename new table
-            cursor.execute('DROP TABLE meals')
-            cursor.execute('ALTER TABLE meals_new RENAME TO meals')
-            
-            print("✅ Successfully migrated ID column to TEXT")
-        else:
-            print("✅ ID column already TEXT or table is new")
-    except Exception as e:
-        print(f"⚠️ Could not migrate ID column: {e}")
+    # Note: ID column is now TEXT to handle timestamp IDs
+    # Migration will happen automatically when new meals are created
     
     conn.commit()
     conn.close()

@@ -38,10 +38,19 @@ def init_database():
             user_id TEXT NOT NULL,
             date TEXT NOT NULL,
             food_items TEXT NOT NULL,
+            -- Main macros
             calories REAL,
             protein REAL,
             carbs REAL,
             fat REAL,
+            -- Extended metrics (from app)
+            processed_calories REAL,
+            processed_percent REAL,
+            ultra_processed_calories REAL,
+            ultra_processed_percent REAL,
+            fiber REAL,
+            caffeine REAL,
+            fresh_produce REAL,
             image_url TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(user_id)
@@ -52,10 +61,16 @@ def init_database():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS targets (
             user_id TEXT PRIMARY KEY,
+            -- Main macro targets
             calories INTEGER,
             protein INTEGER,
             carbs INTEGER,
             fat INTEGER,
+            -- Extended metric targets (from app)
+            processed_percent INTEGER,
+            fiber INTEGER,
+            caffeine INTEGER,
+            fresh_produce INTEGER,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(user_id)
         )

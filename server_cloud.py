@@ -6,9 +6,6 @@ import os
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# API key - you'll need to get a new one from Anthropic Console
-API_KEY = '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'
-
 @app.route('/', methods=['GET'])
 def home():
     return "✅ Fuell Cloud Server is running!"
@@ -25,25 +22,20 @@ def analyze():
     try:
         data = request.get_json()
         
-        headers = {
-            'Content-Type': 'application/json',
-            'x-api-key': API_KEY,
-            'anthropic-version': '2023-06-01'
+        # For now, return a mock response to test the server
+        mock_response = {
+            "content": [
+                {
+                    "text": "🍎 Apple Analysis:\n\n**Macros per 100g:**\n- Calories: 52 kcal\n- Protein: 0.3g\n- Carbs: 14g\n- Fat: 0.2g\n- Fiber: 2.4g\n\n**Nutritional Benefits:**\n- High in fiber\n- Vitamin C\n- Antioxidants\n\n*This is a test response. Please update your API key for real analysis.*"
+                }
+            ],
+            "usage": {
+                "input_tokens": 10,
+                "output_tokens": 50
+            }
         }
         
-        api_response = requests.post(
-            'https://api.anthropic.com/v1/messages',
-            headers=headers,
-            json=data,
-            timeout=60
-        )
-        
-        if api_response.status_code == 200:
-            result = api_response.json()
-            return jsonify(result)
-        else:
-            error_data = api_response.json() if api_response.text else {"error": "Unknown error"}
-            return jsonify(error_data), api_response.status_code
+        return jsonify(mock_response)
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500

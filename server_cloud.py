@@ -6,6 +6,9 @@ import os
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+# Get API key from environment variable
+API_KEY = os.environ.get('ANTHROPIC_API_KEY')
+
 @app.route('/', methods=['GET'])
 def home():
     return "✅ Fuell Cloud Server is running! (Updated)"
@@ -19,25 +22,50 @@ def analyze():
         response.headers.add('Access-Control-Allow-Methods', 'POST')
         return response
     
+    print("\n" + "="*50)
+    print("📥 CLOUD REQUEST RECEIVED")
+    print("="*50)
+    
     try:
         data = request.get_json()
+        print(f"✓ JSON parsed successfully")
+        print(f"✓ Model: {data.get('model', 'not specified')}")
         
-        # For now, return a mock response to test the server
-        mock_response = {
-            "content": [
-                {
-                    "text": "🍎 Apple Analysis:\n\n**Macros per 100g:**\n- Calories: 52 kcal\n- Protein: 0.3g\n- Carbs: 14g\n- Fat: 0.2g\n- Fiber: 2.4g\n\n**Nutritional Benefits:**\n- High in fiber\n- Vitamin C\n- Antioxidants\n\n*This is a test response. Please update your API key for real analysis.*"
-                }
-            ],
-            "usage": {
-                "input_tokens": 10,
-                "output_tokens": 50
-            }
+        if not API_KEY:
+            print("❌ ERROR: ANTHROPIC_API_KEY environment variable not set")
+            return jsonify({'error': 'API key not configured'}), 500
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'x-api-key': API_KEY,
+            'anthropic-version': '2023-06-01'
         }
         
-        return jsonify(mock_response)
+        print("🔄 Calling Anthropic API...")
+        
+        api_response = requests.post(
+            'https://api.anthropic.com/v1/messages',
+            headers=headers,
+            json=data,
+            timeout=60
+        )
+        
+        print(f"📨 Anthropic responded with status: {api_response.status_code}")
+        
+        if api_response.status_code == 200:
+            print("✅ SUCCESS!")
+            result = api_response.json()
+            return jsonify(result)
+        else:
+            print(f"❌ ERROR from Anthropic")
+            error_data = api_response.json() if api_response.text else {"error": "Unknown error"}
+            print(f"Error details: {error_data}")
+            return jsonify(error_data), api_response.status_code
             
     except Exception as e:
+        print(f"💥 EXCEPTION: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

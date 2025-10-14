@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import MealCard from '../components/MealCard';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
-import StorageService from '../services/storage';
+import HybridHybridStorageService from '../services/hybridStorage';
 
 const SavedMealsScreen = ({ navigation }) => {
   const [savedMeals, setSavedMeals] = useState([]);
@@ -27,7 +27,7 @@ const SavedMealsScreen = ({ navigation }) => {
 
   const loadSavedMeals = async () => {
     try {
-      const meals = await StorageService.getSavedMeals();
+      const meals = await HybridStorageService.getSavedMeals();
       // Filter out any invalid meals (missing name or all zeros)
       const validMeals = meals.filter(meal => 
         meal.name && 
@@ -57,7 +57,7 @@ const SavedMealsScreen = ({ navigation }) => {
           text: 'Delete', 
           style: 'destructive',
           onPress: async () => {
-            await StorageService.deleteSavedMeal(mealId);
+            await HybridStorageService.deleteSavedMeal(mealId);
             await loadSavedMeals();
           }
         }
@@ -78,7 +78,7 @@ const SavedMealsScreen = ({ navigation }) => {
         date: new Date().toDateString()
       };
 
-      await StorageService.saveMeal(meal);
+      await HybridStorageService.saveMeal(meal);
       Alert.alert('Success', 'Meal logged successfully! 🎉');
       setExpandedMealId(null); // Collapse after logging
     } catch (error) {
@@ -123,7 +123,7 @@ const SavedMealsScreen = ({ navigation }) => {
         ultraProcessedPercent: parseFloat(editedValues.ultraProcessedPercent) || meal.ultraProcessedPercent || 0
       };
       
-      await StorageService.updateSavedMeal(meal.id, updatedMeal);
+      await HybridStorageService.updateSavedMeal(meal.id, updatedMeal);
       await loadSavedMeals();
       setEditingMealId(null);
       setEditedValues({});

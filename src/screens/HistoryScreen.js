@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
-import StorageService from '../services/storage';
+import HybridHybridStorageService from '../services/hybridStorage';
 import { calculateAggregatedProcessed, calculateAggregatedUltraProcessed } from '../utils/extendedMetrics';
 
 // Metric configuration - add new metrics here!
@@ -356,7 +356,7 @@ const TrendsScreen = ({ navigation }) => {
 
   const loadTrends = async () => {
     try {
-      const allMeals = await StorageService.getMeals();
+      const allMeals = await HybridStorageService.getMeals();
       
       let data;
       if (selectedPeriod === 'day') {

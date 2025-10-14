@@ -1,7 +1,7 @@
 import { ClerkProvider, SignedIn, SignedOut, useUser } from '@clerk/clerk-expo';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect } from 'react';
-import StorageService from '../services/storage';
+import HybridHybridStorageService from '../services/hybridStorage';
 
 // Cache for token
 const tokenCache = {
@@ -31,7 +31,7 @@ function UserIdSetter({ children }) {
   useEffect(() => {
     if (user?.id) {
       // Set the user ID in storage service (async)
-      StorageService.setUserId(user.id).then(() => {
+      HybridStorageService.setUserId(user.id).then(() => {
         console.log('User ID set in storage:', user.id);
       });
     }

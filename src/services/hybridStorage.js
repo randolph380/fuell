@@ -325,6 +325,68 @@ class HybridStorageService {
     this.FALLBACK_TO_LOCAL = settings.fallbackToLocal ?? this.FALLBACK_TO_LOCAL;
     console.log('🔄 Sync settings updated:', settings);
   }
+
+  // Additional methods needed for compatibility with existing app
+
+  /**
+   * Get all daily macros (for trends/history)
+   */
+  static async getAllDailyMacros() {
+    try {
+      return await StorageService.getAllDailyMacros();
+    } catch (error) {
+      console.error('Error getting daily macros:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Get saved meals (templates)
+   */
+  static async getSavedMeals() {
+    try {
+      return await StorageService.getSavedMeals();
+    } catch (error) {
+      console.error('Error getting saved meals:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Save meal template
+   */
+  static async saveMealTemplate(meal) {
+    try {
+      return await StorageService.saveMealTemplate(meal);
+    } catch (error) {
+      console.error('Error saving meal template:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Delete saved meal template
+   */
+  static async deleteSavedMeal(mealId) {
+    try {
+      return await StorageService.deleteSavedMeal(mealId);
+    } catch (error) {
+      console.error('Error deleting saved meal:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Clear user ID
+   */
+  static async clearUserId() {
+    try {
+      return await StorageService.clearUserId();
+    } catch (error) {
+      console.error('Error clearing user ID:', error);
+      return false;
+    }
+  }
 }
 
 export default HybridStorageService;

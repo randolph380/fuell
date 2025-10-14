@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../constants/colors';
 import SimpleBackup from '../services/simpleBackup';
-import StorageService from '../services/storage';
+import HybridHybridStorageService from '../services/hybridStorage';
 
 export default function SimpleBackupScreen({ navigation }) {
   const [stats, setStats] = useState({
@@ -157,7 +157,7 @@ export default function SimpleBackupScreen({ navigation }) {
           onPress: async () => {
             setIsLoading(true);
             try {
-              await StorageService.clearAllData();
+              await HybridStorageService.clearAllData();
               Alert.alert(
                 'Data Cleared',
                 'All your data has been permanently deleted. You can now test importing a backup.',

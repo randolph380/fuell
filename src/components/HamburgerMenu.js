@@ -13,7 +13,7 @@ import {
     View,
 } from 'react-native';
 import { Colors, Spacing, Typography } from '../constants/colors';
-import StorageService from '../services/storage';
+import HybridHybridStorageService from '../services/hybridStorage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -76,7 +76,7 @@ export default function HamburgerMenu({ navigation }) {
           text: 'Sign Out',
           style: 'destructive',
           onPress: async () => {
-            await StorageService.clearUserId();
+            await HybridStorageService.clearUserId();
             await signOut();
           }
         }

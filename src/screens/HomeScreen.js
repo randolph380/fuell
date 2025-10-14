@@ -20,7 +20,7 @@ import HamburgerMenu from '../components/HamburgerMenu';
 import MacroDisplay from '../components/MacroDisplay';
 import MealCard from '../components/MealCard';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
-import StorageService from '../services/storage';
+import HybridStorageService from '../services/hybridStorage';
 import DateHelpers from '../utils/dateHelpers';
 import { calculateAggregatedProcessed, calculateAggregatedUltraProcessed } from '../utils/extendedMetrics';
 
@@ -78,10 +78,10 @@ const HomeScreen = ({ navigation, route }) => {
     try {
       // Ensure user ID is set in storage before loading meals
       if (user?.id) {
-        await StorageService.setUserId(user.id);
+        await HybridStorageService.setUserId(user.id);
       }
       
-      const dateMeals = await StorageService.getMealsByDate(currentDate);
+      const dateMeals = await HybridStorageService.getMealsByDate(currentDate);
       
       // Debug: Log meal names
       console.log('DEBUG - Loaded meals:', dateMeals.map(m => ({ name: m.name, id: m.id })));
@@ -222,12 +222,7 @@ const HomeScreen = ({ navigation, route }) => {
       };
       
       // Update the meal in storage
-      const allMeals = await StorageService.getMeals();
-      const updatedMeals = allMeals.map(m => m.id === meal.id ? updatedMeal : m);
-      await StorageService.clearAllData();
-      for (const m of updatedMeals) {
-        await StorageService.saveMeal(m);
-      }
+      await HybridStorageService.updateMeal(meal.id, updatedMeal);
       
       await loadMeals();
       setEditingMealId(null);

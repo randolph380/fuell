@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
 import ClaudeAPI from '../services/api';
-import StorageService from '../services/storage';
+import HybridStorageService from '../services/hybridStorage';
 
 const CameraScreen = ({ navigation, route }) => {
   const [imageUri, setImageUri] = useState(null);
@@ -513,7 +513,7 @@ const CameraScreen = ({ navigation, route }) => {
       };
 
       // Log the meal immediately
-      await StorageService.saveMeal(meal);
+      await HybridStorageService.saveMeal(meal);
       navigation.navigate('Home', { targetDate: targetDate.toISOString() });
     } catch (error) {
       console.error('Error quick logging meal:', error);
@@ -554,7 +554,7 @@ const CameraScreen = ({ navigation, route }) => {
         extendedMetrics: currentExtendedMetrics
       };
 
-      await StorageService.saveMeal(meal);
+      await HybridStorageService.saveMeal(meal);
       navigation.navigate('Home', { targetDate: targetDate.toISOString() });
     } catch (error) {
       console.error('Error logging meal:', error);
@@ -589,7 +589,7 @@ const CameraScreen = ({ navigation, route }) => {
                 extendedMetrics: currentExtendedMetrics
               };
 
-              await StorageService.saveMealTemplate(savedMeal);
+              await HybridHybridStorageService.saveMealTemplate(savedMeal);
               Alert.alert('Success', 'Meal template saved! You can find it in the Saved Meals section.');
             } catch (error) {
               console.error('Error saving meal template:', error);

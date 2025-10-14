@@ -1,4 +1,4 @@
-import StorageService from '../services/storage';
+import HybridHybridStorageService from '../services/hybridStorage';
 
 const sampleMeals = [
   // Breakfast options
@@ -116,7 +116,7 @@ export const addSampleMealsForPast6Months = async () => {
   // Save all meals
   console.log(`Generated ${meals.length} meals for past 6 months`);
   for (const meal of meals) {
-    await StorageService.saveMeal(meal);
+    await HybridStorageService.saveMeal(meal);
   }
   
   return meals.length;
@@ -154,7 +154,7 @@ export const addSampleSavedMeals = async () => {
   ];
   
   for (const meal of savedMeals) {
-    await StorageService.saveMealTemplate(meal);
+    await HybridStorageService.saveMealTemplate(meal);
   }
   
   return savedMeals.length;

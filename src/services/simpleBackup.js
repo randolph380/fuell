@@ -1,13 +1,13 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import StorageService from './storage';
+import HybridHybridStorageService from './hybridStorage';
 
 /**
  * Simple Backup Service - No Cloud Sync
  * 
  * Provides basic backup/restore functionality without complex cloud integration
- * Uses existing StorageService and simple file operations
+ * Uses existing HybridStorageService and simple file operations
  */
 class SimpleBackup {
   
@@ -20,17 +20,17 @@ class SimpleBackup {
    */
   static async createBackup() {
     try {
-      const userId = await StorageService.getUserId();
+      const userId = await HybridStorageService.getUserId();
       if (!userId) {
         throw new Error('User not authenticated');
       }
 
       // Get all user data
       const [meals, dailyMacros, savedMeals, preferences] = await Promise.all([
-        StorageService.getMeals(),
-        StorageService.getAllDailyMacros(),
-        StorageService.getSavedMeals(),
-        StorageService.getUserPreferences()
+        HybridStorageService.getMeals(),
+        HybridStorageService.getAllDailyMacros(),
+        HybridStorageService.getSavedMeals(),
+        HybridStorageService.getUserPreferences()
       ]);
 
       const backupData = {
@@ -165,38 +165,38 @@ class SimpleBackup {
         throw new Error('Invalid backup file format');
       }
 
-      const currentUserId = await StorageService.getUserId();
+      const currentUserId = await HybridStorageService.getUserId();
       if (backupData.userId !== currentUserId) {
         throw new Error('Backup file is for a different user account');
       }
 
       // Clear existing data
-      await StorageService.clearAllData();
+      await HybridStorageService.clearAllData();
 
       // Import data directly to avoid duplicates and ensure correct structure
       const { meals, dailyMacros, savedMeals, preferences } = backupData.data;
 
       // Import meals directly
       if (meals && Array.isArray(meals)) {
-        const mealsKey = await StorageService.getUserKey(StorageService.KEYS.MEALS);
+        const mealsKey = await HybridStorageService.getUserKey(HybridStorageService.KEYS.MEALS);
         await AsyncStorage.setItem(mealsKey, JSON.stringify(meals));
       }
 
       // Import daily macros directly
       if (dailyMacros && typeof dailyMacros === 'object') {
-        const dailyMacrosKey = await StorageService.getUserKey(StorageService.KEYS.DAILY_MACROS);
+        const dailyMacrosKey = await HybridStorageService.getUserKey(HybridStorageService.KEYS.DAILY_MACROS);
         await AsyncStorage.setItem(dailyMacrosKey, JSON.stringify(dailyMacros));
       }
 
       // Import saved meals directly
       if (savedMeals && Array.isArray(savedMeals)) {
-        const savedMealsKey = await StorageService.getUserKey(StorageService.KEYS.SAVED_MEALS);
+        const savedMealsKey = await HybridStorageService.getUserKey(HybridStorageService.KEYS.SAVED_MEALS);
         await AsyncStorage.setItem(savedMealsKey, JSON.stringify(savedMeals));
       }
 
       // Import preferences directly
       if (preferences && typeof preferences === 'object') {
-        const preferencesKey = await StorageService.getUserKey(StorageService.KEYS.USER_PREFERENCES);
+        const preferencesKey = await HybridStorageService.getUserKey(HybridStorageService.KEYS.USER_PREFERENCES);
         await AsyncStorage.setItem(preferencesKey, JSON.stringify(preferences));
       }
 
@@ -215,10 +215,10 @@ class SimpleBackup {
   static async getBackupStats() {
     try {
       const [meals, savedMeals, dailyMacros, preferences] = await Promise.all([
-        StorageService.getMeals(),
-        StorageService.getSavedMeals(),
-        StorageService.getAllDailyMacros(),
-        StorageService.getUserPreferences()
+        HybridStorageService.getMeals(),
+        HybridStorageService.getSavedMeals(),
+        HybridStorageService.getAllDailyMacros(),
+        HybridStorageService.getUserPreferences()
       ]);
 
       return {

@@ -38,6 +38,9 @@ def analyze():
         }
         
         print("🔄 Calling Anthropic API...")
+        print(f"🔑 API Key (first 10 chars): {API_KEY[:10]}...")
+        print(f"📤 Headers: {headers}")
+        print(f"📤 Data: {data}")
         
         api_response = requests.post(
             'https://api.anthropic.com/v1/messages',

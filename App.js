@@ -10,6 +10,7 @@ import EditTargetsScreen from './src/screens/EditTargetsScreen';
 import TrendsScreen from './src/screens/HistoryScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import SavedMealsScreen from './src/screens/SavedMealsScreen';
+import ServerTestScreen from './src/screens/ServerTestScreen';
 import SignInScreen from './src/screens/SignInScreen';
 import SimpleBackupScreen from './src/screens/SimpleBackupScreen';
 
@@ -68,6 +69,11 @@ function AppNavigator() {
           name="EditTargets" 
           component={EditTargetsScreen}
           options={{ title: 'Edit Targets' }}
+        />
+        <Stack.Screen 
+          name="ServerTest" 
+          component={ServerTestScreen}
+          options={{ title: 'Server Test' }}
         />
         <Stack.Screen 
           name="Backup" 

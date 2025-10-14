@@ -1,5 +1,5 @@
 // Claude API service for macro analysis
-const API_BASE_URL = 'https://fuell.onrender.com/api';
+const API_BASE_URL = 'http://10.0.106.89:5000/api';
 
 class ClaudeAPI {
   constructor(apiKey) {

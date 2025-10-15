@@ -460,6 +460,9 @@ const CameraScreen = ({ navigation, route }) => {
   };
 
   const quickLogMeal = async () => {
+    // Dismiss keyboard first
+    Keyboard.dismiss();
+    
     if (!imageUri && !foodDescription.trim()) {
       Alert.alert('Input Required', 'Please take a photo or describe your meal');
       return;
@@ -740,6 +743,7 @@ const CameraScreen = ({ navigation, route }) => {
               blurOnSubmit={true}
               onSubmitEditing={() => {
                 Keyboard.dismiss();
+                setShowInput(false);
               }}
             />
           </View>

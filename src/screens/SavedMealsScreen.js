@@ -75,7 +75,8 @@ const SavedMealsScreen = ({ navigation }) => {
         carbs: savedMeal.carbs,
         fat: savedMeal.fat,
         timestamp: new Date().getTime(),
-        date: new Date().toDateString()
+        date: new Date().toDateString(),
+        extendedMetrics: savedMeal.extendedMetrics || null
       };
 
       await HybridStorageService.saveMeal(meal);

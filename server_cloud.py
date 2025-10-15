@@ -19,18 +19,34 @@ BACKUP_PATH = 'fuell_database_backup.db'
 def restore_database():
     """Restore database from backup if it exists"""
     import shutil
-    if os.path.exists(BACKUP_PATH) and not os.path.exists(DATABASE_PATH):
-        print("🔄 Restoring database from backup...")
-        shutil.copy2(BACKUP_PATH, DATABASE_PATH)
-        print("✅ Database restored from backup!")
+    try:
+        if os.path.exists(BACKUP_PATH) and not os.path.exists(DATABASE_PATH):
+            print("🔄 Restoring database from backup...")
+            shutil.copy2(BACKUP_PATH, DATABASE_PATH)
+            print("✅ Database restored from backup!")
+        elif os.path.exists(BACKUP_PATH):
+            print("📁 Backup exists but main database also exists")
+        else:
+            print("📁 No backup file found")
+    except Exception as e:
+        print(f"❌ Restore failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
 def backup_database():
     """Create backup of current database"""
     import shutil
-    if os.path.exists(DATABASE_PATH):
-        print("💾 Creating database backup...")
-        shutil.copy2(DATABASE_PATH, BACKUP_PATH)
-        print("✅ Database backed up!")
+    try:
+        if os.path.exists(DATABASE_PATH):
+            print("💾 Creating database backup...")
+            shutil.copy2(DATABASE_PATH, BACKUP_PATH)
+            print("✅ Database backed up!")
+        else:
+            print("⚠️ Database file not found for backup")
+    except Exception as e:
+        print(f"❌ Backup failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
 def init_database():
     """Initialize the SQLite database with required tables"""
@@ -185,6 +201,36 @@ init_database()
 @app.route('/', methods=['GET'])
 def home():
     return "✅ Fuell Cloud Server is running! (Updated with Download Endpoints)"
+
+@app.route('/api/database/backup-status', methods=['GET'])
+def backup_status():
+    """Check backup system status"""
+    try:
+        main_exists = os.path.exists(DATABASE_PATH)
+        backup_exists = os.path.exists(BACKUP_PATH)
+        
+        main_size = 0
+        backup_size = 0
+        
+        if main_exists:
+            main_size = os.path.getsize(DATABASE_PATH)
+        if backup_exists:
+            backup_size = os.path.getsize(BACKUP_PATH)
+        
+        return jsonify({
+            'status': 'success',
+            'main_database': {
+                'exists': main_exists,
+                'size_bytes': main_size
+            },
+            'backup_database': {
+                'exists': backup_exists,
+                'size_bytes': backup_size
+            },
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/database/test', methods=['GET'])
 def test_database():

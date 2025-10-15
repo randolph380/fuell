@@ -14,51 +14,12 @@ API_KEY = os.environ.get('ANTHROPIC_API_KEY')
 
 # Database configuration
 DATABASE_PATH = 'fuell_database.db'
-BACKUP_PATH = 'fuell_database_backup.db'
 
-def restore_database():
-    """Restore database from backup if it exists"""
-    import shutil
-    try:
-        if os.path.exists(BACKUP_PATH) and not os.path.exists(DATABASE_PATH):
-            print("🔄 Restoring database from backup...")
-            shutil.copy2(BACKUP_PATH, DATABASE_PATH)
-            print("✅ Database restored from backup!")
-        elif os.path.exists(BACKUP_PATH):
-            print("📁 Backup exists but main database also exists")
-        else:
-            print("📁 No backup file found")
-    except Exception as e:
-        print(f"❌ Restore failed: {str(e)}")
-        import traceback
-        traceback.print_exc()
-
-def backup_database():
-    """Create backup of current database"""
-    import shutil
-    try:
-        print(f"🔍 Backup check: Main DB exists: {os.path.exists(DATABASE_PATH)}")
-        print(f"🔍 Backup check: Backup DB exists: {os.path.exists(BACKUP_PATH)}")
-        
-        if os.path.exists(DATABASE_PATH):
-            main_size = os.path.getsize(DATABASE_PATH)
-            print(f"💾 Creating database backup... (Main size: {main_size} bytes)")
-            shutil.copy2(DATABASE_PATH, BACKUP_PATH)
-            backup_size = os.path.getsize(BACKUP_PATH)
-            print(f"✅ Database backed up! (Backup size: {backup_size} bytes)")
-        else:
-            print("⚠️ Database file not found for backup")
-    except Exception as e:
-        print(f"❌ Backup failed: {str(e)}")
-        import traceback
-        traceback.print_exc()
+# Backup system removed - incompatible with cloud deployments
 
 def init_database():
     """Initialize the SQLite database with required tables"""
     print("🗄️ Initializing database...")
-    
-    # Try to restore from backup first
-    restore_database()
     
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
@@ -184,9 +145,6 @@ def init_database():
     conn.commit()
     conn.close()
     
-    # Create backup after initialization
-    backup_database()
-    
     print("✅ Database initialized successfully!")
 
 def get_db_connection():
@@ -207,35 +165,7 @@ init_database()
 def home():
     return "✅ Fuell Cloud Server is running! (Updated with Download Endpoints)"
 
-@app.route('/api/database/backup-status', methods=['GET'])
-def backup_status():
-    """Check backup system status"""
-    try:
-        main_exists = os.path.exists(DATABASE_PATH)
-        backup_exists = os.path.exists(BACKUP_PATH)
-        
-        main_size = 0
-        backup_size = 0
-        
-        if main_exists:
-            main_size = os.path.getsize(DATABASE_PATH)
-        if backup_exists:
-            backup_size = os.path.getsize(BACKUP_PATH)
-        
-        return jsonify({
-            'status': 'success',
-            'main_database': {
-                'exists': main_exists,
-                'size_bytes': main_size
-            },
-            'backup_database': {
-                'exists': backup_exists,
-                'size_bytes': backup_size
-            },
-            'timestamp': datetime.now().isoformat()
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# Backup status endpoint removed
 
 @app.route('/api/database/test', methods=['GET'])
 def test_database():
@@ -371,9 +301,6 @@ def create_meal():
         conn.commit()
         conn.close()
         
-        # Create backup after saving meal
-        backup_database()
-        
         return jsonify({
             'status': 'success',
             'message': 'Meal created successfully',
@@ -421,9 +348,6 @@ def update_meal(meal_id):
         conn.commit()
         conn.close()
         
-        # Create backup after updating meal
-        backup_database()
-        
         return jsonify({
             'status': 'success',
             'message': 'Meal updated successfully'
@@ -455,9 +379,6 @@ def delete_meal(meal_id):
         cursor.execute('DELETE FROM meals WHERE id = ? AND user_id = ?', (meal_id, user_id))
         conn.commit()
         conn.close()
-        
-        # Create backup after deleting meal
-        backup_database()
         
         return jsonify({
             'status': 'success',

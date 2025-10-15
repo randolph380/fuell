@@ -543,10 +543,15 @@ def analyze():
 
 @app.route('/api/download/database', methods=['GET'])
 def download_database():
-    """Download the SQLite database file"""
+    """Download the SQLite database file (requires password)"""
     try:
         from flask import send_file
         import os
+        
+        # Check for password parameter
+        password = request.args.get('password')
+        if password != 'fuell_admin_2025':
+            return jsonify({'error': 'Password required. Use ?password=your_password'}), 401
         
         if os.path.exists(DATABASE_PATH):
             return send_file(
@@ -562,8 +567,12 @@ def download_database():
 
 @app.route('/api/admin/all-meals', methods=['GET'])
 def get_all_meals():
-    """Admin endpoint to get all meals regardless of user ID"""
+    """Admin endpoint to get all meals regardless of user ID (requires password)"""
     try:
+        # Check for password parameter
+        password = request.args.get('password')
+        if password != 'fuell_admin_2025':
+            return jsonify({'error': 'Password required. Use ?password=your_password'}), 401
         conn = get_db_connection()
         cursor = conn.cursor()
         
@@ -582,8 +591,12 @@ def get_all_meals():
 
 @app.route('/api/admin/users', methods=['GET'])
 def get_user_stats():
-    """Admin endpoint to get user statistics for monitoring"""
+    """Admin endpoint to get user statistics for monitoring (requires password)"""
     try:
+        # Check for password parameter
+        password = request.args.get('password')
+        if password != 'fuell_admin_2025':
+            return jsonify({'error': 'Password required. Use ?password=your_password'}), 401
         conn = get_db_connection()
         cursor = conn.cursor()
         

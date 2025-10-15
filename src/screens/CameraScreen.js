@@ -239,6 +239,7 @@ const CameraScreen = ({ navigation, route }) => {
       // Only update if macros were successfully parsed
       if (result.macros) {
         setCurrentMacros(result.macros);
+        console.log('🔍 Setting currentExtendedMetrics from AI result:', result.extendedMetrics);
         setCurrentExtendedMetrics(result.extendedMetrics || getDefaultExtendedMetrics());
       } else {
         console.warn('⚠️ Initial analysis: Failed to parse macros, keeping previous values');
@@ -579,6 +580,8 @@ const CameraScreen = ({ navigation, route }) => {
 
   const saveMealTemplate = async () => {
     if (!currentMacros) return;
+    
+    console.log('🔍 saveMealTemplate called - currentExtendedMetrics:', currentExtendedMetrics);
 
     Alert.prompt(
       'Save Meal Template',

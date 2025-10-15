@@ -30,6 +30,7 @@ const CameraScreen = ({ navigation, route }) => {
   const [conversation, setConversation] = useState([]);
   const [currentMacros, setCurrentMacros] = useState(null);
   const [currentExtendedMetrics, setCurrentExtendedMetrics] = useState(null);
+  const extendedMetricsRef = useRef(null);
   const [showInput, setShowInput] = useState(false);
   const [userInput, setUserInput] = useState('');
   const [isRefining, setIsRefining] = useState(false);
@@ -240,7 +241,9 @@ const CameraScreen = ({ navigation, route }) => {
       if (result.macros) {
         setCurrentMacros(result.macros);
         console.log('🔍 Setting currentExtendedMetrics from AI result:', result.extendedMetrics);
-        setCurrentExtendedMetrics(result.extendedMetrics || getDefaultExtendedMetrics());
+        const extendedMetrics = result.extendedMetrics || getDefaultExtendedMetrics();
+        setCurrentExtendedMetrics(extendedMetrics);
+        extendedMetricsRef.current = extendedMetrics; // Store in ref for persistence
       } else {
         console.warn('⚠️ Initial analysis: Failed to parse macros, keeping previous values');
       }
@@ -403,7 +406,9 @@ const CameraScreen = ({ navigation, route }) => {
       // Only update if macros were successfully parsed, otherwise keep previous values
       if (result.macros) {
         setCurrentMacros(result.macros);
-        setCurrentExtendedMetrics(result.extendedMetrics || getDefaultExtendedMetrics());
+        const extendedMetrics = result.extendedMetrics || getDefaultExtendedMetrics();
+        setCurrentExtendedMetrics(extendedMetrics);
+        extendedMetricsRef.current = extendedMetrics; // Store in ref for persistence
       } else {
         console.warn('⚠️ Refinement: Failed to parse macros, keeping previous values');
         // Keep the existing currentMacros and currentExtendedMetrics values
@@ -582,6 +587,7 @@ const CameraScreen = ({ navigation, route }) => {
     if (!currentMacros) return;
     
     console.log('🔍 saveMealTemplate called - currentExtendedMetrics:', currentExtendedMetrics);
+    console.log('🔍 saveMealTemplate called - extendedMetricsRef.current:', extendedMetricsRef.current);
 
     Alert.prompt(
       'Save Meal Template',
@@ -604,7 +610,7 @@ const CameraScreen = ({ navigation, route }) => {
                 protein: currentMacros.protein,
                 carbs: currentMacros.carbs,
                 fat: currentMacros.fat,
-                extendedMetrics: currentExtendedMetrics
+                extendedMetrics: currentExtendedMetrics || extendedMetricsRef.current
               };
 
               console.log('🔍 Saving meal template with extended metrics:', {

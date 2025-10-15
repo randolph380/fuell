@@ -37,10 +37,15 @@ def backup_database():
     """Create backup of current database"""
     import shutil
     try:
+        print(f"🔍 Backup check: Main DB exists: {os.path.exists(DATABASE_PATH)}")
+        print(f"🔍 Backup check: Backup DB exists: {os.path.exists(BACKUP_PATH)}")
+        
         if os.path.exists(DATABASE_PATH):
-            print("💾 Creating database backup...")
+            main_size = os.path.getsize(DATABASE_PATH)
+            print(f"💾 Creating database backup... (Main size: {main_size} bytes)")
             shutil.copy2(DATABASE_PATH, BACKUP_PATH)
-            print("✅ Database backed up!")
+            backup_size = os.path.getsize(BACKUP_PATH)
+            print(f"✅ Database backed up! (Backup size: {backup_size} bytes)")
         else:
             print("⚠️ Database file not found for backup")
     except Exception as e:

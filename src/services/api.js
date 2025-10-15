@@ -41,7 +41,7 @@ Total: [sum] calories
 - Small plate of noodles (~80g) → 120 cal
 - 6 thin beef slices (~60g) → 150 cal  
 - Mixed vegetables (~100g) → 40 cal
-Total: 310 calories. Mostly NOVA 1 (fresh ingredients) with minimal processing."
+Total: 310 calories."
 
 **Full macro example for internal calculation:**
 - Image 1 (Small plate of noodles): ~80g noodles = 120 cal, 4g protein, 24g carbs, 1g fat
@@ -71,6 +71,11 @@ The images provide DIFFERENT INFORMATION about ONE food item:
    - SMALLER weight = ONE component measured separately
    - SUBTRACT smaller from larger to find the other component
    - Example: 360g total, 214g yogurt alone → berries = 360g - 214g = 146g
+
+**MULTIPLE ANGLES/INGREDIENTS:**
+- If multiple images of ONE item: different angles, ingredients, or step-by-step preparation
+- Combine all visual information to analyze the complete dish
+- Don't treat as separate meals - it's one item from multiple perspectives
 
 **Example approach:**
 - Image 1: Bowl on scale showing 360g total
@@ -232,12 +237,14 @@ ${preparationContext}
 - **FOR RESTAURANT MEALS:** If you can't identify the restaurant, ask: "What restaurant is this from? This will help me give you more accurate macro estimates."
 
 **RESPONSE LENGTH REQUIREMENTS:**
-- Keep the conversational analysis section (before JSON) under 50 words
-- If conversational part exceeds 50 words, summarize to key points only
+- Keep the conversational analysis section (before JSON) under 40 words
+- If conversational part exceeds 40 words, summarize to key points only
 - Focus on: calories, main ingredients, portion size
 - Skip detailed explanations and examples
-- No NOVA classification mentions in conversational text
+- NEVER mention NOVA classification in conversational text - only in JSON
+- Don't say "processed food", "NOVA 3", "ultra-processed", or any processing level in chat
 - **IMPORTANT:** The JSON section must remain complete and unchanged
+- **DEBUG:** Start your response with "🔧 PROMPT v2.5 ACTIVE" to confirm this version is being used
 
 **PROCESSED FOOD CLASSIFICATION:**
 Use the NOVA classification system to estimate processed food percentage. Ask yourself these questions:
@@ -322,10 +329,10 @@ Rate your confidence in this estimate (0-10 scale):
 - 4-5: Partial ambiguity (hidden ingredients, unclear portions, unfamiliar preparation)
 - 0-3: High uncertainty (blurry images, unusual foods, no size reference)
 
-If certainty is 6 or below, ask 1-2 brief clarifying questions to improve accuracy:
-- Portion size: "Is this a small appetizer portion or a full entree?"
-- Preparation: "Was this cooked with oil/butter?"
-- Context: "Are these separate meals or different angles of the same dish?"
+If certainty is 6 or below, ask ONE essential question:
+- Use format: "Which meal: [option 1] or [option 2]?"
+- Don't explain why you're asking
+- Keep question under 10 words
 
 **NUTRITION_DATA:**
 \`\`\`json
@@ -562,12 +569,14 @@ RESPONSE STYLE:
 - Skip unnecessary elaboration
 
 RESPONSE LENGTH REQUIREMENTS:
-- Keep the conversational analysis section (before JSON) under 50 words
-- If conversational part exceeds 50 words, summarize to key points only
+- Keep the conversational analysis section (before JSON) under 40 words
+- If conversational part exceeds 40 words, summarize to key points only
 - Focus on: calories, main ingredients, portion size
 - Skip detailed explanations and examples
-- No NOVA classification mentions in conversational text
+- NEVER mention NOVA classification in conversational text - only in JSON
+- Don't say "processed food", "NOVA 3", "ultra-processed", or any processing level in chat
 - **IMPORTANT:** The JSON section must remain complete and unchanged
+- **DEBUG:** Start your response with "🔧 PROMPT v2.5 ACTIVE" to confirm this version is being used
 
 PROCESSED FOOD (NOVA):
 - Update your NOVA classification if new information changes it

@@ -20,6 +20,7 @@ import {
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
 import ClaudeAPI from '../services/api';
 import HybridStorageService from '../services/hybridStorage';
+import { getDefaultExtendedMetrics } from '../utils/extendedMetrics';
 
 const CameraScreen = ({ navigation, route }) => {
   const [imageUri, setImageUri] = useState(null);
@@ -238,7 +239,7 @@ const CameraScreen = ({ navigation, route }) => {
       // Only update if macros were successfully parsed
       if (result.macros) {
         setCurrentMacros(result.macros);
-        setCurrentExtendedMetrics(result.extendedMetrics || null);
+        setCurrentExtendedMetrics(result.extendedMetrics || getDefaultExtendedMetrics());
       } else {
         console.warn('⚠️ Initial analysis: Failed to parse macros, keeping previous values');
       }
@@ -401,7 +402,7 @@ const CameraScreen = ({ navigation, route }) => {
       // Only update if macros were successfully parsed, otherwise keep previous values
       if (result.macros) {
         setCurrentMacros(result.macros);
-        setCurrentExtendedMetrics(result.extendedMetrics || null);
+        setCurrentExtendedMetrics(result.extendedMetrics || getDefaultExtendedMetrics());
       } else {
         console.warn('⚠️ Refinement: Failed to parse macros, keeping previous values');
         // Keep the existing currentMacros and currentExtendedMetrics values

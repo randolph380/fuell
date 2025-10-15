@@ -76,11 +76,11 @@ export const calculateAggregatedUltraProcessed = (meals) => {
 export const getDefaultExtendedMetrics = () => ({
   processedCalories: null,
   processedPercent: null,
-  // Future metrics can be added here:
-  // fiber: null,
-  // sugar: null,
-  // sodium: null,
-  // saturatedFat: null,
+  ultraProcessedCalories: null,
+  ultraProcessedPercent: null,
+  fiber: null,
+  caffeine: null,
+  freshProduce: null,
 });
 
 /**

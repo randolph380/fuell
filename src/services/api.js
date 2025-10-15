@@ -231,6 +231,14 @@ ${preparationContext}
 - Focus on the key facts and calculations
 - **FOR RESTAURANT MEALS:** If you can't identify the restaurant, ask: "What restaurant is this from? This will help me give you more accurate macro estimates."
 
+**RESPONSE LENGTH REQUIREMENTS:**
+- Keep the conversational analysis section (before JSON) under 50 words
+- If conversational part exceeds 50 words, summarize to key points only
+- Focus on: calories, main ingredients, portion size
+- Skip detailed explanations and examples
+- No NOVA classification mentions in conversational text
+- **IMPORTANT:** The JSON section must remain complete and unchanged
+
 **PROCESSED FOOD CLASSIFICATION:**
 Use the NOVA classification system to estimate processed food percentage. Ask yourself these questions:
 
@@ -552,6 +560,14 @@ RESPONSE STYLE:
 - Use short sentences
 - Focus on key updates and math
 - Skip unnecessary elaboration
+
+RESPONSE LENGTH REQUIREMENTS:
+- Keep the conversational analysis section (before JSON) under 50 words
+- If conversational part exceeds 50 words, summarize to key points only
+- Focus on: calories, main ingredients, portion size
+- Skip detailed explanations and examples
+- No NOVA classification mentions in conversational text
+- **IMPORTANT:** The JSON section must remain complete and unchanged
 
 PROCESSED FOOD (NOVA):
 - Update your NOVA classification if new information changes it

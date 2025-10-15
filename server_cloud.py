@@ -547,6 +547,41 @@ def get_all_meals():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/admin/users', methods=['GET'])
+def get_user_stats():
+    """Admin endpoint to get user statistics for monitoring"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get user statistics
+        cursor.execute('''
+            SELECT 
+                user_id,
+                COUNT(*) as meal_count,
+                MIN(created_at) as first_meal,
+                MAX(created_at) as last_meal,
+                SUM(calories) as total_calories,
+                AVG(calories) as avg_calories_per_meal
+            FROM meals 
+            GROUP BY user_id 
+            ORDER BY meal_count DESC
+        ''')
+        user_stats = cursor.fetchall()
+        
+        # Get total stats
+        cursor.execute('SELECT COUNT(*) as total_meals, COUNT(DISTINCT user_id) as unique_users FROM meals')
+        total_stats = cursor.fetchone()
+        
+        return jsonify({
+            'status': 'success',
+            'total_users': total_stats['unique_users'],
+            'total_meals': total_stats['total_meals'],
+            'users': [dict(user) for user in user_stats]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/download/meals/csv', methods=['GET'])
 def download_meals_csv():
     """Download all meals as CSV file"""

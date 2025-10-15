@@ -98,14 +98,14 @@ def ensure_user_exists(user_id, email=None):
     
     try:
         # Check if user exists
-        cursor.execute('SELECT id FROM users WHERE id = %s', (user_id,))
+        cursor.execute('SELECT user_id FROM users WHERE user_id = %s', (user_id,))
         if cursor.fetchone():
             conn.close()
             return True
         
         # Create user if doesn't exist
         cursor.execute('''
-            INSERT INTO users (id, email, created_at, updated_at)
+            INSERT INTO users (user_id, email, created_at, updated_at)
             VALUES (%s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         ''', (user_id, email))
         conn.commit()
@@ -140,14 +140,14 @@ def create_user_manually():
         cursor = conn.cursor()
         
         # Check if user exists
-        cursor.execute('SELECT id FROM users WHERE id = %s', (user_id,))
+        cursor.execute('SELECT user_id FROM users WHERE user_id = %s', (user_id,))
         if cursor.fetchone():
             conn.close()
             return jsonify({'message': 'User already exists', 'user_id': user_id}), 200
         
         # Create user
         cursor.execute('''
-            INSERT INTO users (id, email, created_at, updated_at)
+            INSERT INTO users (user_id, email, created_at, updated_at)
             VALUES (%s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         ''', (user_id, email))
         conn.commit()

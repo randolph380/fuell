@@ -105,8 +105,8 @@ def ensure_user_exists(user_id, email=None):
         
         # Create user if doesn't exist
         cursor.execute('''
-            INSERT INTO users (user_id, email, created_at, updated_at)
-            VALUES (%s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            INSERT INTO users (user_id, email, created_at)
+            VALUES (%s, %s, CURRENT_TIMESTAMP)
         ''', (user_id, email))
         conn.commit()
         conn.close()
@@ -147,8 +147,8 @@ def create_user_manually():
         
         # Create user
         cursor.execute('''
-            INSERT INTO users (user_id, email, created_at, updated_at)
-            VALUES (%s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            INSERT INTO users (user_id, email, created_at)
+            VALUES (%s, %s, CURRENT_TIMESTAMP)
         ''', (user_id, email))
         conn.commit()
         conn.close()

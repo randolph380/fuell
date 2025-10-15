@@ -69,6 +69,7 @@ class ServerStorageService {
 
       // Convert meal to server format
       const serverMeal = {
+        id: meal.id,
         user_id: userId,
         date: meal.date,
         name: meal.name || 'Meal',

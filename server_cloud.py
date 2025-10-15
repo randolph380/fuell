@@ -508,5 +508,61 @@ def analyze():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/download/database', methods=['GET'])
+def download_database():
+    """Download the SQLite database file"""
+    try:
+        from flask import send_file
+        import os
+        
+        if os.path.exists(DATABASE_PATH):
+            return send_file(
+                DATABASE_PATH,
+                as_attachment=True,
+                download_name='fuell_database.db',
+                mimetype='application/octet-stream'
+            )
+        else:
+            return jsonify({'error': 'Database file not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/download/meals/csv', methods=['GET'])
+def download_meals_csv():
+    """Download all meals as CSV file"""
+    try:
+        import csv
+        import io
+        from flask import make_response
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get all meals
+        cursor.execute('''
+            SELECT * FROM meals ORDER BY created_at DESC
+        ''')
+        meals = cursor.fetchall()
+        
+        # Create CSV in memory
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        if meals:
+            writer.writerow(meals[0].keys())
+            # Write data
+            for meal in meals:
+                writer.writerow(meal.values())
+        
+        # Create response
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'text/csv'
+        response.headers['Content-Disposition'] = 'attachment; filename=fuell_meals.csv'
+        
+        return response
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)

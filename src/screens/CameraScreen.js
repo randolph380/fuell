@@ -244,6 +244,7 @@ const CameraScreen = ({ navigation, route }) => {
         const extendedMetrics = result.extendedMetrics || getDefaultExtendedMetrics();
         setCurrentExtendedMetrics(extendedMetrics);
         extendedMetricsRef.current = extendedMetrics; // Store in ref for persistence
+        console.log('🔍 Stored extended metrics in ref:', extendedMetricsRef.current);
       } else {
         console.warn('⚠️ Initial analysis: Failed to parse macros, keeping previous values');
       }

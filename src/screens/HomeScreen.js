@@ -170,7 +170,8 @@ const HomeScreen = ({ navigation, route }) => {
         calories: meal.baseMacros?.calories || meal.calories,
         protein: meal.baseMacros?.protein || meal.protein,
         carbs: meal.baseMacros?.carbs || meal.carbs,
-        fat: meal.baseMacros?.fat || meal.fat
+        fat: meal.baseMacros?.fat || meal.fat,
+        extendedMetrics: meal.extendedMetrics || null
       };
       await HybridStorageService.saveMealTemplate(template);
       Alert.alert('Success', 'Meal saved as template!');

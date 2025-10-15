@@ -107,11 +107,11 @@ const SavedMealsScreen = ({ navigation }) => {
       protein: meal.protein.toString(),
       carbs: meal.carbs.toString(),
       fat: meal.fat.toString(),
-      fiber: meal.fiber?.toString() || '0',
-      caffeine: meal.caffeine?.toString() || '0',
-      freshProduce: meal.freshProduce?.toString() || '0',
-      processedPercent: meal.processedPercent?.toString() || '0',
-      ultraProcessedPercent: meal.ultraProcessedPercent?.toString() || '0'
+      fiber: meal.extendedMetrics?.fiber?.toString() || '0',
+      caffeine: meal.extendedMetrics?.caffeine?.toString() || '0',
+      freshProduce: meal.extendedMetrics?.freshProduce?.toString() || '0',
+      processedPercent: meal.extendedMetrics?.processedPercent?.toString() || '0',
+      ultraProcessedPercent: meal.extendedMetrics?.ultraProcessedPercent?.toString() || '0'
     });
     setExpandedMealId(null);
   };
@@ -123,17 +123,23 @@ const SavedMealsScreen = ({ navigation }) => {
 
   const saveEditedMeal = async (meal) => {
     try {
+      // Create updated extended metrics object
+      const updatedExtendedMetrics = {
+        ...meal.extendedMetrics,
+        fiber: parseFloat(editedValues.fiber) || 0,
+        caffeine: parseFloat(editedValues.caffeine) || 0,
+        freshProduce: parseFloat(editedValues.freshProduce) || 0,
+        processedPercent: parseFloat(editedValues.processedPercent) || 0,
+        ultraProcessedPercent: parseFloat(editedValues.ultraProcessedPercent) || 0
+      };
+
       const updatedMeal = {
         ...meal,
         calories: parseInt(editedValues.calories) || meal.calories,
         protein: parseInt(editedValues.protein) || meal.protein,
         carbs: parseInt(editedValues.carbs) || meal.carbs,
         fat: parseInt(editedValues.fat) || meal.fat,
-        fiber: parseFloat(editedValues.fiber) || meal.fiber || 0,
-        caffeine: parseFloat(editedValues.caffeine) || meal.caffeine || 0,
-        freshProduce: parseFloat(editedValues.freshProduce) || meal.freshProduce || 0,
-        processedPercent: parseFloat(editedValues.processedPercent) || meal.processedPercent || 0,
-        ultraProcessedPercent: parseFloat(editedValues.ultraProcessedPercent) || meal.ultraProcessedPercent || 0
+        extendedMetrics: updatedExtendedMetrics
       };
       
       await HybridStorageService.updateSavedMeal(meal.id, updatedMeal);

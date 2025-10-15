@@ -14,10 +14,30 @@ API_KEY = os.environ.get('ANTHROPIC_API_KEY')
 
 # Database configuration
 DATABASE_PATH = 'fuell_database.db'
+BACKUP_PATH = 'fuell_database_backup.db'
+
+def restore_database():
+    """Restore database from backup if it exists"""
+    import shutil
+    if os.path.exists(BACKUP_PATH) and not os.path.exists(DATABASE_PATH):
+        print("🔄 Restoring database from backup...")
+        shutil.copy2(BACKUP_PATH, DATABASE_PATH)
+        print("✅ Database restored from backup!")
+
+def backup_database():
+    """Create backup of current database"""
+    import shutil
+    if os.path.exists(DATABASE_PATH):
+        print("💾 Creating database backup...")
+        shutil.copy2(DATABASE_PATH, BACKUP_PATH)
+        print("✅ Database backed up!")
 
 def init_database():
     """Initialize the SQLite database with required tables"""
     print("🗄️ Initializing database...")
+    
+    # Try to restore from backup first
+    restore_database()
     
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
@@ -142,6 +162,10 @@ def init_database():
     
     conn.commit()
     conn.close()
+    
+    # Create backup after initialization
+    backup_database()
+    
     print("✅ Database initialized successfully!")
 
 def get_db_connection():
@@ -296,6 +320,9 @@ def create_meal():
         conn.commit()
         conn.close()
         
+        # Create backup after saving meal
+        backup_database()
+        
         return jsonify({
             'status': 'success',
             'message': 'Meal created successfully',
@@ -343,6 +370,9 @@ def update_meal(meal_id):
         conn.commit()
         conn.close()
         
+        # Create backup after updating meal
+        backup_database()
+        
         return jsonify({
             'status': 'success',
             'message': 'Meal updated successfully'
@@ -374,6 +404,9 @@ def delete_meal(meal_id):
         cursor.execute('DELETE FROM meals WHERE id = ? AND user_id = ?', (meal_id, user_id))
         conn.commit()
         conn.close()
+        
+        # Create backup after deleting meal
+        backup_database()
         
         return jsonify({
             'status': 'success',

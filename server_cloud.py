@@ -2,8 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 import os
-import psycopg2
-import psycopg2.extras
+import psycopg
 import json
 from datetime import datetime
 
@@ -22,7 +21,7 @@ def init_database():
     """Initialize the PostgreSQL database with required tables"""
     print("🗄️ Initializing PostgreSQL database...")
     
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = psycopg.connect(DATABASE_URL)
     cursor = conn.cursor()
     
     # Create users table
@@ -150,8 +149,7 @@ def init_database():
 
 def get_db_connection():
     """Get a PostgreSQL database connection"""
-    conn = psycopg2.connect(DATABASE_URL)
-    conn.autocommit = False
+    conn = psycopg.connect(DATABASE_URL)
     return conn
 
 # Initialize database on startup

@@ -605,7 +605,19 @@ const CameraScreen = ({ navigation, route }) => {
 
             try {
               // Try to get extended metrics from multiple sources
-              const extendedMetrics = currentExtendedMetrics || extendedMetricsRef.current || getDefaultExtendedMetrics();
+              // If both are null/undefined, use default values but log a warning
+              const extendedMetrics = currentExtendedMetrics || extendedMetricsRef.current;
+              
+              if (!extendedMetrics) {
+                console.warn('⚠️ No extended metrics found when saving meal template!');
+                console.log('🔍 State check:', {
+                  currentExtendedMetrics: currentExtendedMetrics,
+                  extendedMetricsRef: extendedMetricsRef.current,
+                  hasCurrent: !!currentExtendedMetrics,
+                  hasRef: !!extendedMetricsRef.current
+                });
+              }
+              
               console.log('🔍 Extended metrics fallback check:', {
                 currentExtendedMetrics: !!currentExtendedMetrics,
                 extendedMetricsRef: !!extendedMetricsRef.current,

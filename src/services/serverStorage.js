@@ -96,6 +96,16 @@ class ServerStorageService {
         image_url: meal.imageUrl
       };
 
+      console.log('🔍 Server meal extended metrics:', {
+        hasExtendedMetrics: !!meal.extendedMetrics,
+        extendedMetrics: meal.extendedMetrics,
+        processedCalories: serverMeal.processed_calories,
+        processedPercent: serverMeal.processed_percent,
+        fiber: serverMeal.fiber,
+        caffeine: serverMeal.caffeine,
+        freshProduce: serverMeal.fresh_produce
+      });
+
       console.log('🌐 Making server request with data:', {
         endpoint: '/user/meals',
         method: 'POST',

@@ -67,6 +67,12 @@ const SavedMealsScreen = ({ navigation }) => {
 
   const logSavedMeal = async (savedMeal) => {
     try {
+      console.log('🔍 Logging saved meal with extended metrics:', {
+        mealName: savedMeal.name,
+        hasExtendedMetrics: !!savedMeal.extendedMetrics,
+        extendedMetrics: savedMeal.extendedMetrics
+      });
+      
       const meal = {
         id: Date.now().toString(),
         name: savedMeal.name,
@@ -78,6 +84,12 @@ const SavedMealsScreen = ({ navigation }) => {
         date: new Date().toDateString(),
         extendedMetrics: savedMeal.extendedMetrics || null
       };
+
+      console.log('🔍 Final meal object for logging:', {
+        mealName: meal.name,
+        hasExtendedMetrics: !!meal.extendedMetrics,
+        extendedMetrics: meal.extendedMetrics
+      });
 
       await HybridStorageService.saveMeal(meal);
       Alert.alert('Success', 'Meal logged successfully! 🎉');

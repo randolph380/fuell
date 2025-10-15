@@ -180,10 +180,18 @@ class StorageService {
   // Saved meals storage methods
   static async saveMealTemplate(mealTemplate) {
     try {
+      console.log('💾 StorageService.saveMealTemplate called with:', {
+        mealName: mealTemplate.name,
+        extendedMetrics: mealTemplate.extendedMetrics,
+        hasExtendedMetrics: !!mealTemplate.extendedMetrics
+      });
+      
       const savedMeals = await this.getSavedMeals();
       const updatedSavedMeals = [...savedMeals, mealTemplate];
       const key = await this.getUserKey(this.KEYS.SAVED_MEALS);
       await AsyncStorage.setItem(key, JSON.stringify(updatedSavedMeals));
+      
+      console.log('✅ Meal template saved to local storage');
       return true;
     } catch (error) {
       console.error('Error saving meal template:', error);
@@ -195,7 +203,15 @@ class StorageService {
     try {
       const key = await this.getUserKey(this.KEYS.SAVED_MEALS);
       const savedMeals = await AsyncStorage.getItem(key);
-      return savedMeals ? JSON.parse(savedMeals) : [];
+      const parsedMeals = savedMeals ? JSON.parse(savedMeals) : [];
+      
+      console.log('📖 Retrieved saved meals:', parsedMeals.map(meal => ({
+        name: meal.name,
+        extendedMetrics: meal.extendedMetrics,
+        hasExtendedMetrics: !!meal.extendedMetrics
+      })));
+      
+      return parsedMeals;
     } catch (error) {
       console.error('Error getting saved meals:', error);
       return [];

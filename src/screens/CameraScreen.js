@@ -604,6 +604,12 @@ const CameraScreen = ({ navigation, route }) => {
                 extendedMetrics: currentExtendedMetrics
               };
 
+              console.log('🔍 Saving meal template with extended metrics:', {
+                mealName: savedMeal.name,
+                extendedMetrics: savedMeal.extendedMetrics,
+                hasExtendedMetrics: !!savedMeal.extendedMetrics
+              });
+
               await HybridStorageService.saveMealTemplate(savedMeal);
               Alert.alert('Success', 'Meal template saved! You can find it in the Saved Meals section.');
             } catch (error) {

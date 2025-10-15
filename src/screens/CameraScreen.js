@@ -606,6 +606,12 @@ const CameraScreen = ({ navigation, route }) => {
             try {
               // Try to get extended metrics from multiple sources
               const extendedMetrics = currentExtendedMetrics || extendedMetricsRef.current || getDefaultExtendedMetrics();
+              console.log('🔍 Extended metrics fallback check:', {
+                currentExtendedMetrics: !!currentExtendedMetrics,
+                extendedMetricsRef: !!extendedMetricsRef.current,
+                fallbackUsed: !currentExtendedMetrics && !extendedMetricsRef.current,
+                finalExtendedMetrics: extendedMetrics
+              });
               
               const savedMeal = {
                 id: Date.now().toString(),

@@ -604,6 +604,9 @@ const CameraScreen = ({ navigation, route }) => {
             }
 
             try {
+              // Try to get extended metrics from multiple sources
+              const extendedMetrics = currentExtendedMetrics || extendedMetricsRef.current || getDefaultExtendedMetrics();
+              
               const savedMeal = {
                 id: Date.now().toString(),
                 name: mealName.trim(),
@@ -611,7 +614,7 @@ const CameraScreen = ({ navigation, route }) => {
                 protein: currentMacros.protein,
                 carbs: currentMacros.carbs,
                 fat: currentMacros.fat,
-                extendedMetrics: currentExtendedMetrics || extendedMetricsRef.current
+                extendedMetrics: extendedMetrics
               };
 
               console.log('🔍 Saving meal template with extended metrics:', {

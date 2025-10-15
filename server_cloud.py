@@ -553,7 +553,7 @@ def download_meals_csv():
             writer.writerow(meals[0].keys())
             # Write data
             for meal in meals:
-                writer.writerow(meal.values())
+                writer.writerow(list(meal))
         
         # Create response
         response = make_response(output.getvalue())

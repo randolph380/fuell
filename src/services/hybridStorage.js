@@ -52,7 +52,14 @@ class HybridStorageService {
       }
 
       // Try to save to server if enabled
+      console.log('🔍 Server storage config:', {
+        USE_SERVER_STORAGE: this.USE_SERVER_STORAGE,
+        SYNC_ON_SAVE: this.SYNC_ON_SAVE,
+        FALLBACK_TO_LOCAL: this.FALLBACK_TO_LOCAL
+      });
+      
       if (this.USE_SERVER_STORAGE && this.SYNC_ON_SAVE) {
+        console.log('🌐 Attempting to save to server...');
         try {
           await ServerStorageService.saveMeal(meal);
           console.log('✅ Meal saved to server with name:', meal.name);
@@ -63,6 +70,8 @@ class HybridStorageService {
             throw serverError;
           }
         }
+      } else {
+        console.log('❌ Server storage disabled or sync disabled');
       }
 
       return true;

@@ -62,7 +62,15 @@ class ServerStorageService {
    */
   static async saveMeal(meal) {
     try {
+      console.log('🔍 ServerStorageService.saveMeal called with:', {
+        mealId: meal.id,
+        mealName: meal.name,
+        hasExtendedMetrics: !!meal.extendedMetrics
+      });
+      
       const userId = await this.getUserId();
+      console.log('👤 User ID from getUserId():', userId);
+      
       if (!userId) {
         throw new Error('User not authenticated');
       }
@@ -88,10 +96,18 @@ class ServerStorageService {
         image_url: meal.imageUrl
       };
 
+      console.log('🌐 Making server request with data:', {
+        endpoint: '/user/meals',
+        method: 'POST',
+        userId: serverMeal.user_id,
+        mealName: serverMeal.name
+      });
+
       const result = await this.makeRequest('/user/meals', 'POST', serverMeal);
+      console.log('✅ Server response:', result);
       return result.meal_id;
     } catch (error) {
-      console.error('Error saving meal to server:', error);
+      console.error('❌ Error saving meal to server:', error);
       throw error;
     }
   }

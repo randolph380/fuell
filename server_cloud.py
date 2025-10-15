@@ -527,6 +527,26 @@ def download_database():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/admin/all-meals', methods=['GET'])
+def get_all_meals():
+    """Admin endpoint to get all meals regardless of user ID"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT * FROM meals ORDER BY created_at DESC
+        ''')
+        meals = cursor.fetchall()
+        
+        return jsonify({
+            'status': 'success',
+            'count': len(meals),
+            'meals': [dict(meal) for meal in meals]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/download/meals/csv', methods=['GET'])
 def download_meals_csv():
     """Download all meals as CSV file"""

@@ -91,6 +91,31 @@ def get_db_connection():
     conn = psycopg.connect(DATABASE_URL)
     return conn
 
+def ensure_user_exists(user_id, email=None):
+    """Ensure user exists in database, create if not"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Check if user exists
+        cursor.execute('SELECT id FROM users WHERE id = %s', (user_id,))
+        if cursor.fetchone():
+            conn.close()
+            return True
+        
+        # Create user if doesn't exist
+        cursor.execute('''
+            INSERT INTO users (id, email, created_at, updated_at)
+            VALUES (%s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ''', (user_id, email))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        conn.close()
+        print(f"Error ensuring user exists: {e}")
+        return False
+
 # Initialize database on startup
 init_database()
 
@@ -191,6 +216,9 @@ def create_meal():
         
         if not user_id:
             return jsonify({'error': 'User ID required'}), 400
+        
+        # Ensure user exists in database
+        ensure_user_exists(user_id, data.get('email'))
         
         # Extract meal data
         meal_data = {

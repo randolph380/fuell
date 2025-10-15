@@ -161,13 +161,14 @@ def get_user_meals():
         
         cursor.execute('''
             SELECT * FROM meals 
-            WHERE user_id = ? 
+            WHERE user_id = %s 
             ORDER BY date DESC, created_at DESC
         ''', (user_id,))
         
         meals = []
+        columns = [desc[0] for desc in cursor.description]
         for row in cursor.fetchall():
-            meal = dict(row)
+            meal = dict(zip(columns, row))
             meals.append(meal)
         
         conn.close()
@@ -222,7 +223,7 @@ def create_meal():
                 id, user_id, date, name, food_items, calories, protein, carbs, fat,
                 processed_calories, processed_percent, ultra_processed_calories, ultra_processed_percent,
                 fiber, caffeine, fresh_produce, image_url
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             meal_id, meal_data['user_id'], meal_data['date'], meal_data['name'], meal_data['food_items'],
             meal_data['calories'], meal_data['protein'], meal_data['carbs'], meal_data['fat'],
@@ -257,7 +258,7 @@ def update_meal(meal_id):
         cursor = conn.cursor()
         
         # Check if meal exists and belongs to user (using timestamp ID)
-        cursor.execute('SELECT id FROM meals WHERE id = ? AND user_id = ?', (meal_id, user_id))
+        cursor.execute('SELECT id FROM meals WHERE id = %s AND user_id = %s', (meal_id, user_id))
         if not cursor.fetchone():
             conn.close()
             return jsonify({'error': 'Meal not found'}), 404
@@ -265,10 +266,10 @@ def update_meal(meal_id):
         # Update meal data
         cursor.execute('''
             UPDATE meals SET
-                date = ?, name = ?, food_items = ?, calories = ?, protein = ?, carbs = ?, fat = ?,
-                processed_calories = ?, processed_percent = ?, ultra_processed_calories = ?, ultra_processed_percent = ?,
-                fiber = ?, caffeine = ?, fresh_produce = ?, image_url = ?
-            WHERE id = ? AND user_id = ?
+                date = %s, name = %s, food_items = %s, calories = %s, protein = %s, carbs = %s, fat = %s,
+                processed_calories = %s, processed_percent = %s, ultra_processed_calories = %s, ultra_processed_percent = %s,
+                fiber = %s, caffeine = %s, fresh_produce = %s, image_url = %s
+            WHERE id = %s AND user_id = %s
         ''', (
             data.get('date'), data.get('name', 'Meal'), json.dumps(data.get('food_items', [])),
             data.get('calories'), data.get('protein'), data.get('carbs'), data.get('fat'),
@@ -303,13 +304,13 @@ def delete_meal(meal_id):
         cursor = conn.cursor()
         
         # Check if meal exists and belongs to user
-        cursor.execute('SELECT id FROM meals WHERE id = ? AND user_id = ?', (meal_id, user_id))
+        cursor.execute('SELECT id FROM meals WHERE id = %s AND user_id = %s', (meal_id, user_id))
         if not cursor.fetchone():
             conn.close()
             return jsonify({'error': 'Meal not found'}), 404
         
         # Delete meal
-        cursor.execute('DELETE FROM meals WHERE id = ? AND user_id = ?', (meal_id, user_id))
+        cursor.execute('DELETE FROM meals WHERE id = %s AND user_id = %s', (meal_id, user_id))
         conn.commit()
         conn.close()
         
@@ -336,15 +337,17 @@ def get_user_targets():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute('SELECT * FROM targets WHERE user_id = ?', (user_id,))
+        cursor.execute('SELECT * FROM targets WHERE user_id = %s', (user_id,))
         target = cursor.fetchone()
         
         conn.close()
         
         if target:
+            columns = [desc[0] for desc in cursor.description]
+            target_dict = dict(zip(columns, target))
             return jsonify({
                 'status': 'success',
-                'targets': dict(target)
+                'targets': target_dict
             })
         else:
             return jsonify({
@@ -368,12 +371,22 @@ def update_user_targets():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Insert or update targets
+        # Insert or update targets (PostgreSQL uses ON CONFLICT instead of INSERT OR REPLACE)
         cursor.execute('''
-            INSERT OR REPLACE INTO targets (
+            INSERT INTO targets (
                 user_id, calories, protein, carbs, fat,
                 processed_percent, fiber, caffeine, fresh_produce
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (user_id) DO UPDATE SET
+                calories = EXCLUDED.calories,
+                protein = EXCLUDED.protein,
+                carbs = EXCLUDED.carbs,
+                fat = EXCLUDED.fat,
+                processed_percent = EXCLUDED.processed_percent,
+                fiber = EXCLUDED.fiber,
+                caffeine = EXCLUDED.caffeine,
+                fresh_produce = EXCLUDED.fresh_produce,
+                updated_at = CURRENT_TIMESTAMP
         ''', (
             user_id,
             data.get('calories'), data.get('protein'), data.get('carbs'), data.get('fat'),
@@ -486,10 +499,14 @@ def get_all_meals():
         ''')
         meals = cursor.fetchall()
         
+        # Convert to list of dictionaries
+        columns = [desc[0] for desc in cursor.description]
+        meals_list = [dict(zip(columns, row)) for row in meals]
+        
         return jsonify({
             'status': 'success',
-            'count': len(meals),
-            'meals': meals
+            'count': len(meals_list),
+            'meals': meals_list
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -550,16 +567,20 @@ def download_meals_csv():
         ''')
         meals = cursor.fetchall()
         
+        # Convert to list of dictionaries
+        columns = [desc[0] for desc in cursor.description]
+        meals_list = [dict(zip(columns, row)) for row in meals]
+        
         # Create CSV in memory
         output = io.StringIO()
         writer = csv.writer(output)
         
         # Write header
-        if meals:
-            writer.writerow(meals[0].keys())
+        if meals_list:
+            writer.writerow(meals_list[0].keys())
             # Write data
-            for meal in meals:
-                writer.writerow(list(meal))
+            for meal in meals_list:
+                writer.writerow(list(meal.values()))
         
         # Create response
         response = make_response(output.getvalue())

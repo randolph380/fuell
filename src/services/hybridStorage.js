@@ -12,7 +12,7 @@ import StorageService from './storage';
 class HybridStorageService {
   
   // Configuration flags
-  static USE_SERVER_STORAGE = false;  // Toggle server storage on/off - TEMPORARILY DISABLED FOR DEBUGGING
+  static USE_SERVER_STORAGE = true;   // Toggle server storage on/off
   static SYNC_ON_LOGIN = true;        // Sync from server on login
   static SYNC_ON_SAVE = true;         // Sync to server on save
   static FALLBACK_TO_LOCAL = true;    // Use local storage if server fails

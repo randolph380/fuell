@@ -2,7 +2,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 import os
-import sqlite3
+import psycopg2
+import psycopg2.extras
 import json
 from datetime import datetime
 
@@ -13,22 +14,22 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 API_KEY = os.environ.get('ANTHROPIC_API_KEY')
 
 # Database configuration
-DATABASE_PATH = 'fuell_database.db'
+DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://fuell_database_user:WqqzrcZce9tz91w9IedIpof6biagok1U@dpg-d3ng1radbo4c73cv01sg-a.oregon-postgres.render.com/fuell_database')
 
 # Backup system removed - incompatible with cloud deployments
 
 def init_database():
-    """Initialize the SQLite database with required tables"""
-    print("🗄️ Initializing database...")
+    """Initialize the PostgreSQL database with required tables"""
+    print("🗄️ Initializing PostgreSQL database...")
     
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     
     # Create users table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
-            user_id TEXT PRIMARY KEY,
-            email TEXT UNIQUE,
+            user_id VARCHAR PRIMARY KEY,
+            email VARCHAR UNIQUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -36,25 +37,25 @@ def init_database():
     # Create meals table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS meals (
-            id TEXT PRIMARY KEY,
-            user_id TEXT NOT NULL,
-            date TEXT NOT NULL,
-            name TEXT NOT NULL DEFAULT 'Meal',
+            id VARCHAR PRIMARY KEY,
+            user_id VARCHAR NOT NULL,
+            date VARCHAR NOT NULL,
+            name VARCHAR NOT NULL DEFAULT 'Meal',
             food_items TEXT NOT NULL,
             -- Main macros
-            calories REAL,
-            protein REAL,
-            carbs REAL,
-            fat REAL,
+            calories DECIMAL,
+            protein DECIMAL,
+            carbs DECIMAL,
+            fat DECIMAL,
             -- Extended metrics (from app)
-            processed_calories REAL,
-            processed_percent REAL,
-            ultra_processed_calories REAL,
-            ultra_processed_percent REAL,
-            fiber REAL,
-            caffeine REAL,
-            fresh_produce REAL,
-            image_url TEXT,
+            processed_calories DECIMAL,
+            processed_percent DECIMAL,
+            ultra_processed_calories DECIMAL,
+            ultra_processed_percent DECIMAL,
+            fiber DECIMAL,
+            caffeine DECIMAL,
+            fresh_produce DECIMAL,
+            image_url VARCHAR,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(user_id)
         )
@@ -63,7 +64,7 @@ def init_database():
     # Create targets table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS targets (
-            user_id TEXT PRIMARY KEY,
+            user_id VARCHAR PRIMARY KEY,
             -- Main macro targets
             calories INTEGER,
             protein INTEGER,
@@ -148,14 +149,9 @@ def init_database():
     print("✅ Database initialized successfully!")
 
 def get_db_connection():
-    """Get a database connection with proper timeout and WAL mode"""
-    conn = sqlite3.connect(DATABASE_PATH, timeout=30.0)
-    conn.row_factory = sqlite3.Row  # Enable column access by name
-    # Enable WAL mode for better concurrent access
-    conn.execute('PRAGMA journal_mode=WAL')
-    conn.execute('PRAGMA synchronous=NORMAL')
-    conn.execute('PRAGMA cache_size=1000')
-    conn.execute('PRAGMA temp_store=MEMORY')
+    """Get a PostgreSQL database connection"""
+    conn = psycopg2.connect(DATABASE_URL)
+    conn.autocommit = False
     return conn
 
 # Initialize database on startup
@@ -175,23 +171,23 @@ def test_database():
         cursor = conn.cursor()
         
         # Test basic database operations
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
         tables = cursor.fetchall()
         
         # Count records in each table
         table_counts = {}
         for table in tables:
-            table_name = table['name']
+            table_name = table[0]
             cursor.execute(f"SELECT COUNT(*) as count FROM {table_name}")
-            count = cursor.fetchone()['count']
+            count = cursor.fetchone()[0]
             table_counts[table_name] = count
         
         conn.close()
         
         return jsonify({
             'status': 'success',
-            'message': 'Database is working correctly',
-            'tables': [table['name'] for table in tables],
+            'message': 'PostgreSQL database is working correctly',
+            'tables': [table[0] for table in tables],
             'record_counts': table_counts,
             'timestamp': datetime.now().isoformat()
         })
@@ -556,7 +552,7 @@ def get_all_meals():
         return jsonify({
             'status': 'success',
             'count': len(meals),
-            'meals': [dict(meal) for meal in meals]
+            'meals': meals
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -593,9 +589,9 @@ def get_user_stats():
         
         return jsonify({
             'status': 'success',
-            'total_users': total_stats['unique_users'],
-            'total_meals': total_stats['total_meals'],
-            'users': [dict(user) for user in user_stats]
+            'total_users': total_stats[1],
+            'total_meals': total_stats[0],
+            'users': user_stats
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500

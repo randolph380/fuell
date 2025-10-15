@@ -160,7 +160,7 @@ init_database()
 
 @app.route('/', methods=['GET'])
 def home():
-    return "✅ Fuell Cloud Server is running! (Updated)"
+    return "✅ Fuell Cloud Server is running! (Updated with Download Endpoints)"
 
 @app.route('/api/database/test', methods=['GET'])
 def test_database():

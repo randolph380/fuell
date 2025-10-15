@@ -125,6 +125,43 @@ def home():
 
 # Backup status endpoint removed
 
+@app.route('/api/create-user', methods=['POST'])
+def create_user_manually():
+    """Manually create a user for testing"""
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        email = data.get('email', 'test@example.com')
+        
+        if not user_id:
+            return jsonify({'error': 'User ID required'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if user exists
+        cursor.execute('SELECT id FROM users WHERE id = %s', (user_id,))
+        if cursor.fetchone():
+            conn.close()
+            return jsonify({'message': 'User already exists', 'user_id': user_id}), 200
+        
+        # Create user
+        cursor.execute('''
+            INSERT INTO users (id, email, created_at, updated_at)
+            VALUES (%s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ''', (user_id, email))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'message': 'User created successfully',
+            'user_id': user_id,
+            'email': email
+        }), 201
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/database/test', methods=['GET'])
 def test_database():
     """Test endpoint to verify database is working"""

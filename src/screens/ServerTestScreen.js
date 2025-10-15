@@ -210,6 +210,27 @@ const ServerTestScreen = ({ navigation }) => {
     }
   };
 
+  const syncLocalMeals = async () => {
+    try {
+      console.log('🔄 Starting sync of local meals to server...');
+      
+      const result = await HybridStorageService.syncLocalMealsToServer();
+      
+      if (result.success) {
+        Alert.alert(
+          'Sync Complete!',
+          `Synced ${result.synced} of ${result.total} meals to server.\n` +
+          `Failed: ${result.failed}`
+        );
+      } else {
+        Alert.alert('Sync Failed', result.error);
+      }
+    } catch (error) {
+      console.error('❌ Sync Failed:', error);
+      Alert.alert('Error', 'Sync failed: ' + error.message);
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Server Integration Test</Text>
@@ -243,6 +264,13 @@ const ServerTestScreen = ({ navigation }) => {
         <Text style={styles.sectionTitle}>Storage Diagnostics</Text>
         <TouchableOpacity style={styles.button} onPress={runStorageDiagnostics}>
           <Text style={styles.buttonText}>🔍 Run Diagnostics</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Sync Local Data</Text>
+        <TouchableOpacity style={styles.button} onPress={syncLocalMeals}>
+          <Text style={styles.buttonText}>🔄 Sync All Meals to Server</Text>
         </TouchableOpacity>
       </View>
 

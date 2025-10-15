@@ -312,6 +312,48 @@ class HybridStorageService {
   }
 
   /**
+   * Sync all local meals to server
+   */
+  static async syncLocalMealsToServer() {
+    try {
+      console.log('🔄 Starting sync of local meals to server...');
+      
+      // Get all local meals
+      const localMeals = await StorageService.getMeals();
+      console.log(`📊 Found ${localMeals.length} local meals to sync`);
+      
+      let syncedCount = 0;
+      let failedCount = 0;
+      
+      for (const meal of localMeals) {
+        try {
+          await ServerStorageService.saveMeal(meal);
+          syncedCount++;
+          console.log(`✅ Synced meal: ${meal.name} (${meal.id})`);
+        } catch (error) {
+          failedCount++;
+          console.warn(`❌ Failed to sync meal: ${meal.name} (${meal.id})`, error);
+        }
+      }
+      
+      console.log(`📊 Sync complete: ${syncedCount} synced, ${failedCount} failed`);
+      
+      return {
+        success: true,
+        total: localMeals.length,
+        synced: syncedCount,
+        failed: failedCount
+      };
+    } catch (error) {
+      console.error('❌ Sync failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * Get storage status
    */
   static getStorageStatus() {

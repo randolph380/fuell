@@ -101,6 +101,12 @@ mealPreparation === 'restaurant' ?
   * Cooking methods (more oil, butter, salt, sugar than home cooking)
   * Hidden ingredients (cooking oils, sauces, seasonings, marinades)
   * Menu item variations and typical preparations
+- **PRIORITIZE PUBLISHED NUTRITION DATA:** If the user provides a specific restaurant and dish name:
+  * **FIRST:** Search your knowledge for that exact restaurant's published nutrition data
+  * **USE PUBLISHED VALUES:** If you know the macros for that specific dish at that restaurant, use those exact values
+  * **CITE SOURCE:** Always cite "Restaurant Menu: [Restaurant Name] [Dish Name]" when using published data
+  * **HIGH CONFIDENCE:** Published restaurant nutrition data should get 0.9+ confidence scores
+  * **EXAMPLE:** "McDonald's Big Mac" → Use published 550 cal, 25g protein, 33g carbs, 33g fat
 - **COMMON RESTAURANT PATTERNS:**
   * Fast food: High sodium, processed ingredients, large portions
   * Casual dining: Generous portions, rich sauces, hidden calories

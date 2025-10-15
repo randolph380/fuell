@@ -128,20 +128,20 @@ class ServerStorageService {
       return result.meals.map(serverMeal => ({
         id: serverMeal.id.toString(),
         name: serverMeal.name || 'Meal',
-        calories: serverMeal.calories,
-        protein: serverMeal.protein,
-        carbs: serverMeal.carbs,
-        fat: serverMeal.fat,
+        calories: parseFloat(serverMeal.calories) || 0,
+        protein: parseFloat(serverMeal.protein) || 0,
+        carbs: parseFloat(serverMeal.carbs) || 0,
+        fat: parseFloat(serverMeal.fat) || 0,
         timestamp: new Date(serverMeal.created_at).getTime(),
         date: serverMeal.date,
         extendedMetrics: {
-          processedCalories: serverMeal.processed_calories,
-          processedPercent: serverMeal.processed_percent,
-          ultraProcessedCalories: serverMeal.ultra_processed_calories,
-          ultraProcessedPercent: serverMeal.ultra_processed_percent,
-          fiber: serverMeal.fiber,
-          caffeine: serverMeal.caffeine,
-          freshProduce: serverMeal.fresh_produce
+          processedCalories: parseFloat(serverMeal.processed_calories) || 0,
+          processedPercent: parseFloat(serverMeal.processed_percent) || 0,
+          ultraProcessedCalories: parseFloat(serverMeal.ultra_processed_calories) || 0,
+          ultraProcessedPercent: parseFloat(serverMeal.ultra_processed_percent) || 0,
+          fiber: parseFloat(serverMeal.fiber) || 0,
+          caffeine: parseFloat(serverMeal.caffeine) || 0,
+          freshProduce: parseFloat(serverMeal.fresh_produce) || 0
         },
         imageUrl: serverMeal.image_url
       }));

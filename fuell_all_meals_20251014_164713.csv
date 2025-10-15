@@ -1,0 +1,2 @@
+id,user_id,date,name,food_items,calories,protein,carbs,fat,processed_calories,processed_percent,ultra_processed_calories,ultra_processed_percent,fiber,caffeine,fresh_produce,image_url,created_at
+1,test_user_123,2025-10-14,Meal,[],500.0,25.0,50.0,20.0,,,,,,,,,2025-10-14 19:52:09

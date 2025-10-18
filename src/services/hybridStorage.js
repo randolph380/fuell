@@ -407,11 +407,25 @@ class HybridStorageService {
   }
 
   /**
-   * Get saved meals (templates)
+   * Get saved meals (templates) with hybrid storage
    */
   static async getSavedMeals() {
     try {
-      return await StorageService.getSavedMeals();
+      // If server storage is enabled, try to get from server first
+      if (this.USE_SERVER_STORAGE) {
+        try {
+          const serverSavedMeals = await ServerStorageService.getSavedMeals();
+          console.log('✅ Saved meals loaded from server:', serverSavedMeals.map(m => ({ id: m.id, name: m.name })));
+          return serverSavedMeals;
+        } catch (serverError) {
+          console.warn('⚠️ Server load failed, using local storage:', serverError);
+        }
+      }
+
+      // Fallback to local storage
+      const localSavedMeals = await StorageService.getSavedMeals();
+      console.log('✅ Saved meals loaded from local storage:', localSavedMeals.map(m => ({ id: m.id, name: m.name })));
+      return localSavedMeals;
     } catch (error) {
       console.error('Error getting saved meals:', error);
       return [];
@@ -419,11 +433,42 @@ class HybridStorageService {
   }
 
   /**
-   * Save meal template
+   * Save meal template with hybrid storage
    */
   static async saveMealTemplate(meal) {
     try {
-      return await StorageService.saveMealTemplate(meal);
+      console.log('🔄 HybridStorage saving meal template:', {
+        id: meal.id,
+        name: meal.name,
+        hasName: !!meal.name,
+        nameLength: meal.name?.length
+      });
+
+      // Always save to local storage first
+      const localSuccess = await StorageService.saveMealTemplate(meal);
+      
+      if (!localSuccess) {
+        throw new Error('Failed to save meal template locally');
+      }
+
+      // Try to save to server if enabled
+      if (this.USE_SERVER_STORAGE && this.SYNC_ON_SAVE) {
+        console.log('🌐 Attempting to save saved meal to server...');
+        try {
+          await ServerStorageService.saveSavedMeal(meal);
+          console.log('✅ Saved meal template saved to server with name:', meal.name);
+        } catch (serverError) {
+          console.warn('⚠️ Server save failed, using local storage only:', serverError);
+          
+          if (!this.FALLBACK_TO_LOCAL) {
+            throw serverError;
+          }
+        }
+      } else {
+        console.log('❌ Server storage disabled or sync disabled for saved meals');
+      }
+
+      return true;
     } catch (error) {
       console.error('Error saving meal template:', error);
       return false;
@@ -431,11 +476,71 @@ class HybridStorageService {
   }
 
   /**
-   * Delete saved meal template
+   * Update saved meal template with hybrid storage
+   */
+  static async updateSavedMeal(mealId, updatedMeal) {
+    try {
+      console.log('✏️ Updating saved meal template:', mealId);
+      
+      // Update in local storage
+      const localSuccess = await StorageService.updateSavedMeal(mealId, updatedMeal);
+      
+      if (!localSuccess) {
+        throw new Error('Failed to update saved meal in local storage');
+      }
+
+      // Try to update on server if enabled
+      if (this.USE_SERVER_STORAGE && this.SYNC_ON_SAVE) {
+        try {
+          await ServerStorageService.updateSavedMeal(mealId, updatedMeal);
+          console.log('✅ Saved meal template updated on server');
+        } catch (serverError) {
+          console.warn('⚠️ Server update failed:', serverError);
+          
+          if (!this.FALLBACK_TO_LOCAL) {
+            throw serverError;
+          }
+        }
+      }
+
+      console.log('✅ Saved meal template updated successfully');
+      return true;
+    } catch (error) {
+      console.error('Error updating saved meal:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Delete saved meal template with hybrid storage
    */
   static async deleteSavedMeal(mealId) {
     try {
-      return await StorageService.deleteSavedMeal(mealId);
+      console.log('🗑️ Deleting saved meal template:', mealId);
+      
+      // Delete from local storage first
+      const localSuccess = await StorageService.deleteSavedMeal(mealId);
+      
+      if (!localSuccess) {
+        throw new Error('Failed to delete saved meal from local storage');
+      }
+
+      // Try to delete from server if enabled
+      if (this.USE_SERVER_STORAGE && this.SYNC_ON_SAVE) {
+        try {
+          await ServerStorageService.deleteSavedMeal(mealId);
+          console.log('✅ Saved meal template deleted from server');
+        } catch (serverError) {
+          console.warn('⚠️ Server delete failed:', serverError);
+          
+          if (!this.FALLBACK_TO_LOCAL) {
+            throw serverError;
+          }
+        }
+      }
+
+      console.log('✅ Saved meal template deleted successfully');
+      return true;
     } catch (error) {
       console.error('Error deleting saved meal:', error);
       return false;

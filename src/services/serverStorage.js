@@ -313,6 +313,136 @@ class ServerStorageService {
   }
 
   /**
+   * Save saved meal template to server
+   */
+  static async saveSavedMeal(savedMeal) {
+    try {
+      console.log('🔍 ServerStorageService.saveSavedMeal called with:', {
+        mealId: savedMeal.id,
+        mealName: savedMeal.name,
+        hasExtendedMetrics: !!savedMeal.extendedMetrics
+      });
+      
+      const userId = await this.getUserId();
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      // Convert saved meal to server format
+      const serverSavedMeal = {
+        id: savedMeal.id,
+        user_id: userId,
+        name: savedMeal.name || 'Saved Meal',
+        calories: savedMeal.calories,
+        protein: savedMeal.protein,
+        carbs: savedMeal.carbs,
+        fat: savedMeal.fat,
+        processed_calories: savedMeal.extendedMetrics?.processedCalories,
+        processed_percent: savedMeal.extendedMetrics?.processedPercent,
+        ultra_processed_calories: savedMeal.extendedMetrics?.ultraProcessedCalories,
+        ultra_processed_percent: savedMeal.extendedMetrics?.ultraProcessedPercent,
+        fiber: savedMeal.extendedMetrics?.fiber,
+        caffeine: savedMeal.extendedMetrics?.caffeine,
+        fresh_produce: savedMeal.extendedMetrics?.freshProduce,
+        is_template: true  // Mark as saved meal template
+      };
+
+      const result = await this.makeRequest('/user/saved-meals', 'POST', serverSavedMeal);
+      console.log('✅ Saved meal template saved to server:', result);
+      return result.saved_meal_id;
+    } catch (error) {
+      console.error('Error saving saved meal template:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get saved meal templates from server
+   */
+  static async getSavedMeals() {
+    try {
+      const userId = await this.getUserId();
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      const result = await this.makeRequest(`/user/saved-meals?user_id=${userId}`, 'GET');
+      
+      // Convert server format to app format
+      return result.saved_meals.map(serverSavedMeal => ({
+        id: serverSavedMeal.id.toString(),
+        name: serverSavedMeal.name || 'Saved Meal',
+        calories: parseFloat(serverSavedMeal.calories) || 0,
+        protein: parseFloat(serverSavedMeal.protein) || 0,
+        carbs: parseFloat(serverSavedMeal.carbs) || 0,
+        fat: parseFloat(serverSavedMeal.fat) || 0,
+        createdAt: serverSavedMeal.created_at,
+        updatedAt: serverSavedMeal.updated_at,
+        extendedMetrics: {
+          processedCalories: parseFloat(serverSavedMeal.processed_calories) || 0,
+          processedPercent: parseFloat(serverSavedMeal.processed_percent) || 0,
+          ultraProcessedCalories: parseFloat(serverSavedMeal.ultra_processed_calories) || 0,
+          ultraProcessedPercent: parseFloat(serverSavedMeal.ultra_processed_percent) || 0,
+          fiber: parseFloat(serverSavedMeal.fiber) || 0,
+          caffeine: parseFloat(serverSavedMeal.caffeine) || 0,
+          freshProduce: parseFloat(serverSavedMeal.fresh_produce) || 0
+        }
+      }));
+    } catch (error) {
+      console.error('Error getting saved meals from server:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update saved meal template on server
+   */
+  static async updateSavedMeal(savedMealId, savedMeal) {
+    try {
+      const userId = await this.getUserId();
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      const serverSavedMeal = {
+        name: savedMeal.name || 'Saved Meal',
+        calories: savedMeal.calories,
+        protein: savedMeal.protein,
+        carbs: savedMeal.carbs,
+        fat: savedMeal.fat,
+        processed_calories: savedMeal.extendedMetrics?.processedCalories,
+        processed_percent: savedMeal.extendedMetrics?.processedPercent,
+        ultra_processed_calories: savedMeal.extendedMetrics?.ultraProcessedCalories,
+        ultra_processed_percent: savedMeal.extendedMetrics?.ultraProcessedPercent,
+        fiber: savedMeal.extendedMetrics?.fiber,
+        caffeine: savedMeal.extendedMetrics?.caffeine,
+        fresh_produce: savedMeal.extendedMetrics?.freshProduce
+      };
+
+      const result = await this.makeRequest(`/user/saved-meals/${savedMealId}`, 'PUT', serverSavedMeal);
+      console.log('✅ Saved meal template updated on server');
+      return result;
+    } catch (error) {
+      console.error('Error updating saved meal template:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete saved meal template from server
+   */
+  static async deleteSavedMeal(savedMealId) {
+    try {
+      const result = await this.makeRequest(`/user/saved-meals/${savedMealId}`, 'DELETE');
+      console.log('✅ Saved meal template deleted from server');
+      return result;
+    } catch (error) {
+      console.error('Error deleting saved meal template:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Sync all data from local storage to server
    */
   static async syncToServer() {
@@ -323,6 +453,9 @@ class ServerStorageService {
       
       // Get all local meals
       const localMeals = await StorageService.getMeals();
+      
+      // Get all local saved meals
+      const localSavedMeals = await StorageService.getSavedMeals();
       
       // Get local targets
       const localPreferences = await StorageService.getUserPreferences();
@@ -337,6 +470,15 @@ class ServerStorageService {
         }
       }
       
+      // Save all saved meals to server
+      for (const savedMeal of localSavedMeals) {
+        try {
+          await this.saveSavedMeal(savedMeal);
+        } catch (error) {
+          console.error(`Failed to sync saved meal ${savedMeal.id}:`, error);
+        }
+      }
+      
       // Save targets to server
       if (localTargets) {
         try {
@@ -347,7 +489,7 @@ class ServerStorageService {
       }
       
       console.log('✅ Local sync to server completed');
-      return { meals: localMeals, targets: localTargets };
+      return { meals: localMeals, savedMeals: localSavedMeals, targets: localTargets };
     } catch (error) {
       console.error('❌ Local sync to server failed:', error);
       throw error;

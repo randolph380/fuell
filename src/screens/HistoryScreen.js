@@ -110,38 +110,15 @@ const TrendsScreen = ({ navigation }) => {
       days.unshift({ value: dayTotal, dayNum: dayNum + 1 });
     }
     
-    // Count days with actual data
-    const daysWithData = days.filter(d => d.value > 0).length;
-    
-    // Only include moving average if we have at least 3 days of data
-    const datasets = [
-      { 
-        data: days.map(d => d.value || 0),
-        color: () => Colors.accent,
-        strokeWidth: 3
-      }
-    ];
-    
-    if (daysWithData >= 3) {
-      // Calculate 3-day moving average
-      const movingAverage = days.map((day, index) => {
-        if (index < 2) return day.value;
-        
-        const threeDaySum = days[index].value + days[index - 1].value + days[index - 2].value;
-        return Math.round(threeDaySum / 3);
-      });
-      
-      datasets.push({ 
-        data: movingAverage,
-        color: () => '#10b981',
-        strokeWidth: 2
-      });
-    }
-    
     return {
       labels: days.map(d => `${d.dayNum}`),
-      datasets,
-      hasMovingAverage: daysWithData >= 3
+      datasets: [
+        { 
+          data: days.map(d => d.value || 0),
+          color: () => Colors.accent,
+          strokeWidth: 3
+        }
+      ]
     };
   };
 
@@ -187,37 +164,15 @@ const TrendsScreen = ({ navigation }) => {
       }
     }
     
-    // Count months with actual data
-    const monthsWithData = months.filter(m => m.average > 0).length;
-    
-    const datasets = [
-      { 
-        data: months.map(m => m.average || 0),
-        color: () => Colors.accent,
-        strokeWidth: 3
-      }
-    ];
-    
-    // Only include moving average if we have at least 3 months of data
-    if (monthsWithData >= 3) {
-      const movingAverage = months.map((month, index) => {
-        if (index < 2) return month.average;
-        
-        const threeMonthSum = months[index].average + months[index - 1].average + months[index - 2].average;
-        return Math.round(threeMonthSum / 3);
-      });
-      
-      datasets.push({ 
-        data: movingAverage,
-        color: () => '#10b981',
-        strokeWidth: 2
-      });
-    }
-    
     return {
       labels: months.map(m => `${m.monthNum}`),
-      datasets,
-      hasMovingAverage: monthsWithData >= 3
+      datasets: [
+        { 
+          data: months.map(m => m.average || 0),
+          color: () => Colors.accent,
+          strokeWidth: 3
+        }
+      ]
     };
   };
 
@@ -320,37 +275,15 @@ const TrendsScreen = ({ navigation }) => {
       }
     }
     
-    // Count weeks with actual data
-    const weeksWithData = weeks.filter(w => w.average > 0).length;
-    
-    const datasets = [
-      { 
-        data: weeks.map(w => w.average || 0),
-        color: () => Colors.accent,
-        strokeWidth: 3
-      }
-    ];
-    
-    // Only include moving average if we have at least 3 weeks of data
-    if (weeksWithData >= 3) {
-      const movingAverage = weeks.map((week, index) => {
-        if (index < 2) return week.average;
-        
-        const threeWeekSum = weeks[index].average + weeks[index - 1].average + weeks[index - 2].average;
-        return Math.round(threeWeekSum / 3);
-      });
-      
-      datasets.push({ 
-        data: movingAverage,
-        color: () => '#10b981',
-        strokeWidth: 2
-      });
-    }
-    
     return {
       labels: weeks.map(w => `${w.weekNum}`), // Just numbers without "W" prefix
-      datasets,
-      hasMovingAverage: weeksWithData >= 3
+      datasets: [
+        { 
+          data: weeks.map(w => w.average || 0),
+          color: () => Colors.accent,
+          strokeWidth: 3
+        }
+      ]
     };
   };
 
@@ -443,18 +376,6 @@ const TrendsScreen = ({ navigation }) => {
           />
         </View>
         <Text style={styles.xAxisLabel}>{getPeriodLabel()}</Text>
-        {chartData.hasMovingAverage && (
-          <View style={styles.legendContainer}>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: Colors.accent }]} />
-              <Text style={styles.legendText}>{getPeriodLabel()}ly Average</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
-              <Text style={styles.legendText}>3-{getPeriodLabel()} Moving Avg.</Text>
-            </View>
-          </View>
-        )}
       </View>
 
       {/* Controls */}
@@ -568,27 +489,6 @@ const styles = StyleSheet.create({
     letterSpacing: Typography.letterSpacingNormal,
     textAlign: 'center',
     marginTop: -Spacing.sm,
-  },
-  legendContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: Spacing.md,
-    gap: Spacing.lg,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: BorderRadius.full,
-  },
-  legendText: {
-    fontSize: Typography.xs,
-    color: Colors.textSecondary,
-    letterSpacing: Typography.letterSpacingNormal,
   },
   controlsContainer: {
     marginHorizontal: Spacing.base,

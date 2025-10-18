@@ -860,9 +860,11 @@ const CameraScreen = ({ navigation, route }) => {
               <View style={styles.uploadSection}>
                 <TouchableOpacity style={styles.uploadButton} onPress={takePicture}>
                   <Ionicons name="camera" size={32} color={Colors.accent} />
+                  <Text style={styles.uploadText}>Take Photo</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
                   <Ionicons name="image" size={32} color={Colors.accent} />
+                  <Text style={styles.uploadText}>From gallery</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -879,7 +881,7 @@ const CameraScreen = ({ navigation, route }) => {
               disabled={isAnalyzing}
             >
               <Ionicons name="chatbubbles-outline" size={18} color={Colors.textInverse} />
-              <Text style={styles.analyzeButtonText}>Analyze & Chat</Text>
+              <Text style={styles.analyzeButtonText}>Analyze and Refine</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 

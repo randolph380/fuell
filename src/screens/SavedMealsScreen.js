@@ -28,11 +28,11 @@ const SavedMealsScreen = ({ navigation }) => {
   const loadSavedMeals = async () => {
     try {
       const meals = await HybridStorageService.getSavedMeals();
-      // Filter out any invalid meals (missing name or all zeros)
+      // Filter out any invalid meals (missing name or ID)
       const validMeals = meals.filter(meal => 
         meal.name && 
-        meal.id && 
-        (meal.calories > 0 || meal.protein > 0 || meal.carbs > 0 || meal.fat > 0)
+        meal.id
+        // Allow zero-calorie meals (e.g., diet coke, black coffee, etc.)
       );
       console.log('Loaded saved meals:', validMeals);
       setSavedMeals(validMeals);

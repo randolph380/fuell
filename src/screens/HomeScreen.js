@@ -54,6 +54,27 @@ const HomeScreen = ({ navigation, route }) => {
     }
   }, [currentDate, user?.id]);
 
+  // Check for date changes periodically (every 5 minutes)
+  useEffect(() => {
+    const checkDateChange = () => {
+      const today = new Date();
+      const isCurrentDateToday = currentDate.toDateString() === today.toDateString();
+      
+      if (!isCurrentDateToday) {
+        console.log('DEBUG - Periodic date check: updating to today:', today.toDateString());
+        setCurrentDate(today);
+      }
+    };
+
+    // Check immediately
+    checkDateChange();
+    
+    // Set up interval to check every 5 minutes
+    const interval = setInterval(checkDateChange, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [currentDate]);
+
   // Handle route params changes (when returning from CameraScreen with target date)
   useEffect(() => {
     if (route.params?.targetDate) {
@@ -67,10 +88,20 @@ const HomeScreen = ({ navigation, route }) => {
   useFocusEffect(
     useCallback(() => {
       console.log('DEBUG - useFocusEffect triggered, currentDate:', currentDate.toDateString());
+      
+      // Check if we need to update to today's date
+      const today = new Date();
+      const isCurrentDateToday = currentDate.toDateString() === today.toDateString();
+      
+      if (!isCurrentDateToday) {
+        console.log('DEBUG - Date mismatch detected, updating to today:', today.toDateString());
+        setCurrentDate(today);
+      }
+      
       if (user?.id) {
         loadMeals();
       }
-    }, [user?.id]) // Remove currentDate dependency to ensure it always runs on focus
+    }, [user?.id, currentDate]) // Include currentDate to detect changes
   );
 
 

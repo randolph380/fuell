@@ -47,13 +47,18 @@ const DateNavigator = ({ currentDate, onDateChange, navigation }) => {
     onDateChange(nextDay);
   };
 
+  const goToToday = () => {
+    const today = new Date();
+    onDateChange(today);
+  };
+
   return (
     <View style={styles.container}>
       <HamburgerMenu navigation={navigation} />
       
-      <View style={styles.dateContainer}>
+      <TouchableOpacity style={styles.dateContainer} onPress={goToToday} activeOpacity={0.7}>
         <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
-      </View>
+      </TouchableOpacity>
       
       <View style={styles.arrowButtons}>
         <TouchableOpacity style={styles.button} onPress={goToPreviousDay} activeOpacity={0.7}>

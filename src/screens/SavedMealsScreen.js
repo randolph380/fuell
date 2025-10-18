@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     Alert,
     RefreshControl,
@@ -25,19 +26,32 @@ const SavedMealsScreen = ({ navigation }) => {
     loadSavedMeals();
   }, []);
 
+  // Reload saved meals when screen comes into focus (e.g., after editing on another device)
+  useFocusEffect(
+    useCallback(() => {
+      console.log('🔄 SavedMealsScreen focused - reloading saved meals');
+      loadSavedMeals();
+    }, [])
+  );
+
   const loadSavedMeals = async () => {
     try {
+      console.log('🔄 Loading saved meals...');
       const meals = await HybridStorageService.getSavedMeals();
+      console.log('📊 Raw saved meals from HybridStorage:', meals.length, 'meals');
+      console.log('📊 Saved meals details:', meals.map(m => ({ id: m.id, name: m.name, calories: m.calories })));
+      
       // Filter out any invalid meals (missing name or ID)
       const validMeals = meals.filter(meal => 
         meal.name && 
         meal.id
         // Allow zero-calorie meals (e.g., diet coke, black coffee, etc.)
       );
-      console.log('Loaded saved meals:', validMeals);
+      console.log('✅ Valid saved meals:', validMeals.length, 'meals');
+      console.log('✅ Valid saved meals details:', validMeals.map(m => ({ id: m.id, name: m.name, calories: m.calories })));
       setSavedMeals(validMeals);
     } catch (error) {
-      console.error('Error loading saved meals:', error);
+      console.error('❌ Error loading saved meals:', error);
     }
   };
 

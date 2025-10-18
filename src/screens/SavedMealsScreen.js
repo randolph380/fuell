@@ -103,6 +103,7 @@ const SavedMealsScreen = ({ navigation }) => {
   const startEditingMeal = (meal) => {
     setEditingMealId(meal.id);
     setEditedValues({
+      name: meal.name,
       calories: meal.calories.toString(),
       protein: meal.protein.toString(),
       carbs: meal.carbs.toString(),
@@ -135,6 +136,7 @@ const SavedMealsScreen = ({ navigation }) => {
 
       const updatedMeal = {
         ...meal,
+        name: editedValues.name.trim() || meal.name,
         calories: parseInt(editedValues.calories) || meal.calories,
         protein: parseInt(editedValues.protein) || meal.protein,
         carbs: parseInt(editedValues.carbs) || meal.carbs,
@@ -180,6 +182,17 @@ const SavedMealsScreen = ({ navigation }) => {
                 <View style={styles.editCard}>
                   <View style={styles.editHeader}>
                     <Text style={styles.editTitle}>EDITING: {meal.name}</Text>
+                  </View>
+                  
+                  <View style={styles.editRow}>
+                    <Text style={styles.editLabel}>Meal Name</Text>
+                    <TextInput
+                      style={styles.editInput}
+                      value={editedValues.name}
+                      onChangeText={(text) => setEditedValues({...editedValues, name: text})}
+                      placeholder="Enter meal name"
+                      selectTextOnFocus
+                    />
                   </View>
                   
                   <View style={styles.editRow}>

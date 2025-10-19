@@ -499,12 +499,19 @@ def analyze():
         
         print("🔄 Calling Anthropic API...")
         
-        api_response = requests.post(
-            'https://api.anthropic.com/v1/messages',
-            headers=headers,
-            json=data,
-            timeout=60
-        )
+        try:
+            api_response = requests.post(
+                'https://api.anthropic.com/v1/messages',
+                headers=headers,
+                json=data,
+                timeout=25  # Stay under Render's 30s limit
+            )
+        except requests.exceptions.RequestException as e:
+            print(f"💥 Request failed: {e}")
+            return jsonify({'error': 'Failed to connect to Claude API'}), 500
+        except Exception as e:
+            print(f"💥 Unexpected error: {e}")
+            return jsonify({'error': 'Server error during API call'}), 500
         
         print(f"📨 Anthropic responded with status: {api_response.status_code}")
         

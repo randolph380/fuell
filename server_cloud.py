@@ -499,13 +499,13 @@ def analyze():
         
         print("🔄 Calling Anthropic API...")
         
-                 try:
-                     api_response = requests.post(
-                         'https://api.anthropic.com/v1/messages',
-                         headers=headers,
-                         json=data,
-                         timeout=120  # Give Claude enough time to complete
-                     )
+        try:
+            api_response = requests.post(
+                'https://api.anthropic.com/v1/messages',
+                headers=headers,
+                json=data,
+                timeout=120  # Give Claude enough time to complete
+            )
         except requests.exceptions.RequestException as e:
             print(f"💥 Request failed: {e}")
             return jsonify({'error': 'Failed to connect to Claude API'}), 500

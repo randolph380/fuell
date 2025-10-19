@@ -504,7 +504,7 @@ def analyze():
                          'https://api.anthropic.com/v1/messages',
                          headers=headers,
                          json=data,
-                         timeout=35  # Give more time for client retries
+                         timeout=120  # Give Claude enough time to complete
                      )
         except requests.exceptions.RequestException as e:
             print(f"💥 Request failed: {e}")

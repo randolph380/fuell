@@ -7,6 +7,34 @@ class ClaudeAPI {
   }
 
   async analyzeMealImage(imageData, foodDescription = '', additionalImages = [], isMultipleDishes = false, mealPreparation = null) {
+    const maxRetries = 3;
+    let lastError;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Claude API attempt ${attempt}/${maxRetries}`);
+        return await this._analyzeMealImageInternal(imageData, foodDescription, additionalImages, isMultipleDishes, mealPreparation);
+      } catch (error) {
+        lastError = error;
+        console.log(`❌ Attempt ${attempt} failed:`, error.message);
+        
+        if (attempt === maxRetries) {
+          console.log('💥 All retry attempts failed');
+          break;
+        }
+        
+        // Wait before retry (exponential backoff)
+        const delay = 1000 * attempt; // 1s, 2s, 3s
+        console.log(`⏳ Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    // If we get here, all retries failed
+    throw lastError;
+  }
+
+  async _analyzeMealImageInternal(imageData, foodDescription = '', additionalImages = [], isMultipleDishes = false, mealPreparation = null) {
     try {
       // Build context-specific instructions based on user's selection
       const multiImageInstructions = isMultipleDishes ? 
@@ -512,6 +540,34 @@ ${initialPrompt}`;
   }
 
   async refineAnalysis(conversationHistory) {
+    const maxRetries = 3;
+    let lastError;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Claude API refine attempt ${attempt}/${maxRetries}`);
+        return await this._refineAnalysisInternal(conversationHistory);
+      } catch (error) {
+        lastError = error;
+        console.log(`❌ Refine attempt ${attempt} failed:`, error.message);
+        
+        if (attempt === maxRetries) {
+          console.log('💥 All refine retry attempts failed');
+          break;
+        }
+        
+        // Wait before retry (exponential backoff)
+        const delay = 1000 * attempt; // 1s, 2s, 3s
+        console.log(`⏳ Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    // If we get here, all retries failed
+    throw lastError;
+  }
+
+  async _refineAnalysisInternal(conversationHistory) {
     try {
       // conversationHistory already includes the new user message
 

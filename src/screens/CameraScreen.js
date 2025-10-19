@@ -43,6 +43,34 @@ const CameraScreen = ({ navigation, route }) => {
   const [portionSize, setPortionSize] = useState('1');
   const scrollViewRef = React.useRef(null);
   
+  // Analysis tracking
+  const [analysisStartTime, setAnalysisStartTime] = useState(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [requestAttempt, setRequestAttempt] = useState(0);
+  
+  // Timer for elapsed time
+  useEffect(() => {
+    let interval;
+    if (analysisStartTime) {
+      interval = setInterval(() => {
+        setElapsedTime(Math.floor((Date.now() - analysisStartTime) / 1000));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [analysisStartTime]);
+  
+  // Function to handle retry attempts
+  const handleRetryAttempt = () => {
+    setRequestAttempt(prev => prev + 1);
+  };
+  
+  // Simulate retry attempts based on elapsed time (25s intervals)
+  useEffect(() => {
+    if (isAnalyzing && elapsedTime > 0 && elapsedTime % 25 === 0) {
+      handleRetryAttempt();
+    }
+  }, [elapsedTime, isAnalyzing]);
+  
   // Animation refs for food dots
   const dot1Anim = useRef(new Animated.Value(1)).current;
   const dot2Anim = useRef(new Animated.Value(1)).current;
@@ -219,6 +247,9 @@ const CameraScreen = ({ navigation, route }) => {
 
     setIsAnalyzing(true);
     setShowInput(false);
+    setAnalysisStartTime(Date.now());
+    setElapsedTime(0);
+    setRequestAttempt(1);
 
     try {
       let base64Image = null;
@@ -477,6 +508,9 @@ const CameraScreen = ({ navigation, route }) => {
     }
 
     setIsAnalyzing(true);
+    setAnalysisStartTime(Date.now());
+    setElapsedTime(0);
+    setRequestAttempt(1);
 
     try {
       // Convert images to base64
@@ -1295,6 +1329,11 @@ const CameraScreen = ({ navigation, route }) => {
               <Animated.View style={[styles.foodDot, styles.foodDot5, { opacity: dot5Anim }]} />
             </View>
             <Text style={styles.loadingText}>Analyzing meal</Text>
+            <View style={styles.loadingStats}>
+              <Text style={styles.loadingStatsText}>{elapsedTime}s</Text>
+              <Text style={styles.loadingStatsText}>•</Text>
+              <Text style={styles.loadingStatsText}>Attempt {requestAttempt}</Text>
+            </View>
           </View>
         </View>
       )}
@@ -1541,6 +1580,17 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontWeight: '500',
     letterSpacing: Typography.letterSpacingNormal,
+  },
+  loadingStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: Spacing.xs,
+    gap: Spacing.xs,
+  },
+  loadingStatsText: {
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
+    fontWeight: '400',
   },
   macrosCardSticky: {
     backgroundColor: Colors.backgroundElevated,

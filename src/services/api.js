@@ -13,7 +13,7 @@ class ClaudeAPI {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`🔄 Claude API attempt ${attempt}/${maxRetries}`);
-        return await this._analyzeMealImageInternal(imageData, foodDescription, additionalImages, isMultipleDishes, mealPreparation);
+        return await this._analyzeMealImageWithTimeout(imageData, foodDescription, additionalImages, isMultipleDishes, mealPreparation);
       } catch (error) {
         lastError = error;
         console.log(`❌ Attempt ${attempt} failed:`, error.message);
@@ -32,6 +32,24 @@ class ClaudeAPI {
     
     // If we get here, all retries failed
     throw lastError;
+  }
+
+  async _analyzeMealImageWithTimeout(imageData, foodDescription, additionalImages, isMultipleDishes, mealPreparation) {
+    return new Promise(async (resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        console.log('⏰ Request timeout after 25 seconds, cancelling...');
+        reject(new Error('Request timeout - Claude is taking too long'));
+      }, 25000); // 25 second timeout
+
+      try {
+        const result = await this._analyzeMealImageInternal(imageData, foodDescription, additionalImages, isMultipleDishes, mealPreparation);
+        clearTimeout(timeoutId);
+        resolve(result);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        reject(error);
+      }
+    });
   }
 
   async _analyzeMealImageInternal(imageData, foodDescription = '', additionalImages = [], isMultipleDishes = false, mealPreparation = null) {
@@ -546,7 +564,7 @@ ${initialPrompt}`;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`🔄 Claude API refine attempt ${attempt}/${maxRetries}`);
-        return await this._refineAnalysisInternal(conversationHistory);
+        return await this._refineAnalysisWithTimeout(conversationHistory);
       } catch (error) {
         lastError = error;
         console.log(`❌ Refine attempt ${attempt} failed:`, error.message);
@@ -565,6 +583,24 @@ ${initialPrompt}`;
     
     // If we get here, all retries failed
     throw lastError;
+  }
+
+  async _refineAnalysisWithTimeout(conversationHistory) {
+    return new Promise(async (resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        console.log('⏰ Refine request timeout after 25 seconds, cancelling...');
+        reject(new Error('Request timeout - Claude is taking too long'));
+      }, 25000); // 25 second timeout
+
+      try {
+        const result = await this._refineAnalysisInternal(conversationHistory);
+        clearTimeout(timeoutId);
+        resolve(result);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        reject(error);
+      }
+    });
   }
 
   async _refineAnalysisInternal(conversationHistory) {

@@ -378,11 +378,13 @@ const TrendsScreen = ({ navigation }) => {
   const formatYLabel = (value) => {
     if (value === 0) return '0';
     
-    // Determine the scale based on the value
+    // More aggressive rounding for cleaner labels
     if (value >= 1000) {
-      return Math.round(value / 100) * 100; // Round to nearest 100
+      return Math.round(value / 500) * 500; // Round to nearest 500
     } else if (value >= 100) {
-      return Math.round(value / 10) * 10; // Round to nearest 10
+      return Math.round(value / 50) * 50; // Round to nearest 50
+    } else if (value >= 10) {
+      return Math.round(value / 5) * 5; // Round to nearest 5
     } else {
       return Math.round(value); // Round to nearest whole number
     }
@@ -431,7 +433,7 @@ const TrendsScreen = ({ navigation }) => {
         <View style={styles.chartShiftContainer}>
           <LineChart
             data={createCleanChartData(chartData)}
-            width={Dimensions.get('window').width - 64}
+            width={Dimensions.get('window').width - 80}
             height={220}
             chartConfig={{
               backgroundColor: '#fff',
@@ -557,7 +559,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   chartShiftContainer: {
-    marginLeft: -20,
+    marginLeft: 0,
+    paddingHorizontal: 10,
   },
   chartWrapper: {
     flexDirection: 'row',

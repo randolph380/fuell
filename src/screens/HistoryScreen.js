@@ -462,7 +462,7 @@ const TrendsScreen = ({ navigation }) => {
             withHorizontalLabels={true}
             withDots={true}
             withShadow={false}
-            // Remove bezier to eliminate line connections
+            bezier={false}
           />
         </View>
         <Text style={styles.xAxisLabel}>{getPeriodLabel()}</Text>

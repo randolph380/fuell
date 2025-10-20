@@ -445,14 +445,19 @@ const TrendsScreen = ({ navigation }) => {
                 borderRadius: 16
               },
               propsForDots: {
-                r: '4',
-                strokeWidth: '2',
-                stroke: Colors.accent
+                r: '6',
+                strokeWidth: '0',
+                stroke: Colors.accent,
+                fill: Colors.accent
               },
               propsForBackgroundLines: {
                 stroke: '#e5e5e5',
                 strokeWidth: 1,
                 strokeDasharray: '0',
+              },
+              propsForLabels: {
+                fontSize: 12,
+                fontWeight: 'bold'
               }
             }}
             style={styles.chart}
@@ -466,6 +471,7 @@ const TrendsScreen = ({ navigation }) => {
             withScrollableDot={false}
             withHorizontalLines={false}
             withVerticalLines={false}
+            withLine={false}
           />
         </View>
         <Text style={styles.xAxisLabel}>{getPeriodLabel()}</Text>

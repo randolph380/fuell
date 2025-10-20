@@ -121,7 +121,7 @@ const TrendsScreen = ({ navigation }) => {
         { 
           data: days.map(d => d.value || 0),
           color: () => Colors.accent,
-          strokeWidth: 3
+          strokeWidth: 0
         }
       ]
     };
@@ -190,7 +190,7 @@ const TrendsScreen = ({ navigation }) => {
         { 
           data: months.map(m => m.average || 0),
           color: () => Colors.accent,
-          strokeWidth: 3
+          strokeWidth: 0
         }
       ]
     };
@@ -326,7 +326,7 @@ const TrendsScreen = ({ navigation }) => {
         { 
           data: weeks.map(w => w.average || 0),
           color: () => Colors.accent,
-          strokeWidth: 3
+          strokeWidth: 0
         }
       ]
     };
@@ -463,6 +463,9 @@ const TrendsScreen = ({ navigation }) => {
             withDots={true}
             withShadow={false}
             bezier={false}
+            withScrollableDot={false}
+            withHorizontalLines={false}
+            withVerticalLines={false}
           />
         </View>
         <Text style={styles.xAxisLabel}>{getPeriodLabel()}</Text>

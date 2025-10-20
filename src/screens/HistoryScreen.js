@@ -107,11 +107,16 @@ const TrendsScreen = ({ navigation }) => {
         ? metricConfig.extract(dayMeals)  // Pass whole array for aggregated metrics
         : dayMeals.reduce((sum, meal) => sum + metricConfig.extract(meal), 0);  // Sum individual meals
       
-      days.unshift({ value: dayTotal, dayNum: dayNum + 1 });
+      // Create a more descriptive label
+      const dayLabel = date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+      days.unshift({ value: dayTotal, dayNum: dayNum + 1, label: dayLabel });
     }
     
     return {
-      labels: days.map(d => `${d.dayNum}`),
+      labels: days.map(d => d.label),
       datasets: [
         { 
           data: days.map(d => d.value || 0),
@@ -161,14 +166,26 @@ const TrendsScreen = ({ navigation }) => {
         });
         
         const monthAverage = Math.round(dailyValues.reduce((a, b) => a + b, 0) / daysTracked);
-        months.unshift({ average: monthAverage, monthNum: monthNum + 1 });
+        
+        // Create month label
+        const monthLabel = monthStart.toLocaleDateString('en-US', { 
+          month: 'short', 
+          year: 'numeric' 
+        });
+        
+        months.unshift({ average: monthAverage, monthNum: monthNum + 1, label: monthLabel });
       } else {
-        months.unshift({ average: 0, monthNum: monthNum + 1 });
+        // Create month label even for empty months
+        const monthLabel = monthStart.toLocaleDateString('en-US', { 
+          month: 'short', 
+          year: 'numeric' 
+        });
+        months.unshift({ average: 0, monthNum: monthNum + 1, label: monthLabel });
       }
     }
     
     return {
-      labels: months.map(m => `${m.monthNum}`),
+      labels: months.map(m => m.label),
       datasets: [
         { 
           data: months.map(m => m.average || 0),
@@ -277,14 +294,36 @@ const TrendsScreen = ({ navigation }) => {
         });
         
         const weekAverage = Math.round(dailyValues.reduce((a, b) => a + b, 0) / daysTracked);
-        weeks.unshift({ average: weekAverage, weekNum: weekNum + 1 });
+        
+        // Create week range label
+        const weekStartLabel = weekStart.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        });
+        const weekEndLabel = weekEnd.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        });
+        const weekLabel = `${weekStartLabel}-${weekEndLabel}`;
+        
+        weeks.unshift({ average: weekAverage, weekNum: weekNum + 1, label: weekLabel });
       } else {
-        weeks.unshift({ average: 0, weekNum: weekNum + 1 });
+        // Create week range label even for empty weeks
+        const weekStartLabel = weekStart.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        });
+        const weekEndLabel = weekEnd.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        });
+        const weekLabel = `${weekStartLabel}-${weekEndLabel}`;
+        weeks.unshift({ average: 0, weekNum: weekNum + 1, label: weekLabel });
       }
     }
     
     return {
-      labels: weeks.map(w => `${w.weekNum}`), // Just numbers without "W" prefix
+      labels: weeks.map(w => w.label),
       datasets: [
         { 
           data: weeks.map(w => w.average || 0),

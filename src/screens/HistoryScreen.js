@@ -167,17 +167,17 @@ const TrendsScreen = ({ navigation }) => {
         
         const monthAverage = Math.round(dailyValues.reduce((a, b) => a + b, 0) / daysTracked);
         
-        // Create month label
+        // Create month label (MM/YYYY format)
         const monthLabel = monthStart.toLocaleDateString('en-US', { 
-          month: 'short', 
+          month: '2-digit', 
           year: 'numeric' 
         });
         
         months.unshift({ average: monthAverage, monthNum: monthNum + 1, label: monthLabel });
       } else {
-        // Create month label even for empty months
+        // Create month label even for empty months (MM/YYYY format)
         const monthLabel = monthStart.toLocaleDateString('en-US', { 
-          month: 'short', 
+          month: '2-digit', 
           year: 'numeric' 
         });
         months.unshift({ average: 0, monthNum: monthNum + 1, label: monthLabel });
@@ -295,26 +295,24 @@ const TrendsScreen = ({ navigation }) => {
         
         const weekAverage = Math.round(dailyValues.reduce((a, b) => a + b, 0) / daysTracked);
         
-        // Create week range label
+        // Create week range label (shorter format)
         const weekStartLabel = weekStart.toLocaleDateString('en-US', { 
           month: 'short', 
           day: 'numeric' 
         });
         const weekEndLabel = weekEnd.toLocaleDateString('en-US', { 
-          month: 'short', 
           day: 'numeric' 
         });
         const weekLabel = `${weekStartLabel}-${weekEndLabel}`;
         
         weeks.unshift({ average: weekAverage, weekNum: weekNum + 1, label: weekLabel });
       } else {
-        // Create week range label even for empty weeks
+        // Create week range label even for empty weeks (shorter format)
         const weekStartLabel = weekStart.toLocaleDateString('en-US', { 
           month: 'short', 
           day: 'numeric' 
         });
         const weekEndLabel = weekEnd.toLocaleDateString('en-US', { 
-          month: 'short', 
           day: 'numeric' 
         });
         const weekLabel = `${weekStartLabel}-${weekEndLabel}`;

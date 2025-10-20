@@ -74,7 +74,7 @@ const METRICS = {
 const TrendsScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMacro, setSelectedMacro] = useState('calories'); // calories, protein, carbs, fat, processed, fiber
-  const [selectedPeriod, setSelectedPeriod] = useState('week'); // day, week, month
+  const [selectedPeriod, setSelectedPeriod] = useState('day'); // day, week, month
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [

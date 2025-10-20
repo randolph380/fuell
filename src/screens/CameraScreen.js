@@ -1330,9 +1330,7 @@ const CameraScreen = ({ navigation, route }) => {
             </View>
             <Text style={styles.loadingText}>Analyzing meal</Text>
             <View style={styles.loadingStats}>
-              <Text style={styles.loadingStatsText}>{elapsedTime}s</Text>
-              <Text style={styles.loadingStatsText}>•</Text>
-              <Text style={styles.loadingStatsText}>Attempt {requestAttempt}</Text>
+              <Text style={styles.loadingStatsText}>{elapsedTime}s elapsed</Text>
             </View>
           </View>
         </View>

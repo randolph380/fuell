@@ -1,0 +1,20 @@
+Fuel App Performance Test Results
+==================================================
+Test Date: 2025-10-20 12:17:46
+
+1 Picture:
+  Tests: 3 | Success: 3 | Failed: 0
+  Average: 7.78s
+  Range: 7.43s - 8.14s
+  Total: 23.35s
+
+2 Pictures:
+  Tests: 3 | Success: 3 | Failed: 0
+  Average: 11.91s
+  Range: 8.44s - 18.05s
+  Total: 35.74s
+
+3 Pictures:
+  Tests: 3 | Success: 0 | Failed: 3
+  No successful tests
+

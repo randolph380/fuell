@@ -1,0 +1,26 @@
+Claude vs Server Comparison Test Results
+==================================================
+Test Date: 2025-10-20 12:25:56
+Tests per method: 5
+
+Direct Claude:
+  Tests: 5 | Success: 5 | Failed: 0
+  Success Rate: 100.0%
+  Average: 21.64s
+  Range: 8.59s - 68.50s
+  Total: 108.21s
+
+Server Pipeline:
+  Tests: 5 | Success: 3 | Failed: 2
+  Success Rate: 60.0%
+  Average: 10.11s
+  Range: 8.69s - 12.92s
+  Total: 30.32s
+  Errors:
+    - HTTP 500
+    - HTTP 500
+
+COMPARISON SUMMARY:
+Direct Claude Success Rate: 100.0%
+Server Pipeline Success Rate: 60.0%
+CONCLUSION: Direct Claude performs better - Server is the bottleneck

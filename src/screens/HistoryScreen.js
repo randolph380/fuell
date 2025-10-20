@@ -120,7 +120,7 @@ const TrendsScreen = ({ navigation }) => {
       datasets: [
         { 
           data: days.map(d => d.value || 0),
-          color: () => Colors.accent,
+          color: () => 'transparent',
           strokeWidth: 0
         }
       ]
@@ -189,7 +189,7 @@ const TrendsScreen = ({ navigation }) => {
       datasets: [
         { 
           data: months.map(m => m.average || 0),
-          color: () => Colors.accent,
+          color: () => 'transparent',
           strokeWidth: 0
         }
       ]
@@ -325,7 +325,7 @@ const TrendsScreen = ({ navigation }) => {
       datasets: [
         { 
           data: weeks.map(w => w.average || 0),
-          color: () => Colors.accent,
+          color: () => 'transparent',
           strokeWidth: 0
         }
       ]

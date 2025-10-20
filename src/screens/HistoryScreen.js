@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Dimensions,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Dimensions,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
@@ -92,8 +92,8 @@ const TrendsScreen = ({ navigation }) => {
     const today = new Date();
     const metricConfig = METRICS[macro];
     
-    // Calculate for past 10 days
-    for (let dayNum = 0; dayNum < 10; dayNum++) {
+    // Calculate for past 10 days, EXCLUDING today (dayNum starts at 1, not 0)
+    for (let dayNum = 1; dayNum <= 10; dayNum++) {
       const date = new Date(today);
       date.setDate(date.getDate() - dayNum);
       const dateKey = date.toDateString();
@@ -134,6 +134,12 @@ const TrendsScreen = ({ navigation }) => {
       
       const monthMeals = meals.filter(meal => {
         const mealDate = new Date(meal.timestamp);
+        const mealDateOnly = new Date(mealDate.getFullYear(), mealDate.getMonth(), mealDate.getDate());
+        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        // For current month (monthNum === 0), exclude current day
+        if (monthNum === 0) {
+          return mealDate >= monthStart && mealDateOnly < todayOnly;
+        }
         return mealDate >= monthStart && mealDate <= monthEnd;
       });
       
@@ -181,10 +187,12 @@ const TrendsScreen = ({ navigation }) => {
     const startDate = new Date(today);
     startDate.setDate(startDate.getDate() - daysBack);
     
-    // Filter meals within the period
+    // Filter meals within the period, EXCLUDING current day (assume it's in progress)
     const periodMeals = meals.filter(meal => {
       const mealDate = new Date(meal.timestamp);
-      return mealDate >= startDate && mealDate <= today;
+      const mealDateOnly = new Date(mealDate.getFullYear(), mealDate.getMonth(), mealDate.getDate());
+      const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      return mealDate >= startDate && mealDateOnly < todayOnly; // Exclude current day
     });
     
     // Group meals by date to count unique days tracked
@@ -245,6 +253,12 @@ const TrendsScreen = ({ navigation }) => {
       
       const weekMeals = meals.filter(meal => {
         const mealDate = new Date(meal.timestamp);
+        const mealDateOnly = new Date(mealDate.getFullYear(), mealDate.getMonth(), mealDate.getDate());
+        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        // For current week (weekNum === 0), exclude current day
+        if (weekNum === 0) {
+          return mealDate >= weekStart && mealDateOnly < todayOnly;
+        }
         return mealDate >= weekStart && mealDate <= weekEnd;
       });
       
@@ -329,6 +343,50 @@ const TrendsScreen = ({ navigation }) => {
     return `Average Daily ${getMacroLabel()} by ${getPeriodLabel()}`;
   };
 
+  // Function to create clean Y-axis labels (multiples of 10, 100, 1000)
+  const formatYLabel = (value) => {
+    if (value === 0) return '0';
+    
+    // Determine the scale based on the value
+    if (value >= 1000) {
+      return Math.round(value / 100) * 100; // Round to nearest 100
+    } else if (value >= 100) {
+      return Math.round(value / 10) * 10; // Round to nearest 10
+    } else {
+      return Math.round(value); // Round to nearest whole number
+    }
+  };
+
+  // Function to create clean chart data with proper Y-axis scaling
+  const createCleanChartData = (data) => {
+    if (!data || !data.datasets || !data.datasets[0]) return data;
+    
+    const values = data.datasets[0].data;
+    const maxValue = Math.max(...values);
+    
+    // Determine Y-axis step based on max value
+    let yAxisStep;
+    if (maxValue >= 1000) {
+      yAxisStep = 100;
+    } else if (maxValue >= 100) {
+      yAxisStep = 10;
+    } else {
+      yAxisStep = 1;
+    }
+    
+    // Create clean Y-axis labels
+    const yAxisLabels = [];
+    for (let i = 0; i <= Math.ceil(maxValue / yAxisStep) * yAxisStep; i += yAxisStep) {
+      yAxisLabels.push(i);
+    }
+    
+    return {
+      ...data,
+      yAxisStep,
+      yAxisLabels
+    };
+  };
+
   return (
     <ScrollView 
       style={styles.container}
@@ -341,7 +399,7 @@ const TrendsScreen = ({ navigation }) => {
         <Text style={styles.chartTitle}>{getChartTitle()}</Text>
         <View style={styles.chartShiftContainer}>
           <LineChart
-            data={chartData}
+            data={createCleanChartData(chartData)}
             width={Dimensions.get('window').width - 64}
             height={220}
             chartConfig={{
@@ -351,6 +409,7 @@ const TrendsScreen = ({ navigation }) => {
               decimalPlaces: 0,
               color: (opacity = 1) => `rgba(102, 126, 234, ${opacity})`,
               labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              formatYLabel: formatYLabel,
               style: {
                 borderRadius: 16
               },
@@ -365,7 +424,6 @@ const TrendsScreen = ({ navigation }) => {
                 strokeDasharray: '0',
               }
             }}
-            bezier
             style={styles.chart}
             withInnerLines={true}
             withOuterLines={true}
@@ -373,6 +431,7 @@ const TrendsScreen = ({ navigation }) => {
             withHorizontalLabels={true}
             withDots={true}
             withShadow={false}
+            // Remove bezier to eliminate line connections
           />
         </View>
         <Text style={styles.xAxisLabel}>{getPeriodLabel()}</Text>

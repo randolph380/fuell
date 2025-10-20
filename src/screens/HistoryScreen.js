@@ -92,7 +92,7 @@ const TrendsScreen = ({ navigation }) => {
     const today = new Date();
     const metricConfig = METRICS[macro];
     
-    // Calculate for past 10 days, EXCLUDING today (dayNum starts at 1, not 0)
+    // Calculate for past 10 days, EXCLUDING today (start from yesterday)
     for (let dayNum = 1; dayNum <= 10; dayNum++) {
       const date = new Date(today);
       date.setDate(date.getDate() - dayNum);
@@ -136,11 +136,8 @@ const TrendsScreen = ({ navigation }) => {
         const mealDate = new Date(meal.timestamp);
         const mealDateOnly = new Date(mealDate.getFullYear(), mealDate.getMonth(), mealDate.getDate());
         const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        // For current month (monthNum === 0), exclude current day
-        if (monthNum === 0) {
-          return mealDate >= monthStart && mealDateOnly < todayOnly;
-        }
-        return mealDate >= monthStart && mealDate <= monthEnd;
+        // Always exclude today from all calculations
+        return mealDate >= monthStart && mealDate <= monthEnd && mealDateOnly < todayOnly;
       });
       
       // Group by date and calculate daily totals
@@ -255,11 +252,8 @@ const TrendsScreen = ({ navigation }) => {
         const mealDate = new Date(meal.timestamp);
         const mealDateOnly = new Date(mealDate.getFullYear(), mealDate.getMonth(), mealDate.getDate());
         const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        // For current week (weekNum === 0), exclude current day
-        if (weekNum === 0) {
-          return mealDate >= weekStart && mealDateOnly < todayOnly;
-        }
-        return mealDate >= weekStart && mealDate <= weekEnd;
+        // Always exclude today from all calculations
+        return mealDate >= weekStart && mealDate <= weekEnd && mealDateOnly < todayOnly;
       });
       
       // Group by date and calculate daily totals

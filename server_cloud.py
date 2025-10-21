@@ -79,6 +79,28 @@ def init_database():
         )
     ''')
     
+    # Create saved_meals table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS saved_meals (
+            id VARCHAR PRIMARY KEY,
+            user_id VARCHAR NOT NULL,
+            name VARCHAR NOT NULL,
+            calories DECIMAL,
+            protein DECIMAL,
+            carbs DECIMAL,
+            fat DECIMAL,
+            processed_calories DECIMAL,
+            processed_percent DECIMAL,
+            ultra_processed_calories DECIMAL,
+            ultra_processed_percent DECIMAL,
+            fiber DECIMAL,
+            caffeine DECIMAL,
+            fresh_produce DECIMAL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(user_id)
+        )
+    ''')
+    
     # PostgreSQL handles column types automatically - no migration needed
     
     conn.commit()
@@ -197,6 +219,7 @@ def test_database():
             'message': f'Database test failed: {str(e)}',
             'timestamp': datetime.now().isoformat()
         }), 500
+
 
 # User Authentication Helper
 def get_user_id_from_request():
@@ -386,6 +409,76 @@ def delete_meal(meal_id):
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# Saved Meals Endpoints
+@app.route('/api/user/saved-meals', methods=['GET'])
+def get_saved_meals():
+    """Get all saved meal templates for a user"""
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'User ID required'}), 400
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM saved_meals WHERE user_id = %s ORDER BY created_at DESC', (user_id,))
+    
+    saved_meals = []
+    columns = [desc[0] for desc in cursor.description]
+    for row in cursor.fetchall():
+        saved_meals.append(dict(zip(columns, row)))
+    
+    conn.close()
+    return jsonify({'status': 'success', 'saved_meals': saved_meals})
+
+@app.route('/api/user/saved-meals', methods=['POST'])
+def create_saved_meal():
+    """Create a new saved meal template"""
+    data = request.get_json()
+    user_id = data.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'User ID required'}), 400
+    
+    ensure_user_exists(user_id)
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO saved_meals (id, user_id, name, calories, protein, carbs, fat,
+            processed_calories, processed_percent, ultra_processed_calories, 
+            ultra_processed_percent, fiber, caffeine, fresh_produce)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (id) DO UPDATE SET
+            name = EXCLUDED.name, calories = EXCLUDED.calories,
+            protein = EXCLUDED.protein, carbs = EXCLUDED.carbs, fat = EXCLUDED.fat,
+            processed_calories = EXCLUDED.processed_calories,
+            processed_percent = EXCLUDED.processed_percent,
+            ultra_processed_calories = EXCLUDED.ultra_processed_calories,
+            ultra_processed_percent = EXCLUDED.ultra_processed_percent,
+            fiber = EXCLUDED.fiber, caffeine = EXCLUDED.caffeine,
+            fresh_produce = EXCLUDED.fresh_produce
+    ''', (data['id'], user_id, data['name'], data['calories'], data['protein'], 
+          data['carbs'], data['fat'], data.get('processed_calories'),
+          data.get('processed_percent'), data.get('ultra_processed_calories'),
+          data.get('ultra_processed_percent'), data.get('fiber'),
+          data.get('caffeine'), data.get('fresh_produce')))
+    
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'success', 'id': data['id']})
+
+@app.route('/api/user/saved-meals/<meal_id>', methods=['DELETE'])
+def delete_saved_meal(meal_id):
+    """Delete a saved meal template"""
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'User ID required'}), 400
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM saved_meals WHERE id = %s AND user_id = %s', (meal_id, user_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'success'})
 
 # User Targets Endpoints
 @app.route('/api/user/targets', methods=['GET'])

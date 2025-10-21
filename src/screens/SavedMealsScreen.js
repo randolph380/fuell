@@ -2,6 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
     Alert,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
     RefreshControl,
     ScrollView,
     StyleSheet,
@@ -41,6 +44,23 @@ const SavedMealsScreen = ({ navigation }) => {
     }
   };
 
+  const loadSavedMealsFromLocal = async () => {
+    try {
+      console.log('🔄 Loading saved meals from LOCAL storage only...');
+      const meals = await StorageService.getSavedMeals();
+      // Filter out any invalid meals (missing name or all zeros)
+      const validMeals = meals.filter(meal => 
+        meal.name && 
+        meal.id && 
+        (meal.calories > 0 || meal.protein > 0 || meal.carbs > 0 || meal.fat > 0)
+      );
+      console.log('Loaded LOCAL saved meals:', validMeals);
+      setSavedMeals(validMeals);
+    } catch (error) {
+      console.error('Error loading local saved meals:', error);
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     await loadSavedMeals();
@@ -48,22 +68,35 @@ const SavedMealsScreen = ({ navigation }) => {
   };
 
   const deleteSavedMeal = async (mealId) => {
-    Alert.alert(
-      'Delete Saved Meal',
-      'Are you sure you want to delete this saved meal?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive',
-          onPress: async () => {
-            await HybridStorageService.deleteSavedMeal(mealId);
-            await loadSavedMeals();
-          }
+    console.log('🗑️ deleteSavedMeal function called with mealId:', mealId);
+    
+    // Use browser confirm for web compatibility
+    const confirmed = window.confirm('Are you sure you want to delete this saved meal?');
+    
+    if (confirmed) {
+      try {
+        console.log('🗑️ User confirmed deletion, deleting saved meal from UI:', mealId);
+        const success = await HybridStorageService.deleteSavedMeal(mealId);
+        console.log('🗑️ Delete result:', success);
+        
+        if (success) {
+          console.log('🗑️ Refreshing saved meals list...');
+          await loadSavedMeals();
+          console.log('🗑️ Saved meals list refreshed');
+        } else {
+          console.error('❌ Delete failed');
         }
-      ]
-    );
+      } catch (error) {
+        console.error('❌ Error deleting saved meal:', error);
+      }
+    } else {
+      console.log('🗑️ User cancelled deletion');
+    }
   };
+
+
+
+
 
   const logSavedMeal = async (savedMeal) => {
     try {
@@ -103,6 +136,7 @@ const SavedMealsScreen = ({ navigation }) => {
   const startEditingMeal = (meal) => {
     setEditingMealId(meal.id);
     setEditedValues({
+      name: meal.name,
       calories: meal.calories.toString(),
       protein: meal.protein.toString(),
       carbs: meal.carbs.toString(),
@@ -117,12 +151,19 @@ const SavedMealsScreen = ({ navigation }) => {
   };
 
   const cancelEditing = () => {
+    Keyboard.dismiss();
     setEditingMealId(null);
     setEditedValues({});
   };
 
   const saveEditedMeal = async (meal) => {
     try {
+      // Validate name is not empty
+      if (!editedValues.name || editedValues.name.trim() === '') {
+        Alert.alert('Error', 'Meal name cannot be empty');
+        return;
+      }
+
       // Create updated extended metrics object
       const updatedExtendedMetrics = {
         ...meal.extendedMetrics,
@@ -135,6 +176,7 @@ const SavedMealsScreen = ({ navigation }) => {
 
       const updatedMeal = {
         ...meal,
+        name: editedValues.name.trim(),
         calories: parseInt(editedValues.calories) || meal.calories,
         protein: parseInt(editedValues.protein) || meal.protein,
         carbs: parseInt(editedValues.carbs) || meal.carbs,
@@ -142,13 +184,26 @@ const SavedMealsScreen = ({ navigation }) => {
         extendedMetrics: updatedExtendedMetrics
       };
       
-      await HybridStorageService.updateSavedMeal(meal.id, updatedMeal);
+      console.log('💾 Updating saved meal:', {
+        mealId: meal.id,
+        updatedName: updatedMeal.name,
+        updatedCalories: updatedMeal.calories
+      });
+      
+      const updateResult = await HybridStorageService.updateSavedMeal(meal.id, updatedMeal);
+      
+      if (!updateResult) {
+        throw new Error('Update operation returned false');
+      }
+      
       await loadSavedMeals();
+      Keyboard.dismiss();
       setEditingMealId(null);
       setEditedValues({});
-      Alert.alert('Success', '✅ Macros updated!');
+      Alert.alert('Success', '✅ Meal updated!');
     } catch (error) {
-      Alert.alert('Error', 'Failed to update macros');
+      console.error('❌ Failed to update saved meal:', error);
+      Alert.alert('Error', `Failed to update meal: ${error.message}`);
     }
   };
 
@@ -157,12 +212,23 @@ const SavedMealsScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView 
+    <KeyboardAvoidingView 
       style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
+      behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'web' ? 'height' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        showsVerticalScrollIndicator={true}
+        bounces={true}
+      >
+
       {savedMeals.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>📚</Text>
@@ -179,7 +245,27 @@ const SavedMealsScreen = ({ navigation }) => {
                 // Edit Mode - Inline editing interface
                 <View style={styles.editCard}>
                   <View style={styles.editHeader}>
-                    <Text style={styles.editTitle}>EDITING: {meal.name}</Text>
+                    <Text style={styles.editTitle}>EDITING MEAL</Text>
+                  </View>
+                  
+                  <View style={styles.editRow}>
+                    <Text style={styles.editLabel}>Meal Name</Text>
+                    <TextInput
+                      style={[styles.editInput, styles.nameInput]}
+                      value={editedValues.name}
+                      onChangeText={(text) => setEditedValues({...editedValues, name: text})}
+                      placeholder="Enter meal name"
+                      placeholderTextColor={Colors.textTertiary}
+                      autoCapitalize="words"
+                      autoCorrect={false}
+                      returnKeyType="next"
+                      selectTextOnFocus
+                      onSubmitEditing={() => {
+                        // Focus next input or dismiss keyboard
+                        Keyboard.dismiss();
+                      }}
+                      blurOnSubmit={false}
+                    />
                   </View>
                   
                   <View style={styles.editRow}>
@@ -295,7 +381,10 @@ const SavedMealsScreen = ({ navigation }) => {
                     </TouchableOpacity>
                     <TouchableOpacity 
                       style={[styles.editActionButton, styles.deleteEditButton]} 
-                      onPress={() => deleteSavedMeal(meal.id)}
+                      onPress={() => {
+                        console.log('🗑️ Delete button clicked in edit mode for meal:', meal.id);
+                        deleteSavedMeal(meal.id);
+                      }}
                     >
                       <Text style={styles.deleteEditButtonText}>Delete</Text>
                     </TouchableOpacity>
@@ -320,6 +409,7 @@ const SavedMealsScreen = ({ navigation }) => {
                       time: 'Saved'
                     }}
                     onPress={() => toggleExpanded(meal.id)}
+                    onDelete={() => deleteSavedMeal(meal.id)}
                   />
                   
                   {/* Action Buttons - Inside meal card */}
@@ -346,7 +436,8 @@ const SavedMealsScreen = ({ navigation }) => {
           ))}
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -354,6 +445,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  scrollView: {
+    flex: 1,
+    height: '100%',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   mealsSection: {
     paddingHorizontal: Spacing.base,
@@ -446,6 +545,12 @@ const styles = StyleSheet.create({
     width: 100,
     backgroundColor: Colors.backgroundSubtle,
     color: Colors.textPrimary,
+  },
+  nameInput: {
+    textAlign: 'left',
+    width: '100%',
+    flex: 1,
+    marginLeft: Spacing.md,
   },
   editActions: {
     flexDirection: 'row',

@@ -353,6 +353,91 @@ class ServerStorageService {
       throw error;
     }
   }
+
+  /**
+   * Get saved meal templates from server
+   */
+  static async getSavedMeals() {
+    try {
+      const userId = await this.getUserId();
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      const result = await this.makeRequest(`/user/saved-meals?user_id=${userId}`, 'GET');
+      return result.saved_meals.map(sm => ({
+        id: sm.id,
+        name: sm.name,
+        calories: parseFloat(sm.calories) || 0,
+        protein: parseFloat(sm.protein) || 0,
+        carbs: parseFloat(sm.carbs) || 0,
+        fat: parseFloat(sm.fat) || 0,
+        extendedMetrics: {
+          processedCalories: parseFloat(sm.processed_calories) || 0,
+          processedPercent: parseFloat(sm.processed_percent) || 0,
+          ultraProcessedCalories: parseFloat(sm.ultra_processed_calories) || 0,
+          ultraProcessedPercent: parseFloat(sm.ultra_processed_percent) || 0,
+          fiber: parseFloat(sm.fiber) || 0,
+          caffeine: parseFloat(sm.caffeine) || 0,
+          freshProduce: parseFloat(sm.fresh_produce) || 0
+        }
+      }));
+    } catch (error) {
+      console.error('Error getting saved meals from server:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Save meal template to server
+   */
+  static async saveSavedMeal(meal) {
+    try {
+      const userId = await this.getUserId();
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      const data = {
+        id: meal.id,
+        user_id: userId,
+        name: meal.name,
+        calories: meal.calories,
+        protein: meal.protein,
+        carbs: meal.carbs,
+        fat: meal.fat,
+        processed_calories: meal.extendedMetrics?.processedCalories,
+        processed_percent: meal.extendedMetrics?.processedPercent,
+        ultra_processed_calories: meal.extendedMetrics?.ultraProcessedCalories,
+        ultra_processed_percent: meal.extendedMetrics?.ultraProcessedPercent,
+        fiber: meal.extendedMetrics?.fiber,
+        caffeine: meal.extendedMetrics?.caffeine,
+        fresh_produce: meal.extendedMetrics?.freshProduce
+      };
+
+      return await this.makeRequest('/user/saved-meals', 'POST', data);
+    } catch (error) {
+      console.error('Error saving saved meal to server:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete saved meal template from server
+   */
+  static async deleteSavedMeal(mealId) {
+    try {
+      const userId = await this.getUserId();
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      return await this.makeRequest(`/user/saved-meals/${mealId}?user_id=${userId}`, 'DELETE');
+    } catch (error) {
+      console.error('Error deleting saved meal from server:', error);
+      throw error;
+    }
+  }
 }
 
 export default ServerStorageService;

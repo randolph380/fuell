@@ -128,67 +128,6 @@ const TrendsScreen = ({ navigation }) => {
     return days;
   };
 
-  const calculateWeeklyData = (meals, macro) => {
-    const weeks = [];
-    const today = new Date();
-    const metricConfig = METRICS[macro];
-    
-    // Calculate for past 10 weeks (excluding today)
-    for (let weekNum = 0; weekNum < 10; weekNum++) {
-      const weekEnd = new Date(today);
-      weekEnd.setDate(weekEnd.getDate() - 1 - (weekNum * 7)); // Start from yesterday
-      
-      const weekStart = new Date(weekEnd);
-      weekStart.setDate(weekStart.getDate() - 6);
-      
-      const weekMeals = meals.filter(meal => {
-        const mealDate = new Date(meal.date);
-        const mealDateOnly = new Date(mealDate.getFullYear(), mealDate.getMonth(), mealDate.getDate());
-        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        return mealDate >= weekStart && mealDate <= weekEnd && mealDateOnly < todayOnly;
-      });
-      
-      // Group by date and calculate daily totals
-      const mealsByDate = {};
-      weekMeals.forEach(meal => {
-        const dateKey = new Date(meal.date).toDateString();
-        if (!mealsByDate[dateKey]) {
-          mealsByDate[dateKey] = [];
-        }
-        mealsByDate[dateKey].push(meal);
-      });
-      
-      const daysTracked = Object.keys(mealsByDate).length;
-      
-      if (daysTracked > 0) {
-        const dailyValues = Object.values(mealsByDate).map(dayMeals => {
-          return metricConfig.type === 'aggregated'
-            ? metricConfig.extract(dayMeals)
-            : dayMeals.reduce((sum, meal) => sum + metricConfig.extract(meal), 0);
-        });
-        
-        const weekAverage = Math.round(dailyValues.reduce((a, b) => a + b, 0) / daysTracked);
-        
-        const weekStartLabel = weekStart.toLocaleDateString('en-US', { 
-          month: 'short', 
-          day: 'numeric' 
-        });
-        const weekEndLabel = weekEnd.toLocaleDateString('en-US', { 
-          day: 'numeric' 
-        });
-        const weekLabel = `${weekStartLabel}-${weekEndLabel}`;
-        
-        weeks.unshift({ 
-          x: weekNum + 1, 
-          y: weekAverage, 
-          label: weekLabel,
-          daysTracked 
-        });
-      }
-    }
-    
-    return weeks;
-  };
 
   const calculateMonthlyData = (meals, macro) => {
     const months = [];
@@ -254,8 +193,6 @@ const TrendsScreen = ({ navigation }) => {
       let data;
       if (selectedPeriod === 'day') {
         data = calculateDailyData(allMeals, selectedMacro);
-      } else if (selectedPeriod === 'week') {
-        data = calculateWeeklyData(allMeals, selectedMacro);
       } else {
         data = calculateMonthlyData(allMeals, selectedMacro);
       }
@@ -421,7 +358,7 @@ const TrendsScreen = ({ navigation }) => {
         <View style={styles.controlSection}>
           <Text style={styles.controlLabel}>Time Period</Text>
           <View style={styles.radioGroup}>
-            {['day', 'week', 'month'].map((period) => (
+            {['day', 'month'].map((period) => (
               <TouchableOpacity
                 key={period}
                 style={[

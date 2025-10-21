@@ -113,8 +113,20 @@ class HybridStorageService {
   static async getMealsByDate(date) {
     try {
       const allMeals = await this.getMeals();
-      const dateString = date.toDateString();
-      return allMeals.filter(meal => meal.date === dateString);
+      const targetDate = new Date(date).toDateString();
+      
+      console.log('DEBUG - getMealsByDate:', {
+        targetDate,
+        allMealsCount: allMeals.length,
+        mealDates: allMeals.map(m => ({ id: m.id, date: m.date, dateString: new Date(m.date).toDateString() }))
+      });
+      
+      const filteredMeals = allMeals.filter(meal => 
+        new Date(meal.date).toDateString() === targetDate
+      );
+      
+      console.log('DEBUG - filtered meals:', filteredMeals.length);
+      return filteredMeals;
     } catch (error) {
       console.error('Error getting meals by date:', error);
       return [];
@@ -153,6 +165,31 @@ class HybridStorageService {
       return true;
     } catch (error) {
       console.error('Error updating meal:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Update saved meal with hybrid storage
+   */
+  static async updateSavedMeal(mealId, updatedMeal) {
+    try {
+      const localSuccess = await StorageService.updateSavedMeal(mealId, updatedMeal);
+      if (!localSuccess) throw new Error('Failed to update locally');
+      
+      if (this.USE_SERVER_STORAGE && this.SYNC_ON_SAVE) {
+        try {
+          await ServerStorageService.saveSavedMeal(updatedMeal);
+          console.log('✅ Saved meal synced to server');
+        } catch (serverError) {
+          console.warn('⚠️ Server sync failed:', serverError);
+          if (!this.FALLBACK_TO_LOCAL) throw serverError;
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating saved meal:', error);
       return false;
     }
   }
@@ -363,6 +400,147 @@ class HybridStorageService {
   }
 
   /**
+   * Sync all saved meals to server
+   */
+  static async syncSavedMealsToServer() {
+    try {
+      console.log('🔄 Starting sync of saved meals to server...');
+      
+      // Get all local saved meals
+      const localSavedMeals = await StorageService.getSavedMeals();
+      console.log(`📊 Found ${localSavedMeals.length} saved meals to sync`);
+      
+      let syncedCount = 0;
+      let failedCount = 0;
+      
+      for (const savedMeal of localSavedMeals) {
+        try {
+          // Convert saved meal to regular meal format for server sync
+          const serverMeal = {
+            ...savedMeal,
+            date: new Date().toDateString(), // Use current date for server sync
+            timestamp: Date.now()
+          };
+          
+          await ServerStorageService.saveMeal(serverMeal);
+          syncedCount++;
+          console.log(`✅ Synced saved meal: ${savedMeal.name} (${savedMeal.id})`);
+        } catch (error) {
+          failedCount++;
+          console.warn(`❌ Failed to sync saved meal: ${savedMeal.name} (${savedMeal.id})`, error);
+        }
+      }
+      
+      console.log(`📊 Saved meals sync complete: ${syncedCount} synced, ${failedCount} failed`);
+      
+      return {
+        success: true,
+        total: localSavedMeals.length,
+        synced: syncedCount,
+        failed: failedCount
+      };
+    } catch (error) {
+      console.error('❌ Saved meals sync failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Test database sync for saved meals
+   */
+  static async testSavedMealsSync() {
+    try {
+      console.log('🧪 Testing saved meals database sync...');
+      
+      // Get local saved meals
+      const localSavedMeals = await StorageService.getSavedMeals();
+      console.log(`📊 Local saved meals: ${localSavedMeals.length}`);
+      
+      // Get server meals
+      const serverMeals = await ServerStorageService.getMeals();
+      console.log(`📊 Server meals: ${serverMeals.length}`);
+      
+      // Check if any local saved meals are on server
+      const syncedCount = localSavedMeals.filter(localMeal => 
+        serverMeals.some(serverMeal => serverMeal.id === localMeal.id)
+      ).length;
+      
+      console.log(`📊 Synced saved meals: ${syncedCount}/${localSavedMeals.length}`);
+      
+      return {
+        success: true,
+        localCount: localSavedMeals.length,
+        serverCount: serverMeals.length,
+        syncedCount: syncedCount,
+        localMeals: localSavedMeals.map(m => ({ id: m.id, name: m.name })),
+        serverMeals: serverMeals.map(m => ({ id: m.id, name: m.name }))
+      };
+    } catch (error) {
+      console.error('❌ Saved meals sync test failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Force sync all local saved meals to server
+   */
+  static async forceSyncAllSavedMeals() {
+    try {
+      console.log('🔄 Force syncing all local saved meals to server...');
+      
+      // Get all local saved meals
+      const localSavedMeals = await StorageService.getSavedMeals();
+      console.log(`📊 Found ${localSavedMeals.length} local saved meals to sync`);
+      
+      let syncedCount = 0;
+      let failedCount = 0;
+      const errors = [];
+      
+      for (const savedMeal of localSavedMeals) {
+        try {
+          // Convert saved meal to server format with saved meal marker
+          const serverMeal = {
+            ...savedMeal,
+            date: new Date().toDateString(), // Use current date for server sync
+            timestamp: Date.now(),
+            isSavedMeal: true // Mark this as a saved meal template
+          };
+          
+          await ServerStorageService.saveMeal(serverMeal);
+          syncedCount++;
+          console.log(`✅ Force synced saved meal: ${savedMeal.name} (${savedMeal.id}) with isSavedMeal flag`);
+        } catch (error) {
+          failedCount++;
+          errors.push(`${savedMeal.name}: ${error.message}`);
+          console.warn(`❌ Failed to force sync saved meal: ${savedMeal.name} (${savedMeal.id})`, error);
+        }
+      }
+      
+      console.log(`📊 Force sync complete: ${syncedCount} synced, ${failedCount} failed`);
+      
+      return {
+        success: true,
+        total: localSavedMeals.length,
+        synced: syncedCount,
+        failed: failedCount,
+        errors: errors
+      };
+    } catch (error) {
+      console.error('❌ Force sync failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * Get storage status
    */
   static getStorageStatus() {
@@ -407,11 +585,24 @@ class HybridStorageService {
   }
 
   /**
-   * Get saved meals (templates)
+   * Get saved meals (templates) with proper sync
+   * Saved meals are templates that should sync across devices
    */
   static async getSavedMeals() {
     try {
-      return await StorageService.getSavedMeals();
+      if (this.USE_SERVER_STORAGE) {
+        try {
+          const serverSavedMeals = await ServerStorageService.getSavedMeals();
+          console.log('✅ Saved meals loaded from server:', serverSavedMeals.length);
+          return serverSavedMeals;
+        } catch (serverError) {
+          console.warn('⚠️ Server load failed, using local storage:', serverError);
+        }
+      }
+      
+      const localSavedMeals = await StorageService.getSavedMeals();
+      console.log('✅ Saved meals loaded from local:', localSavedMeals.length);
+      return localSavedMeals;
     } catch (error) {
       console.error('Error getting saved meals:', error);
       return [];
@@ -423,7 +614,20 @@ class HybridStorageService {
    */
   static async saveMealTemplate(meal) {
     try {
-      return await StorageService.saveMealTemplate(meal);
+      const localSuccess = await StorageService.saveMealTemplate(meal);
+      if (!localSuccess) throw new Error('Failed to save locally');
+      
+      if (this.USE_SERVER_STORAGE && this.SYNC_ON_SAVE) {
+        try {
+          await ServerStorageService.saveSavedMeal(meal);
+          console.log('✅ Saved meal synced to server');
+        } catch (serverError) {
+          console.warn('⚠️ Server sync failed:', serverError);
+          if (!this.FALLBACK_TO_LOCAL) throw serverError;
+        }
+      }
+      
+      return true;
     } catch (error) {
       console.error('Error saving meal template:', error);
       return false;
@@ -435,7 +639,19 @@ class HybridStorageService {
    */
   static async deleteSavedMeal(mealId) {
     try {
-      return await StorageService.deleteSavedMeal(mealId);
+      const localSuccess = await StorageService.deleteSavedMeal(mealId);
+      if (!localSuccess) throw new Error('Failed to delete locally');
+      
+      if (this.USE_SERVER_STORAGE) {
+        try {
+          await ServerStorageService.deleteSavedMeal(mealId);
+          console.log('✅ Saved meal deleted from server');
+        } catch (serverError) {
+          console.warn('⚠️ Server delete failed:', serverError);
+        }
+      }
+      
+      return true;
     } catch (error) {
       console.error('Error deleting saved meal:', error);
       return false;

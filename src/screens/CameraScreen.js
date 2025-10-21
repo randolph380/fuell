@@ -535,6 +535,8 @@ const CameraScreen = ({ navigation, route }) => {
       console.log('💾 Saving meal with title:', {
         mealName: meal.name,
         mealId: meal.id,
+        targetDate: targetDate.toDateString(),
+        mealDate: mealDate.toDateString(),
         fullMeal: meal
       });
 
@@ -579,6 +581,14 @@ const CameraScreen = ({ navigation, route }) => {
         date: mealDate.toDateString(),
         extendedMetrics: currentExtendedMetrics
       };
+
+      console.log('💾 Saving meal (logMeal):', {
+        mealName: meal.name,
+        mealId: meal.id,
+        targetDate: targetDate.toDateString(),
+        mealDate: mealDate.toDateString(),
+        fullMeal: meal
+      });
 
       await HybridStorageService.saveMeal(meal);
       navigation.navigate('Home', { targetDate: targetDate.toISOString() });

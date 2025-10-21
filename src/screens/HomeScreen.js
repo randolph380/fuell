@@ -54,6 +54,19 @@ const HomeScreen = ({ navigation, route }) => {
     }
   }, [currentDate, user?.id]);
 
+  // Auto-update to today when app opens (if no specific target date)
+  useEffect(() => {
+    const today = new Date();
+    const isCurrentDateToday = currentDate.toDateString() === today.toDateString();
+    
+    // Only auto-update if we're not on today's date and there's no specific target date
+    // This handles the case where the app was opened yesterday and is opened again today
+    if (!isCurrentDateToday && !route.params?.targetDate) {
+      console.log('DEBUG - Auto-updating to today on mount:', today.toDateString());
+      setCurrentDate(today);
+    }
+  }, []); // Run once on mount
+
   // Handle route params changes (when returning from CameraScreen with target date)
   useEffect(() => {
     if (route.params?.targetDate) {

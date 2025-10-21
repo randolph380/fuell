@@ -181,6 +181,55 @@ export default function SimpleBackupScreen({ navigation }) {
     );
   };
 
+  const handleResetDatabase = () => {
+    Alert.alert(
+      '🗄️ Reset Server Database',
+      'This will clear ALL data from the server database:\n\n• All user accounts\n• All meals from all users\n• All saved meals from all users\n• All targets and preferences\n\nThis affects ALL users, not just you. Are you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Reset Database', 
+          style: 'destructive',
+          onPress: async () => {
+            setIsLoading(true);
+            try {
+              const response = await fetch('https://fuell-app.onrender.com/api/database/reset', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+              });
+              
+              const result = await response.json();
+              
+              if (response.ok) {
+                Alert.alert(
+                  'Database Reset',
+                  `Server database has been reset:\n\n• Cleared ${result.cleared_meals} meals\n• Cleared ${result.cleared_users} users\n\nAll data is now fresh!`,
+                  [
+                    { 
+                      text: 'OK', 
+                      onPress: () => {
+                        loadStats(); // Refresh stats
+                      }
+                    }
+                  ]
+                );
+              } else {
+                Alert.alert('Reset Failed', result.message || 'Failed to reset database');
+              }
+            } catch (error) {
+              console.error('Database reset error:', error);
+              Alert.alert('Error', 'Failed to reset database. Please try again.');
+            } finally {
+              setIsLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <ScrollView style={styles.container}>
       {/* Header Section */}
@@ -286,6 +335,29 @@ export default function SimpleBackupScreen({ navigation }) {
               </Text>
               <Text style={styles.buttonSubtitle}>
                 Permanently delete all your data
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textInverse} />
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionButton, styles.dangerButton]}
+          onPress={handleResetDatabase}
+          disabled={isLoading}
+        >
+          <View style={styles.buttonContent}>
+            <Ionicons 
+              name={isLoading ? "hourglass-outline" : "server-outline"} 
+              size={20} 
+              color={Colors.textInverse} 
+            />
+            <View style={styles.buttonTextContainer}>
+              <Text style={styles.buttonTitle}>
+                {isLoading ? 'Resetting Database...' : 'Reset Server Database'}
+              </Text>
+              <Text style={styles.buttonSubtitle}>
+                Clear ALL data from server (affects all users)
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={Colors.textInverse} />

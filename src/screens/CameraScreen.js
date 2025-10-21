@@ -46,6 +46,7 @@ const CameraScreen = ({ navigation, route }) => {
   const [analysisStartTime, setAnalysisStartTime] = useState(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [requestAttempt, setRequestAttempt] = useState(0);
+  const [analysisSuccessful, setAnalysisSuccessful] = useState(false);
   
   // Timer for elapsed time
   useEffect(() => {
@@ -64,11 +65,12 @@ const CameraScreen = ({ navigation, route }) => {
   };
   
   // Simulate retry attempts based on elapsed time (25s intervals)
+  // Only retry if analysis is still running and not yet successful
   useEffect(() => {
-    if (isAnalyzing && elapsedTime > 0 && elapsedTime % 25 === 0) {
+    if (isAnalyzing && !analysisSuccessful && elapsedTime > 0 && elapsedTime % 25 === 0) {
       handleRetryAttempt();
     }
-  }, [elapsedTime, isAnalyzing]);
+  }, [elapsedTime, isAnalyzing, analysisSuccessful]);
   
   
   // Get the target date from navigation params (defaults to today)
@@ -207,6 +209,7 @@ const CameraScreen = ({ navigation, route }) => {
     setAnalysisStartTime(Date.now());
     setElapsedTime(0);
     setRequestAttempt(1);
+    setAnalysisSuccessful(false);
 
     try {
       let base64Image = null;
@@ -233,6 +236,10 @@ const CameraScreen = ({ navigation, route }) => {
         setCurrentExtendedMetrics(extendedMetrics);
         extendedMetricsRef.current = extendedMetrics; // Store in ref for persistence
         console.log('🔍 Stored extended metrics in ref:', extendedMetricsRef.current);
+        
+        // Mark analysis as successful to stop retries
+        setAnalysisSuccessful(true);
+        console.log('✅ Analysis successful - stopping retry attempts');
       } else {
         console.warn('⚠️ Initial analysis: Failed to parse macros, keeping previous values');
       }
@@ -1296,6 +1303,7 @@ const CameraScreen = ({ navigation, route }) => {
                 setIsAnalyzing(false);
                 setAnalysisStartTime(null);
                 setElapsedTime(0);
+                setAnalysisSuccessful(false);
               }}
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>

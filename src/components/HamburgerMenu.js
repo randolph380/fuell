@@ -119,6 +119,12 @@ export default function HamburgerMenu({ navigation }) {
       screen: 'Trends',
     },
     {
+      id: 'trends2',
+      label: 'Trends #2',
+      icon: 'analytics',
+      screen: 'Trends2',
+    },
+    {
       id: 'saved-meals',
       label: 'Saved Meals',
       icon: 'bookmark',

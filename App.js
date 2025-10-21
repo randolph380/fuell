@@ -13,6 +13,7 @@ import SavedMealsScreen from './src/screens/SavedMealsScreen';
 import ServerTestScreen from './src/screens/ServerTestScreen';
 import SignInScreen from './src/screens/SignInScreen';
 import SimpleBackupScreen from './src/screens/SimpleBackupScreen';
+import Trends2Screen from './src/screens/Trends2Screen';
 
 const Stack = createStackNavigator();
 
@@ -59,6 +60,11 @@ function AppNavigator() {
           name="Trends" 
           component={TrendsScreen}
           options={{ title: 'Trends' }}
+        />
+        <Stack.Screen 
+          name="Trends2" 
+          component={Trends2Screen}
+          options={{ title: 'Trends #2' }}
         />
         <Stack.Screen 
           name="SavedMeals" 

@@ -78,10 +78,17 @@ const TrendsScreen = ({ navigation }) => {
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [
-      { data: [], color: () => Colors.accent, strokeWidth: 3 },
+      { data: [], color: () => '#001f3f', strokeWidth: 3 },
       { data: [], color: () => '#10b981', strokeWidth: 2 }
     ]
   });
+  const [summaryStats, setSummaryStats] = useState({
+    average: 0,
+    trend: 'stable', // 'up', 'down', 'stable'
+    daysTracked: 0,
+    consistency: 0
+  });
+  const [averageValue, setAverageValue] = useState(0);
 
   useEffect(() => {
     loadTrends();
@@ -345,6 +352,22 @@ const TrendsScreen = ({ navigation }) => {
         data = calculateMonthlyData(allMeals, selectedMacro);
       }
       
+      // Calculate average excluding zero values
+      const values = data.datasets[0].data;
+      const nonZeroValues = values.filter(val => val > 0);
+      const average = nonZeroValues.length > 0 ? Math.round(nonZeroValues.reduce((sum, val) => sum + val, 0) / nonZeroValues.length) : 0;
+      setAverageValue(average);
+      
+      // Add average line to chart data
+      const averageLineData = new Array(values.length).fill(average);
+      data.datasets.push({
+        data: averageLineData,
+        color: () => '#007AFF', // Blue color for average line
+        strokeWidth: 2,
+        strokeDashArray: [5, 5], // Dashed line
+        withDots: false // Remove dots from average line
+      });
+      
       setChartData(data);
     } catch (error) {
       console.error('Error loading trends:', error);
@@ -370,24 +393,31 @@ const TrendsScreen = ({ navigation }) => {
     return labels[selectedPeriod];
   };
 
+  const getAverageUnit = () => {
+    const units = {
+      calories: 'cal',
+      protein: 'g',
+      carbs: 'g',
+      fat: 'g',
+      fiber: 'g',
+      processed: '%',
+      ultraProcessed: '%',
+      caffeine: 'mg',
+      freshProduce: 'g'
+    };
+    return units[selectedMacro] || '';
+  };
+
   const getChartTitle = () => {
     return `Average Daily ${getMacroLabel()} by ${getPeriodLabel()}`;
   };
 
-  // Function to create clean Y-axis labels (multiples of 10, 100, 1000)
+  // Function to create clean Y-axis labels (multiples of 10 only)
   const formatYLabel = (value) => {
     if (value === 0) return '0';
     
-    // More aggressive rounding for cleaner labels
-    if (value >= 1000) {
-      return Math.round(value / 500) * 500; // Round to nearest 500
-    } else if (value >= 100) {
-      return Math.round(value / 50) * 50; // Round to nearest 50
-    } else if (value >= 10) {
-      return Math.round(value / 5) * 5; // Round to nearest 5
-    } else {
-      return Math.round(value); // Round to nearest whole number
-    }
+    // Force all Y-axis labels to be multiples of 10
+    return Math.round(value / 10) * 10;
   };
 
   // Function to create clean chart data with proper Y-axis scaling
@@ -429,12 +459,26 @@ const TrendsScreen = ({ navigation }) => {
     >
       {/* Chart Container */}
       <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>{getChartTitle()}</Text>
-        <View style={styles.chartShiftContainer}>
-          <LineChart
-            data={createCleanChartData(chartData)}
-            width={Dimensions.get('window').width - 80}
-            height={220}
+        <View style={styles.chartHeader}>
+          <Text style={styles.chartTitle}>{getChartTitle()}</Text>
+        </View>
+        {averageValue > 0 && (
+          <View style={styles.averageLabel}>
+            <Text style={styles.averageText}>
+              Avg: {averageValue.toLocaleString()} {getAverageUnit()}
+            </Text>
+          </View>
+        )}
+        {/* VERSION 1 */}
+        <View style={styles.chartVersion}>
+          <Text style={styles.versionTitle}>Version 1: width-60, height-280, padding-15</Text>
+          <View style={[styles.chartShiftContainer, {paddingHorizontal: 15, paddingBottom: Spacing.lg}]}>
+            <LineChart
+              data={createCleanChartData(chartData)}
+              width={Dimensions.get('window').width - 60}
+              height={280}
+              verticalLabelRotation={-90}
+              horizontalLabelRotation={0}
             chartConfig={{
               backgroundColor: '#fff',
               backgroundGradientFrom: '#fff',
@@ -449,18 +493,14 @@ const TrendsScreen = ({ navigation }) => {
               propsForDots: {
                 r: '6',
                 strokeWidth: '0',
-                stroke: Colors.accent,
-                fill: Colors.accent
+                stroke: '#001f3f',
+                fill: '#001f3f'
               },
               propsForBackgroundLines: {
                 stroke: '#e5e5e5',
                 strokeWidth: 1,
                 strokeDasharray: '0',
               },
-              propsForLabels: {
-                fontSize: 12,
-                fontWeight: 'bold'
-              }
             }}
             style={styles.chart}
             withInnerLines={true}
@@ -471,12 +511,159 @@ const TrendsScreen = ({ navigation }) => {
             withShadow={false}
             bezier={false}
             withScrollableDot={false}
-            withHorizontalLines={false}
-            withVerticalLines={false}
-            withLine={false}
+            withHorizontalLines={true}
+            withVerticalLines={true}
+            withLine={true}
           />
+          </View>
         </View>
-        <Text style={styles.xAxisLabel}>{getPeriodLabel()}</Text>
+
+        {/* VERSION 2 */}
+        <View style={styles.chartVersion}>
+          <Text style={styles.versionTitle}>Version 2: width-40, height-320, padding-20</Text>
+          <View style={[styles.chartShiftContainer, {paddingHorizontal: 20, paddingBottom: Spacing.xl}]}>
+            <LineChart
+              data={createCleanChartData(chartData)}
+              width={Dimensions.get('window').width - 40}
+              height={320}
+              verticalLabelRotation={-90}
+              horizontalLabelRotation={0}
+              chartConfig={{
+                backgroundColor: '#fff',
+                backgroundGradientFrom: '#fff',
+                backgroundGradientTo: '#fff',
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(102, 126, 234, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                formatYLabel: formatYLabel,
+                style: {
+                  borderRadius: 16
+                },
+                propsForDots: {
+                  r: '6',
+                  strokeWidth: '0',
+                  stroke: '#001f3f',
+                  fill: '#001f3f'
+                },
+                propsForBackgroundLines: {
+                  stroke: '#e5e5e5',
+                  strokeWidth: 1,
+                  strokeDasharray: '0',
+                },
+              }}
+              style={styles.chart}
+              withInnerLines={true}
+              withOuterLines={true}
+              withVerticalLabels={true}
+              withHorizontalLabels={true}
+              withDots={true}
+              withShadow={false}
+              bezier={false}
+              withScrollableDot={false}
+              withHorizontalLines={true}
+              withVerticalLines={true}
+              withLine={true}
+            />
+          </View>
+        </View>
+
+        {/* VERSION 3 */}
+        <View style={styles.chartVersion}>
+          <Text style={styles.versionTitle}>Version 3: width-80, height-260, padding-10</Text>
+          <View style={[styles.chartShiftContainer, {paddingHorizontal: 10, paddingBottom: Spacing.base}]}>
+            <LineChart
+              data={createCleanChartData(chartData)}
+              width={Dimensions.get('window').width - 80}
+              height={260}
+              verticalLabelRotation={-90}
+              horizontalLabelRotation={0}
+              chartConfig={{
+                backgroundColor: '#fff',
+                backgroundGradientFrom: '#fff',
+                backgroundGradientTo: '#fff',
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(102, 126, 234, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                formatYLabel: formatYLabel,
+                style: {
+                  borderRadius: 16
+                },
+                propsForDots: {
+                  r: '6',
+                  strokeWidth: '0',
+                  stroke: '#001f3f',
+                  fill: '#001f3f'
+                },
+                propsForBackgroundLines: {
+                  stroke: '#e5e5e5',
+                  strokeWidth: 1,
+                  strokeDasharray: '0',
+                },
+              }}
+              style={styles.chart}
+              withInnerLines={true}
+              withOuterLines={true}
+              withVerticalLabels={true}
+              withHorizontalLabels={true}
+              withDots={true}
+              withShadow={false}
+              bezier={false}
+              withScrollableDot={false}
+              withHorizontalLines={true}
+              withVerticalLines={true}
+              withLine={true}
+            />
+          </View>
+        </View>
+
+        {/* VERSION 4 */}
+        <View style={styles.chartVersion}>
+          <Text style={styles.versionTitle}>Version 4: width-50, height-300, padding-25</Text>
+          <View style={[styles.chartShiftContainer, {paddingHorizontal: 25, paddingBottom: Spacing.xl}]}>
+            <LineChart
+              data={createCleanChartData(chartData)}
+              width={Dimensions.get('window').width - 50}
+              height={300}
+              verticalLabelRotation={-90}
+              horizontalLabelRotation={0}
+              chartConfig={{
+                backgroundColor: '#fff',
+                backgroundGradientFrom: '#fff',
+                backgroundGradientTo: '#fff',
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(102, 126, 234, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                formatYLabel: formatYLabel,
+                style: {
+                  borderRadius: 16
+                },
+                propsForDots: {
+                  r: '6',
+                  strokeWidth: '0',
+                  stroke: '#001f3f',
+                  fill: '#001f3f'
+                },
+                propsForBackgroundLines: {
+                  stroke: '#e5e5e5',
+                  strokeWidth: 1,
+                  strokeDasharray: '0',
+                },
+              }}
+              style={styles.chart}
+              withInnerLines={true}
+              withOuterLines={true}
+              withVerticalLabels={true}
+              withHorizontalLabels={true}
+              withDots={true}
+              withShadow={false}
+              bezier={false}
+              withScrollableDot={false}
+              withHorizontalLines={true}
+              withVerticalLines={true}
+              withLine={true}
+            />
+          </View>
+        </View>
       </View>
 
       {/* Controls */}
@@ -550,17 +737,20 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     ...Shadows.base,
   },
+  chartHeader: {
+    marginBottom: Spacing.sm,
+  },
   chartTitle: {
     fontSize: Typography.base,
     fontWeight: '600',
     color: Colors.textPrimary,
     letterSpacing: Typography.letterSpacingNormal,
-    marginBottom: Spacing.lg,
     textAlign: 'center',
   },
   chartShiftContainer: {
     marginLeft: 0,
-    paddingHorizontal: 10,
+    paddingHorizontal: 15,
+    paddingBottom: Spacing.lg,
   },
   chartWrapper: {
     flexDirection: 'row',
@@ -578,7 +768,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: Colors.textSecondary,
     letterSpacing: Typography.letterSpacingNormal,
-    transform: [{ rotate: '-90deg' }, { translateY: -40 }],
   },
   chart: {
     marginVertical: Spacing.sm,
@@ -591,6 +780,36 @@ const styles = StyleSheet.create({
     letterSpacing: Typography.letterSpacingNormal,
     textAlign: 'center',
     marginTop: -Spacing.sm,
+  },
+  averageLabel: {
+    backgroundColor: 'rgba(0, 122, 255, 0.9)',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    alignSelf: 'center',
+    marginBottom: Spacing.lg,
+  },
+  averageText: {
+    fontSize: Typography.xs,
+    fontWeight: '600',
+    color: Colors.textInverse,
+    letterSpacing: Typography.letterSpacingNormal,
+  },
+  chartVersion: {
+    marginBottom: Spacing.xl,
+    backgroundColor: Colors.backgroundElevated,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.base,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.base,
+  },
+  versionTitle: {
+    fontSize: Typography.sm,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginBottom: Spacing.base,
+    textAlign: 'center',
   },
   controlsContainer: {
     marginHorizontal: Spacing.base,

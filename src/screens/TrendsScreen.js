@@ -70,7 +70,7 @@ const METRICS = {
   }
 };
 
-const Trends2Screen = ({ navigation }) => {
+const TrendsScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMacro, setSelectedMacro] = useState('calories');
   const [selectedPeriod, setSelectedPeriod] = useState('day');
@@ -99,24 +99,30 @@ const Trends2Screen = ({ navigation }) => {
       const dateKey = date.toDateString();
       
       const dayMeals = meals.filter(meal => {
-        return new Date(meal.date).toDateString() === dateKey;
+        const mealDate = new Date(meal.date);
+        const mealDateOnly = new Date(mealDate.getFullYear(), mealDate.getMonth(), mealDate.getDate());
+        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        return new Date(meal.date).toDateString() === dateKey && mealDateOnly < todayOnly;
       });
       
       const dayTotal = metricConfig.type === 'aggregated'
         ? metricConfig.extract(dayMeals)
         : dayMeals.reduce((sum, meal) => sum + metricConfig.extract(meal), 0);
       
-      const dayLabel = date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric' 
-      });
-      
-      days.unshift({ 
-        x: dayNum, 
-        y: dayTotal || 0, 
-        label: dayLabel,
-        date: dateKey
-      });
+      // Only include days that have actual meal entries
+      if (dayMeals.length > 0) {
+        const dayLabel = date.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        });
+        
+        days.unshift({ 
+          x: dayNum, 
+          y: dayTotal, 
+          label: dayLabel,
+          date: dateKey
+        });
+      }
     }
     
     return days;
@@ -127,16 +133,16 @@ const Trends2Screen = ({ navigation }) => {
     const today = new Date();
     const metricConfig = METRICS[macro];
     
-    // Calculate for past 10 weeks
+    // Calculate for past 10 weeks (excluding today)
     for (let weekNum = 0; weekNum < 10; weekNum++) {
       const weekEnd = new Date(today);
-      weekEnd.setDate(weekEnd.getDate() - (weekNum * 7));
+      weekEnd.setDate(weekEnd.getDate() - 1 - (weekNum * 7)); // Start from yesterday
       
       const weekStart = new Date(weekEnd);
       weekStart.setDate(weekStart.getDate() - 6);
       
       const weekMeals = meals.filter(meal => {
-        const mealDate = new Date(meal.timestamp);
+        const mealDate = new Date(meal.date);
         const mealDateOnly = new Date(mealDate.getFullYear(), mealDate.getMonth(), mealDate.getDate());
         const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         return mealDate >= weekStart && mealDate <= weekEnd && mealDateOnly < todayOnly;
@@ -178,22 +184,6 @@ const Trends2Screen = ({ navigation }) => {
           label: weekLabel,
           daysTracked 
         });
-      } else {
-        const weekStartLabel = weekStart.toLocaleDateString('en-US', { 
-          month: 'short', 
-          day: 'numeric' 
-        });
-        const weekEndLabel = weekEnd.toLocaleDateString('en-US', { 
-          day: 'numeric' 
-        });
-        const weekLabel = `${weekStartLabel}-${weekEndLabel}`;
-        
-        weeks.unshift({ 
-          x: weekNum + 1, 
-          y: 0, 
-          label: weekLabel,
-          daysTracked: 0 
-        });
       }
     }
     
@@ -211,7 +201,7 @@ const Trends2Screen = ({ navigation }) => {
       const monthStart = new Date(today.getFullYear(), today.getMonth() - monthNum, 1);
       
       const monthMeals = meals.filter(meal => {
-        const mealDate = new Date(meal.timestamp);
+        const mealDate = new Date(meal.date);
         const mealDateOnly = new Date(mealDate.getFullYear(), mealDate.getMonth(), mealDate.getDate());
         const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         return mealDate >= monthStart && mealDate <= monthEnd && mealDateOnly < todayOnly;
@@ -249,17 +239,6 @@ const Trends2Screen = ({ navigation }) => {
           label: monthLabel,
           daysTracked 
         });
-      } else {
-        const monthLabel = monthStart.toLocaleDateString('en-US', { 
-          month: '2-digit', 
-          year: 'numeric' 
-        });
-        months.unshift({ 
-          x: monthNum + 1, 
-          y: 0, 
-          label: monthLabel,
-          daysTracked: 0 
-        });
       }
     }
     
@@ -281,10 +260,10 @@ const Trends2Screen = ({ navigation }) => {
         data = calculateMonthlyData(allMeals, selectedMacro);
       }
       
-      // Calculate average excluding zero values
-      const nonZeroValues = data.filter(d => d.y > 0);
-      const average = nonZeroValues.length > 0 
-        ? Math.round(nonZeroValues.reduce((sum, d) => sum + d.y, 0) / nonZeroValues.length) 
+      // Calculate average from periods that have actual data (no zero entries)
+      const periodsWithData = data.filter(d => d.y > 0);
+      const average = periodsWithData.length > 0 
+        ? Math.round(periodsWithData.reduce((sum, d) => sum + d.y, 0) / periodsWithData.length) 
         : 0;
       
       setAverageValue(average);
@@ -373,69 +352,43 @@ const Trends2Screen = ({ navigation }) => {
           </View>
         )}
 
-        {/* Simple Data Visualization */}
+        {/* Clean Data Visualization */}
         <View style={styles.chartWrapper}>
-          <View style={styles.simpleChart}>
-            <Text style={styles.chartSubtitle}>
-              {getPeriodLabel()} View - {chartData.length} data points
-            </Text>
-            
+          <View style={styles.cleanChart}>
             {/* Data Points List */}
             <View style={styles.dataList}>
-              {chartData.map((point, index) => (
-                <View key={index} style={styles.dataRow}>
-                  <Text style={styles.dataLabel}>{point.label}</Text>
-                  <View style={styles.dataValueContainer}>
-                    <Text style={styles.dataValue}>{point.y}</Text>
-                    <Text style={styles.dataUnit}>{getAverageUnit()}</Text>
+              {chartData.map((point, index) => {
+                const maxValue = Math.max(...chartData.map(d => d.y), 1);
+                const barWidth = maxValue > 0 ? (point.y / maxValue) * 100 : 0;
+                const isAboveAverage = point.y > averageValue;
+                
+                return (
+                  <View key={index} style={styles.cleanDataRow}>
+                    <View style={styles.dataLabelContainer}>
+                      <Text style={styles.cleanDataLabel}>{point.label}</Text>
+                    </View>
+                    <View style={styles.dataValueContainer}>
+                      <Text style={styles.cleanDataValue}>{point.y.toLocaleString()}</Text>
+                      <Text style={styles.cleanDataUnit}>{getAverageUnit()}</Text>
+                    </View>
+                    <View style={styles.cleanBarContainer}>
+                      <View 
+                        style={[
+                          styles.cleanDataBar, 
+                          { 
+                            width: `${Math.min(barWidth, 100)}%`,
+                            backgroundColor: isAboveAverage ? Colors.accent : Colors.primary
+                          }
+                        ]} 
+                      />
+                    </View>
                   </View>
-                  {/* Simple bar visualization */}
-                  <View style={styles.barContainer}>
-                    <View 
-                      style={[
-                        styles.dataBar, 
-                        { 
-                          width: `${Math.min((point.y / Math.max(...chartData.map(d => d.y), 1)) * 100, 100)}%`,
-                          backgroundColor: point.y > averageValue ? Colors.accent : Colors.primary
-                        }
-                      ]} 
-                    />
-                  </View>
-                </View>
-              ))}
+                );
+              })}
             </View>
-            
-            {/* Average Line Indicator */}
-            {averageValue > 0 && (
-              <View style={styles.averageIndicator}>
-                <Text style={styles.averageIndicatorText}>
-                  Average: {averageValue.toLocaleString()} {getAverageUnit()}
-                </Text>
-              </View>
-            )}
           </View>
         </View>
 
-        {/* Summary Stats */}
-        {summaryStats.daysTracked > 0 && (
-          <View style={styles.summaryStats}>
-            <Text style={styles.summaryTitle}>Summary</Text>
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{summaryStats.daysTracked}</Text>
-                <Text style={styles.statLabel}>Days Tracked</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{summaryStats.consistency}%</Text>
-                <Text style={styles.statLabel}>Consistency</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{summaryStats.trend}</Text>
-                <Text style={styles.statLabel}>Trend</Text>
-              </View>
-            </View>
-          </View>
-        )}
       </View>
 
       {/* Controls */}
@@ -525,7 +478,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundElevated,
     borderRadius: BorderRadius.base,
     padding: Spacing.sm,
-    marginVertical: Spacing.sm,
+    marginVertical: Spacing.xs,
   },
   averageLabel: {
     backgroundColor: Colors.accent,
@@ -533,7 +486,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.sm,
     alignSelf: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.sm,
   },
   averageText: {
     fontSize: Typography.xs,
@@ -721,6 +674,51 @@ const styles = StyleSheet.create({
     color: Colors.textInverse,
     fontWeight: '600',
   },
+  cleanChart: {
+    width: '100%',
+    padding: Spacing.xs,
+  },
+  cleanDataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.base,
+    backgroundColor: Colors.backgroundElevated,
+    borderRadius: BorderRadius.base,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    marginBottom: Spacing.xs,
+  },
+  dataLabelContainer: {
+    flex: 2,
+    justifyContent: 'center',
+  },
+  cleanDataLabel: {
+    fontSize: Typography.sm,
+    fontWeight: '500',
+    color: Colors.textPrimary,
+  },
+  cleanDataValue: {
+    fontSize: Typography.base,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  cleanDataUnit: {
+    fontSize: Typography.xs,
+    color: Colors.textSecondary,
+    marginLeft: Spacing.xs,
+  },
+  cleanBarContainer: {
+    flex: 2,
+    height: 8,
+    backgroundColor: Colors.backgroundSubtle,
+    borderRadius: BorderRadius.xs,
+    overflow: 'hidden',
+  },
+  cleanDataBar: {
+    height: '100%',
+    borderRadius: BorderRadius.xs,
+  },
 });
 
-export default Trends2Screen;
+export default TrendsScreen;

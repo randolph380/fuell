@@ -1329,7 +1329,7 @@ const CameraScreen = ({ navigation, route }) => {
               <Animated.View style={[styles.foodDot, styles.foodDot5, { opacity: dot5Anim }]} />
             </View>
             <Text style={styles.loadingText}>Analyzing meal</Text>
-            <Text style={styles.estimatedTimeText}>Estimated time < 60s</Text>
+            <Text style={styles.estimatedTimeText}>Estimated time &lt; 60s</Text>
             <View style={styles.loadingStats}>
               <Text style={styles.loadingStatsText}>{elapsedTime}s elapsed</Text>
             </View>

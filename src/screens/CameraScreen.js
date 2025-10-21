@@ -47,6 +47,7 @@ const CameraScreen = ({ navigation, route }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [requestAttempt, setRequestAttempt] = useState(0);
   const [analysisSuccessful, setAnalysisSuccessful] = useState(false);
+  const [abortController, setAbortController] = useState(null);
   
   // Timer for elapsed time
   useEffect(() => {
@@ -210,6 +211,10 @@ const CameraScreen = ({ navigation, route }) => {
     setElapsedTime(0);
     setRequestAttempt(1);
     setAnalysisSuccessful(false);
+    
+    // Create abort controller for cancelling the request
+    const controller = new AbortController();
+    setAbortController(controller);
 
     try {
       let base64Image = null;
@@ -302,6 +307,7 @@ const CameraScreen = ({ navigation, route }) => {
       Alert.alert('Error', 'Failed to analyze food. Please try again.');
     } finally {
       setIsAnalyzing(false);
+      setAbortController(null);
     }
   };
 
@@ -1300,10 +1306,20 @@ const CameraScreen = ({ navigation, route }) => {
             <TouchableOpacity 
               style={styles.cancelButton}
               onPress={() => {
+                // Abort any ongoing API request
+                if (abortController) {
+                  abortController.abort();
+                  console.log('🚫 Analysis cancelled by user');
+                }
+                
                 setIsAnalyzing(false);
                 setAnalysisStartTime(null);
                 setElapsedTime(0);
                 setAnalysisSuccessful(false);
+                setAbortController(null);
+                
+                // Navigate back to main screen
+                navigation.goBack();
               }}
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>

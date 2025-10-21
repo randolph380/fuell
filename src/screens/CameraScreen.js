@@ -4,7 +4,6 @@ import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Alert,
-    Animated,
     Image,
     Keyboard,
     KeyboardAvoidingView,
@@ -71,12 +70,6 @@ const CameraScreen = ({ navigation, route }) => {
     }
   }, [elapsedTime, isAnalyzing]);
   
-  // Animation refs for food dots
-  const dot1Anim = useRef(new Animated.Value(1)).current;
-  const dot2Anim = useRef(new Animated.Value(1)).current;
-  const dot3Anim = useRef(new Animated.Value(1)).current;
-  const dot4Anim = useRef(new Animated.Value(1)).current;
-  const dot5Anim = useRef(new Animated.Value(1)).current;
   
   // Get the target date from navigation params (defaults to today)
   const targetDate = route.params?.targetDate ? new Date(route.params.targetDate) : new Date();
@@ -108,42 +101,6 @@ const CameraScreen = ({ navigation, route }) => {
     });
   };
 
-  // Food animation effect
-  useEffect(() => {
-    if (isAnalyzing || isRefining) {
-      const createPulseAnimation = (animValue, delay = 0) => {
-        return Animated.loop(
-          Animated.sequence([
-            Animated.delay(delay),
-            Animated.timing(animValue, {
-              toValue: 0.3,
-              duration: 600,
-              useNativeDriver: true,
-            }),
-            Animated.timing(animValue, {
-              toValue: 1,
-              duration: 600,
-              useNativeDriver: true,
-            }),
-          ])
-        );
-      };
-
-      const animations = [
-        createPulseAnimation(dot1Anim, 0),
-        createPulseAnimation(dot2Anim, 150),
-        createPulseAnimation(dot3Anim, 300),
-        createPulseAnimation(dot4Anim, 450),
-        createPulseAnimation(dot5Anim, 600),
-      ];
-
-      animations.forEach(anim => anim.start());
-
-      return () => {
-        animations.forEach(anim => anim.stop());
-      };
-    }
-  }, [isAnalyzing, isRefining]);
 
   // Handle keyboard events to scroll to bottom
   useEffect(() => {
@@ -1017,11 +974,11 @@ const CameraScreen = ({ navigation, route }) => {
             {isRefining && (
               <View style={styles.refiningContainer}>
                 <View style={styles.foodAnimation}>
-                  <Animated.View style={[styles.foodDot, styles.foodDot1, { opacity: dot1Anim }]} />
-                  <Animated.View style={[styles.foodDot, styles.foodDot2, { opacity: dot2Anim }]} />
-                  <Animated.View style={[styles.foodDot, styles.foodDot3, { opacity: dot3Anim }]} />
-                  <Animated.View style={[styles.foodDot, styles.foodDot4, { opacity: dot4Anim }]} />
-                  <Animated.View style={[styles.foodDot, styles.foodDot5, { opacity: dot5Anim }]} />
+                  <View style={[styles.foodDot, styles.foodDot1]} />
+                  <View style={[styles.foodDot, styles.foodDot2]} />
+                  <View style={[styles.foodDot, styles.foodDot3]} />
+                  <View style={[styles.foodDot, styles.foodDot4]} />
+                  <View style={[styles.foodDot, styles.foodDot5]} />
                 </View>
               </View>
             )}
@@ -1322,11 +1279,11 @@ const CameraScreen = ({ navigation, route }) => {
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingContent}>
             <View style={styles.foodAnimation}>
-              <Animated.View style={[styles.foodDot, styles.foodDot1, { opacity: dot1Anim }]} />
-              <Animated.View style={[styles.foodDot, styles.foodDot2, { opacity: dot2Anim }]} />
-              <Animated.View style={[styles.foodDot, styles.foodDot3, { opacity: dot3Anim }]} />
-              <Animated.View style={[styles.foodDot, styles.foodDot4, { opacity: dot4Anim }]} />
-              <Animated.View style={[styles.foodDot, styles.foodDot5, { opacity: dot5Anim }]} />
+              <View style={[styles.foodDot, styles.foodDot1]} />
+              <View style={[styles.foodDot, styles.foodDot2]} />
+              <View style={[styles.foodDot, styles.foodDot3]} />
+              <View style={[styles.foodDot, styles.foodDot4]} />
+              <View style={[styles.foodDot, styles.foodDot5]} />
             </View>
             <Text style={styles.loadingText}>Analyzing meal</Text>
             <Text style={styles.estimatedTimeText}>Estimated time &lt; 60s</Text>

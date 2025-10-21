@@ -1329,9 +1329,20 @@ const CameraScreen = ({ navigation, route }) => {
               <Animated.View style={[styles.foodDot, styles.foodDot5, { opacity: dot5Anim }]} />
             </View>
             <Text style={styles.loadingText}>Analyzing meal</Text>
+            <Text style={styles.estimatedTimeText}>Estimated time < 60s</Text>
             <View style={styles.loadingStats}>
               <Text style={styles.loadingStatsText}>{elapsedTime}s elapsed</Text>
             </View>
+            <TouchableOpacity 
+              style={styles.cancelButton}
+              onPress={() => {
+                setIsAnalyzing(false);
+                setAnalysisStartTime(null);
+                setElapsedTime(0);
+              }}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       )}
@@ -1589,6 +1600,29 @@ const styles = StyleSheet.create({
     fontSize: Typography.sm,
     color: Colors.textSecondary,
     fontWeight: '400',
+  },
+  estimatedTimeText: {
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
+    fontWeight: '400',
+    marginTop: Spacing.xs,
+    textAlign: 'center',
+  },
+  cancelButton: {
+    backgroundColor: Colors.backgroundElevated,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: BorderRadius.base,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.sm,
+    marginTop: Spacing.base,
+    alignSelf: 'center',
+  },
+  cancelButtonText: {
+    fontSize: Typography.sm,
+    color: Colors.textPrimary,
+    fontWeight: '500',
+    textAlign: 'center',
   },
   macrosCardSticky: {
     backgroundColor: Colors.backgroundElevated,

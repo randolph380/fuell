@@ -247,7 +247,7 @@ const TrendsScreen = ({ navigation }) => {
 
   const loadTrends = async () => {
     try {
-      console.log('Loading trends for Trends2Screen...');
+      console.log('Loading trends for TrendsScreen...');
       const allMeals = await HybridStorageService.getMeals();
       console.log('Meals loaded:', allMeals.length);
       

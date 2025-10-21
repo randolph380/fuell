@@ -59,6 +59,17 @@ const CameraScreen = ({ navigation, route }) => {
     }
     return () => clearInterval(interval);
   }, [analysisStartTime]);
+
+  // Cleanup on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      setImageUri(null);
+      setAdditionalImages([]);
+      setConversation([]);
+      setCurrentMacros(null);
+      setCurrentExtendedMetrics(null);
+    };
+  }, []);
   
   // Function to handle retry attempts
   const handleRetryAttempt = () => {
@@ -576,6 +587,13 @@ const CameraScreen = ({ navigation, route }) => {
 
       // Log the meal immediately
       await HybridStorageService.saveMeal(meal);
+
+      // CLEANUP: Clear all image data and state
+      setImageUri(null);
+      setAdditionalImages([]);
+      setFoodDescription('');
+      setConversation([]);
+
       navigation.navigate('Home', { targetDate: targetDate.toISOString() });
     } catch (error) {
       console.error('Error quick logging meal:', error);
@@ -625,6 +643,17 @@ const CameraScreen = ({ navigation, route }) => {
       });
 
       await HybridStorageService.saveMeal(meal);
+
+      // CLEANUP: Clear all image data and state before navigation
+      setImageUri(null);
+      setAdditionalImages([]);
+      setFoodDescription('');
+      setConversation([]);
+      setCurrentMacros(null);
+      setCurrentExtendedMetrics(null);
+      setMealTitle('');
+      setShowInput(false);
+
       navigation.navigate('Home', { targetDate: targetDate.toISOString() });
     } catch (error) {
       console.error('Error logging meal:', error);

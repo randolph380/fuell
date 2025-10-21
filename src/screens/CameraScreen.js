@@ -34,7 +34,7 @@ const CameraScreen = ({ navigation, route }) => {
   const [userInput, setUserInput] = useState('');
   const [isRefining, setIsRefining] = useState(false);
   const [mealTitle, setMealTitle] = useState('');
-  const [isMultipleDishes, setIsMultipleDishes] = useState(false);
+  const [isMultipleDishes, setIsMultipleDishes] = useState(null); // null, false, true
   const [mealPreparation, setMealPreparation] = useState(null); // null, 'prepackaged', 'restaurant', 'homemade'
   const [showMacroEditor, setShowMacroEditor] = useState(false);
   const [editedMacros, setEditedMacros] = useState(null);
@@ -202,6 +202,23 @@ const CameraScreen = ({ navigation, route }) => {
   const analyzeFood = async () => {
     if (!imageUri && !foodDescription.trim()) {
       Alert.alert('Input Required', 'Please take a photo or describe your meal');
+      return;
+    }
+
+    // Validate that both options are selected
+    if (isMultipleDishes === null) {
+      Alert.alert(
+        'Selection Required', 
+        'Please select how many items are in your meal before analyzing.'
+      );
+      return;
+    }
+
+    if (mealPreparation === null) {
+      Alert.alert(
+        'Selection Required', 
+        'Please select how your meal was prepped before analyzing.'
+      );
       return;
     }
 
@@ -381,6 +398,23 @@ const CameraScreen = ({ navigation, route }) => {
   const sendMessage = async () => {
     if (!userInput.trim()) return;
 
+    // Validate that both options are selected before refining
+    if (isMultipleDishes === null) {
+      Alert.alert(
+        'Selection Required', 
+        'Please select how many items are in your meal before refining the analysis.'
+      );
+      return;
+    }
+
+    if (mealPreparation === null) {
+      Alert.alert(
+        'Selection Required', 
+        'Please select how your meal was prepped before refining the analysis.'
+      );
+      return;
+    }
+
     const userMessage = userInput.trim();
     setUserInput('');
     setIsRefining(true);
@@ -496,8 +530,8 @@ const CameraScreen = ({ navigation, route }) => {
         );
       }
 
-      // Analyze the meal
-      const result = await claudeAPI.analyzeMealImage(base64Image, foodDescription, base64AdditionalImages, isMultipleDishes);
+      // Analyze the meal - use defaults if options not selected
+      const result = await claudeAPI.analyzeMealImage(base64Image, foodDescription, base64AdditionalImages, isMultipleDishes ?? false, mealPreparation);
       
       if (!result.macros) {
         throw new Error('Failed to analyze meal');
@@ -700,30 +734,30 @@ const CameraScreen = ({ navigation, route }) => {
             <Text style={styles.toggleLabel}>How many items in your meal?</Text>
             <View style={styles.toggleButtons}>
               <TouchableOpacity 
-                style={[styles.toggleButton, !isMultipleDishes && styles.toggleButtonActive]}
-                onPress={() => setIsMultipleDishes(false)}
+                style={[styles.toggleButton, isMultipleDishes === false && styles.toggleButtonActive]}
+                onPress={() => setIsMultipleDishes(isMultipleDishes === false ? null : false)}
               >
                 <Ionicons 
                   name="document-text-outline" 
                   size={16} 
-                  color={!isMultipleDishes ? Colors.textInverse : Colors.textSecondary} 
+                  color={isMultipleDishes === false ? Colors.textInverse : Colors.textSecondary} 
                   style={styles.toggleIcon}
                 />
-                <Text style={[styles.toggleButtonText, !isMultipleDishes && styles.toggleButtonTextActive]}>
+                <Text style={[styles.toggleButtonText, isMultipleDishes === false && styles.toggleButtonTextActive]}>
                   One item
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.toggleButton, isMultipleDishes && styles.toggleButtonActive]}
-                onPress={() => setIsMultipleDishes(true)}
+                style={[styles.toggleButton, isMultipleDishes === true && styles.toggleButtonActive]}
+                onPress={() => setIsMultipleDishes(isMultipleDishes === true ? null : true)}
               >
                 <Ionicons 
                   name="restaurant-outline" 
                   size={16} 
-                  color={isMultipleDishes ? Colors.textInverse : Colors.textSecondary}
+                  color={isMultipleDishes === true ? Colors.textInverse : Colors.textSecondary}
                   style={styles.toggleIcon}
                 />
-                <Text style={[styles.toggleButtonText, isMultipleDishes && styles.toggleButtonTextActive]}>
+                <Text style={[styles.toggleButtonText, isMultipleDishes === true && styles.toggleButtonTextActive]}>
                   Multiple items
                 </Text>
               </TouchableOpacity>

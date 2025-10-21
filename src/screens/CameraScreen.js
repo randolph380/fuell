@@ -48,12 +48,16 @@ const CameraScreen = ({ navigation, route }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [requestAttempt, setRequestAttempt] = useState(0);
   
-  // Timer for elapsed time
+  // Timer for elapsed time - optimized to reduce re-renders
   useEffect(() => {
     let interval;
     if (analysisStartTime) {
       interval = setInterval(() => {
-        setElapsedTime(Math.floor((Date.now() - analysisStartTime) / 1000));
+        const newElapsedTime = Math.floor((Date.now() - analysisStartTime) / 1000);
+        setElapsedTime(prev => {
+          // Only update if the value actually changed
+          return prev !== newElapsedTime ? newElapsedTime : prev;
+        });
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -1332,6 +1336,9 @@ const CameraScreen = ({ navigation, route }) => {
             <Text style={styles.estimatedTimeText}>Estimated time &lt; 60s</Text>
             <View style={styles.loadingStats}>
               <Text style={styles.loadingStatsText}>{elapsedTime}s elapsed</Text>
+              {elapsedTime > 30 && (
+                <Text style={styles.timeoutWarning}>Analysis taking longer than usual...</Text>
+              )}
             </View>
             <TouchableOpacity 
               style={styles.cancelButton}
@@ -1622,6 +1629,13 @@ const styles = StyleSheet.create({
     fontSize: Typography.sm,
     color: Colors.textPrimary,
     fontWeight: '500',
+    textAlign: 'center',
+  },
+  timeoutWarning: {
+    fontSize: Typography.xs,
+    color: Colors.accent,
+    fontWeight: '500',
+    marginTop: Spacing.xs,
     textAlign: 'center',
   },
   macrosCardSticky: {

@@ -237,10 +237,19 @@ class SimpleBackup {
         HybridStorageService.getUserPreferences()
       ]);
 
+      // Calculate unique days from meals data
+      const uniqueDays = new Set();
+      meals.forEach(meal => {
+        if (meal.timestamp) {
+          const date = new Date(meal.timestamp).toDateString();
+          uniqueDays.add(date);
+        }
+      });
+
       return {
         totalMeals: meals.length,
         savedMeals: savedMeals.length,
-        dailyRecords: Object.keys(dailyMacros).length,
+        dailyRecords: uniqueDays.size,
         hasPreferences: Object.keys(preferences).length > 0
       };
     } catch (error) {

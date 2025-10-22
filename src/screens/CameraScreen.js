@@ -899,39 +899,67 @@ const CameraScreen = ({ navigation, route }) => {
                   ))}
                 </ScrollView>
                 
-                {/* Add Another Photo buttons */}
-                <View style={styles.addMorePhotosSection}>
-                  <TouchableOpacity style={styles.addMoreButton} onPress={takePicture}>
-                    <Ionicons name="camera" size={20} color={Colors.accent} />
-                    <Text style={styles.addMoreText}>Take Another</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.addMoreButton} onPress={async () => {
-                    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                    if (status !== 'granted') {
-                      Alert.alert('Permission needed', 'Photo library permission is required');
-                      return;
-                    }
-                    try {
-                      const result = await ImagePicker.launchImageLibraryAsync({
-                        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                        allowsEditing: false,
-                        allowsMultipleSelection: true,
-                        quality: 0.7,
-                      });
-                      if (!result.canceled) {
-                        // Add all selected images to additionalImages
-                        const newImages = result.assets.map(asset => asset.uri);
-                        setAdditionalImages(prev => [...prev, ...newImages]);
-                      }
-                    } catch (error) {
-                      console.error('Error picking additional images:', error);
-                      Alert.alert('Error', 'Failed to pick images');
-                    }
-                  }}>
-                    <Ionicons name="image" size={20} color={Colors.accent} />
-                    <Text style={styles.addMoreText}>Add from Gallery</Text>
-                  </TouchableOpacity>
+                {/* Image Counter */}
+                <View style={styles.imageCounter}>
+                  <Text style={styles.imageCounterText}>
+                    {(imageUri ? 1 : 0) + additionalImages.length}/5 images
+                  </Text>
                 </View>
+
+                {/* Add Another Photo buttons */}
+                {((imageUri ? 1 : 0) + additionalImages.length) < 5 && (
+                  <View style={styles.addMorePhotosSection}>
+                    <TouchableOpacity style={styles.addMoreButton} onPress={() => {
+                      const MAX_IMAGES = 5;
+                      const currentTotal = (imageUri ? 1 : 0) + additionalImages.length;
+                      if (currentTotal >= MAX_IMAGES) {
+                        Alert.alert('Limit Reached', 'You can upload up to 5 images total.');
+                        return;
+                      }
+                      takePicture();
+                    }}>
+                      <Ionicons name="camera" size={20} color={Colors.accent} />
+                      <Text style={styles.addMoreText}>Take Another</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.addMoreButton} onPress={async () => {
+                      const MAX_IMAGES = 5;
+                      const currentTotal = (imageUri ? 1 : 0) + additionalImages.length;
+                      const remainingSlots = MAX_IMAGES - currentTotal;
+
+                      if (remainingSlots <= 0) {
+                        Alert.alert('Limit Reached', 'You can upload up to 5 images total.');
+                        return;
+                      }
+
+                      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                      if (status !== 'granted') {
+                        Alert.alert('Permission needed', 'Photo library permission is required');
+                        return;
+                      }
+                      try {
+                        const result = await ImagePicker.launchImageLibraryAsync({
+                          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                          allowsEditing: false,
+                          allowsMultipleSelection: true,
+                          selectionLimit: remainingSlots,
+                          quality: 0.7,
+                        });
+                        if (!result.canceled) {
+                          // Add all selected images to additionalImages
+                          const newImages = result.assets.map(asset => asset.uri);
+                          const imagesToAdd = newImages.slice(0, remainingSlots);
+                          setAdditionalImages(prev => [...prev, ...imagesToAdd]);
+                        }
+                      } catch (error) {
+                        console.error('Error picking additional images:', error);
+                        Alert.alert('Error', 'Failed to pick images');
+                      }
+                    }}>
+                      <Ionicons name="image" size={20} color={Colors.accent} />
+                      <Text style={styles.addMoreText}>Add from Gallery</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             ) : (
               <View style={styles.uploadSection}>
@@ -2072,6 +2100,14 @@ const styles = StyleSheet.create({
     color: 'inherit',
     fontWeight: '400',
     opacity: 0.8,
+  },
+  imageCounter: {
+    alignItems: 'center',
+    marginVertical: Spacing.sm,
+  },
+  imageCounterText: {
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
   },
 });
 

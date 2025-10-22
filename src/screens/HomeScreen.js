@@ -22,6 +22,7 @@ import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants
 import HybridStorageService from '../services/hybridStorage';
 import DateHelpers from '../utils/dateHelpers';
 import { calculateAggregatedProcessed, calculateAggregatedUltraProcessed } from '../utils/extendedMetrics';
+import { useDateChangeDetection } from '../hooks/useDateChangeDetection';
 
 const HomeScreen = ({ navigation, route }) => {
   const { signOut } = useAuth();
@@ -47,25 +48,21 @@ const HomeScreen = ({ navigation, route }) => {
   const [editedValues, setEditedValues] = useState({});
   const [portionSize, setPortionSize] = useState('1');
 
+  // Automatically detect and handle date changes
+  useDateChangeDetection((newToday) => {
+    // Only auto-update if there's no specific target date from route params
+    if (!route.params?.targetDate) {
+      console.log('DEBUG - Date change detected, updating to today:', newToday.toDateString());
+      setCurrentDate(newToday);
+    }
+  });
+
   useEffect(() => {
     // Wait for user to be loaded before loading meals
     if (user?.id) {
       loadMeals();
     }
   }, [currentDate, user?.id]);
-
-  // Auto-update to today when app opens (if no specific target date)
-  useEffect(() => {
-    const today = new Date();
-    const isCurrentDateToday = currentDate.toDateString() === today.toDateString();
-    
-    // Only auto-update if we're not on today's date and there's no specific target date
-    // This handles the case where the app was opened yesterday and is opened again today
-    if (!isCurrentDateToday && !route.params?.targetDate) {
-      console.log('DEBUG - Auto-updating to today on mount:', today.toDateString());
-      setCurrentDate(today);
-    }
-  }, []); // Run once on mount
 
   // Handle route params changes (when returning from CameraScreen with target date)
   useEffect(() => {

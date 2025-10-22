@@ -35,16 +35,12 @@ export default function SimpleBackupScreen({ navigation }) {
 
   const handleExportBackup = () => {
     Alert.alert(
-      'Export Format',
-      'Choose your preferred export format:',
+      'Export Data',
+      'Export your meals data as CSV for analysis:',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
-          text: 'JSON (Complete Backup)', 
-          onPress: () => exportWithFormat('json')
-        },
-        { 
-          text: 'CSV (Meals Only)', 
+          text: 'Export CSV', 
           onPress: () => exportWithFormat('csv')
         }
       ]
@@ -130,10 +126,10 @@ export default function SimpleBackupScreen({ navigation }) {
             />
             <View style={styles.buttonTextContainer}>
               <Text style={styles.buttonTitle}>
-                {isLoading ? 'Creating Backup...' : 'Export Data'}
+                {isLoading ? 'Exporting...' : 'Export Data'}
               </Text>
               <Text style={styles.buttonSubtitle}>
-                Choose JSON (complete) or CSV (analysis)
+                Download meals as CSV for analysis
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={Colors.textInverse} />

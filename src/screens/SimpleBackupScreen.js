@@ -97,26 +97,25 @@ export default function SimpleBackupScreen({ navigation }) {
         <View style={styles.statsGrid}>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{stats.totalMeals}</Text>
-            <Text style={styles.statLabel}>Total Meals</Text>
+            <Text style={styles.statLabel}>Meals Logged</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{stats.savedMeals}</Text>
-            <Text style={styles.statLabel}>Saved Templates</Text>
+            <Text style={styles.statLabel}>Meal Templates</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{stats.dailyRecords}</Text>
-            <Text style={styles.statLabel}>Daily Records</Text>
+            <Text style={styles.statLabel}>Days Tracked</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>{stats.hasPreferences ? '✓' : '○'}</Text>
-            <Text style={styles.statLabel}>Preferences</Text>
+            <Text style={styles.statValue}>{stats.totalMeals > 0 ? Math.round(stats.totalMeals / Math.max(stats.dailyRecords, 1)) : 0}</Text>
+            <Text style={styles.statLabel}>Avg Meals/Day</Text>
           </View>
         </View>
       </View>
 
       {/* Action Buttons */}
       <View style={styles.actionsSection}>
-        <Text style={styles.sectionTitle}>Export Data</Text>
         
         <TouchableOpacity
           style={[styles.actionButton, styles.primaryButton]}

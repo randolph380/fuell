@@ -20,10 +20,10 @@ src/
 │   ├── ClerkWrapper.js  # Authentication wrapper
 │   └── MealCard.js      # Meal display component
 ├── screens/             # Screen components
-│   └── SimpleBackupScreen.js
+│   └── SimpleBackupScreen.js  # Export Data screen
 ├── services/            # Business logic and data
 │   ├── storage.js       # Local storage service
-│   └── simpleBackup.js  # Backup/restore service
+│   └── simpleBackup.js  # CSV export service
 ├── constants/           # Design system and constants
 │   └── colors.js        # Colors, typography, spacing
 └── docs/               # Development documentation
@@ -99,11 +99,11 @@ src/
 3. StorageService updates AsyncStorage with user-scoped key
 4. UI updates reflect changes
 
-### Backup/Restore
-1. User initiates backup
-2. SimpleBackup collects all user data
-3. Data exported as JSON (full backup) or CSV (meals only)
-4. Import restores data to user's account
+### Data Export
+1. User initiates CSV export
+2. SimpleBackup collects meal data with accurate timestamps
+3. Data exported as CSV with chronological sorting
+4. Military time format and ISO dates for analysis
 
 ## Key Patterns
 

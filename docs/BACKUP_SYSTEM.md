@@ -1,54 +1,42 @@
-# Fuel App - Backup System Documentation
+# Fuel App - Export System Documentation
 
 ## Overview
-The backup system provides data export/import functionality for the Fuel app, supporting both complete backups (JSON) and data analysis exports (CSV).
+The export system provides CSV data export functionality for the Fuel app, focused on data analysis and spreadsheet integration. The system exports meal data with accurate timestamps and extended metrics.
 
 ## System Architecture
 
 ### Components
-- **SimpleBackup**: Main backup service
-- **StorageService**: Data access layer
-- **SimpleBackupScreen**: UI for backup operations
+- **SimpleBackup**: Main export service
+- **HybridStorageService**: Data access layer
+- **SimpleBackupScreen**: UI for export operations (renamed to "Export Data")
 - **FileSystem**: File operations (Expo)
 - **Sharing**: File sharing (Expo)
 
 ### Data Flow
 ```
-User Action → SimpleBackupScreen → SimpleBackup → StorageService → FileSystem
+User Action → Export Data Screen → SimpleBackup → HybridStorageService → FileSystem
 ```
 
-## Backup Formats
-
-### JSON Format (Complete Backup)
-**Purpose**: Full data backup for restoration
-**Contains**: All user data (meals, daily macros, saved meals, preferences)
-**Importable**: Yes - can restore complete app state
-
-```javascript
-const jsonBackup = {
-  version: "1.0.0",
-  timestamp: "2024-01-15T12:30:00Z",
-  userId: "user_123",
-  data: {
-    meals: [...],           // All meal records
-    dailyMacros: {...},     // All daily macro summaries
-    savedMeals: [...],      // All saved meal templates
-    preferences: {...}        // User preferences
-  }
-};
-```
+## Export Format
 
 ### CSV Format (Meals Only)
 **Purpose**: Data analysis and plotting
-**Contains**: Only meal data with extended metrics
+**Contains**: Only meal data with extended metrics and accurate timestamps
 **Importable**: No - for analysis only
+**Features**: 
+- Chronological sorting (oldest first)
+- Military time format (24-hour)
+- ISO date format (YYYY-MM-DD)
+- Raw timestamp column for debugging
+- Extended metrics (processed%, fiber, etc.)
 
 ```csv
 # Fuel App - Meals Export
-# Export Date: 1/15/2024
+# Export Date: 2024-10-21
 # Total Meals: 25
 
-ID,Name,Calories,Protein,Carbs,Fat,Date,Timestamp,Processed%,Fiber,UltraProcessed%,Caffeine,FreshProduce,ProcessedCalories,UltraProcessedCalories
+Name,Calories,Protein,Carbs,Fat,Date,Time,Timestamp,Processed%,Fiber,UltraProcessed%,Caffeine,FreshProduce,ProcessedCalories,UltraProcessedCalories
+Apple,95,0.5,25,0.3,2024-10-21,14:30:25,1729543800000,0,4.4,0,0,1,0,0
 ```
 
 ## API Reference
@@ -65,14 +53,13 @@ const backupData = await SimpleBackup.createBackup();
 **Throws**: Error if user not authenticated
 
 #### `exportToFile(format)`
-Exports backup to file in specified format.
+Exports data to CSV file.
 ```javascript
-const filePath = await SimpleBackup.exportToFile('json');
 const filePath = await SimpleBackup.exportToFile('csv');
 ```
 
 **Parameters**:
-- `format`: 'json' or 'csv'
+- `format`: 'csv' (only format supported)
 **Returns**: File path string
 **Throws**: Error if export fails
 
@@ -97,16 +84,6 @@ await SimpleBackup.shareBackup(filePath);
 **Returns**: Promise<boolean>
 **Throws**: Error if sharing not available
 
-#### `importFromFile(filePath)`
-Imports backup from JSON file.
-```javascript
-await SimpleBackup.importFromFile(filePath);
-```
-
-**Parameters**:
-- `filePath`: Path to JSON backup file
-**Returns**: Promise<boolean>
-**Throws**: Error if import fails
 
 #### `getBackupStats()`
 Gets statistics about current user data.
@@ -132,7 +109,6 @@ const BACKUP_DIR = FileSystem.documentDirectory + 'backups/';
 ```
 
 ### File Naming
-- **JSON**: `fuel_backup_${userId}_${timestamp}.json`
 - **CSV**: `fuel_backup_${userId}_${timestamp}.csv`
 
 ### File Management
@@ -206,28 +182,11 @@ try {
 
 ## Usage Examples
 
-### Creating a Backup
+### Exporting Data
 ```javascript
-// Create and export JSON backup
-const filePath = await SimpleBackup.exportToFile('json');
-await SimpleBackup.shareBackup(filePath);
-
-// Create and export CSV for analysis
+// Export CSV for analysis
 const csvPath = await SimpleBackup.exportToFile('csv');
 await SimpleBackup.shareBackup(csvPath);
-```
-
-### Restoring from Backup
-```javascript
-// Import JSON backup (requires file picker)
-const result = await DocumentPicker.getDocumentAsync({
-  type: ['application/json'],
-  copyToCacheDirectory: true,
-});
-
-if (!result.canceled) {
-  await SimpleBackup.importFromFile(result.assets[0].uri);
-}
 ```
 
 ### Getting Backup Statistics
@@ -239,18 +198,21 @@ console.log(`Saved meals: ${stats.savedMeals}`);
 
 ## UI Integration
 
-### Backup Screen Features
-- **Data Statistics**: Show current data counts
-- **Export Options**: JSON (complete) vs CSV (meals only)
-- **Import Functionality**: File picker for JSON backups
-- **Clear Data**: Option to wipe all data for testing
-- **Share Integration**: Direct sharing of backup files
+### Export Data Screen Features
+- **Data Statistics**: Show current data counts with meaningful metrics
+  - Meals Logged: Total number of meals
+  - Meal Templates: Saved meal templates
+  - Days Tracked: Unique days with logged meals
+  - Avg Meals/Day: Calculated consistency metric
+- **Single Export Option**: CSV export only
+- **Share Integration**: Direct sharing of CSV files
+- **Clean Interface**: Removed redundant titles and help text
 
 ### User Experience
-- Clear distinction between backup formats
-- Progress indicators for long operations
-- Confirmation dialogs for destructive actions
-- Error messages with actionable guidance
+- One-click CSV export
+- Progress indicators for export operations
+- Clear data insights in overview
+- Streamlined interface focused on analysis
 
 ## Future Enhancements
 

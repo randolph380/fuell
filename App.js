@@ -72,7 +72,7 @@ function AppNavigator() {
         <Stack.Screen 
           name="Backup" 
           component={SimpleBackupScreen}
-          options={{ title: 'Backup & Restore' }}
+          options={{ title: 'Export Data' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

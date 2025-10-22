@@ -144,51 +144,6 @@ export default function SimpleBackupScreen({ navigation }) {
       </View>
 
 
-      {/* Information Card */}
-      <View style={styles.infoCard}>
-        <View style={styles.cardHeader}>
-          <Ionicons name="information-circle-outline" size={20} color={Colors.textSecondary} />
-          <Text style={styles.cardTitle}>How It Works</Text>
-        </View>
-        
-        <View style={styles.infoContent}>
-          <View style={styles.infoItem}>
-            <View style={styles.infoIcon}>
-              <Ionicons name="document-text-outline" size={16} color={Colors.accent} />
-            </View>
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoTitle}>JSON Export</Text>
-              <Text style={styles.infoDescription}>
-                Complete backup with all data. Can be imported to restore everything.
-              </Text>
-            </View>
-          </View>
-          
-          <View style={styles.infoItem}>
-            <View style={styles.infoIcon}>
-              <Ionicons name="grid-outline" size={16} color={Colors.accent} />
-            </View>
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoTitle}>CSV Export</Text>
-              <Text style={styles.infoDescription}>
-                Meals data only for analysis and plotting in spreadsheet apps.
-              </Text>
-            </View>
-          </View>
-          
-          <View style={styles.infoItem}>
-            <View style={styles.infoIcon}>
-              <Ionicons name="share-outline" size={16} color={Colors.accent} />
-            </View>
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoTitle}>Sharing</Text>
-              <Text style={styles.infoDescription}>
-                Send backup files to yourself or transfer to another device.
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
     </ScrollView>
   );
 }

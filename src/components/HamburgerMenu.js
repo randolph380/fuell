@@ -108,7 +108,7 @@ export default function HamburgerMenu({ navigation }) {
   const menuItems = [
     {
       id: 'edit-targets',
-      label: 'Edit Targets',
+      label: 'Edit targets',
       icon: 'settings-outline',
       screen: 'EditTargets',
     },
@@ -126,7 +126,7 @@ export default function HamburgerMenu({ navigation }) {
     },
     {
       id: 'backup',
-      label: 'Backup & Restore',
+      label: 'Export data',
       icon: 'cloud-upload-outline',
       screen: 'Backup',
     },

@@ -119,7 +119,7 @@ class SimpleBackup {
     csvContent += '\n';
     
     // Add meals data only (for easier plotting and analysis)
-    csvContent += 'Name,Calories,Protein,Carbs,Fat,Date,Time,Processed%,Fiber,UltraProcessed%,Caffeine,FreshProduce,ProcessedCalories,UltraProcessedCalories\n';
+    csvContent += 'Name,Calories,Protein,Carbs,Fat,Date,Time,Timestamp,Processed%,Fiber,UltraProcessed%,Caffeine,FreshProduce,ProcessedCalories,UltraProcessedCalories\n';
     if (meals && Array.isArray(meals)) {
       // Sort meals by chronological time (oldest first) - now using local storage with accurate timestamps
       const sortedMeals = meals.sort((a, b) => {
@@ -133,21 +133,18 @@ class SimpleBackup {
         // Use timestamp for accurate date/time extraction - match meal log format exactly
         const mealDate = new Date(meal.timestamp);
         
-        // Date format: match HomeScreen date display (short format)
-        const date = mealDate.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        });
+        // Date format: ISO format without commas (CSV-safe)
+        const date = mealDate.toISOString().split('T')[0];
         
-        // Time format: match formatMealTime function (12-hour format)
+        // Time format: military time (24-hour format)
         const time = mealDate.toLocaleTimeString('en-US', { 
-          hour: 'numeric', 
+          hour: '2-digit', 
           minute: '2-digit',
-          hour12: true 
+          second: '2-digit',
+          hour12: false 
         });
         const extended = meal.extendedMetrics || {};
-        csvContent += `${meal.name || ''},${meal.calories || 0},${meal.protein || 0},${meal.carbs || 0},${meal.fat || 0},${date},${time},${extended.processedPercent || ''},${extended.fiber || ''},${extended.ultraProcessedPercent || ''},${extended.caffeine || ''},${extended.freshProduce || ''},${extended.processedCalories || ''},${extended.ultraProcessedCalories || ''}\n`;
+        csvContent += `${meal.name || ''},${meal.calories || 0},${meal.protein || 0},${meal.carbs || 0},${meal.fat || 0},${date},${time},${meal.timestamp || ''},${extended.processedPercent || ''},${extended.fiber || ''},${extended.ultraProcessedPercent || ''},${extended.caffeine || ''},${extended.freshProduce || ''},${extended.processedCalories || ''},${extended.ultraProcessedCalories || ''}\n`;
       });
     }
     

@@ -86,13 +86,6 @@ export default function SimpleBackupScreen({ navigation }) {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header Section */}
-      <View style={styles.headerSection}>
-        <Text style={styles.title}>Data Management</Text>
-        <Text style={styles.subtitle}>
-          Backup, restore, and manage your nutrition data
-        </Text>
-      </View>
 
       {/* Data Overview Card */}
       <View style={styles.overviewCard}>
@@ -123,7 +116,7 @@ export default function SimpleBackupScreen({ navigation }) {
 
       {/* Action Buttons */}
       <View style={styles.actionsSection}>
-        <Text style={styles.sectionTitle}>Backup & Export</Text>
+        <Text style={styles.sectionTitle}>Export Data</Text>
         
         <TouchableOpacity
           style={[styles.actionButton, styles.primaryButton]}

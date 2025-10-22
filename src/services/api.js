@@ -290,7 +290,6 @@ ${preparationContext}
 - NEVER mention NOVA classification in conversational text - only in JSON
 - Don't say "processed food", "NOVA 3", "ultra-processed", or any processing level in chat
 - **IMPORTANT:** The JSON section must remain complete and unchanged
-- **DEBUG:** Start your response with "🔧 PROMPT v2.5 ACTIVE" to confirm this version is being used
 
 **PROCESSED FOOD CLASSIFICATION:**
 Use the NOVA classification system to estimate processed food percentage. Ask yourself these questions:
@@ -668,7 +667,6 @@ RESPONSE LENGTH REQUIREMENTS:
 - NEVER mention NOVA classification in conversational text - only in JSON
 - Don't say "processed food", "NOVA 3", "ultra-processed", or any processing level in chat
 - **IMPORTANT:** The JSON section must remain complete and unchanged
-- **DEBUG:** Start your response with "🔧 PROMPT v2.5 ACTIVE" to confirm this version is being used
 
 PROCESSED FOOD (NOVA):
 - Update your NOVA classification if new information changes it

@@ -1,6 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import HybridStorageService from './hybridStorage';
 
 /**
@@ -25,9 +24,9 @@ class SimpleBackup {
         throw new Error('User not authenticated');
       }
 
-      // Get all user data
+      // Get all user data - use same data source as meal log for perfect consistency
       const [meals, dailyMacros, savedMeals, preferences] = await Promise.all([
-        HybridStorageService.getMeals(),
+        HybridStorageService.getMeals(), // Use same data source as meal log
         HybridStorageService.getAllDailyMacros(),
         HybridStorageService.getSavedMeals(),
         HybridStorageService.getUserPreferences()
@@ -120,12 +119,35 @@ class SimpleBackup {
     csvContent += '\n';
     
     // Add meals data only (for easier plotting and analysis)
-    csvContent += 'ID,Name,Calories,Protein,Carbs,Fat,Date,Timestamp,Processed%,Fiber,UltraProcessed%,Caffeine,FreshProduce,ProcessedCalories,UltraProcessedCalories\n';
+    csvContent += 'Name,Calories,Protein,Carbs,Fat,Date,Time,Processed%,Fiber,UltraProcessed%,Caffeine,FreshProduce,ProcessedCalories,UltraProcessedCalories\n';
     if (meals && Array.isArray(meals)) {
-      meals.forEach(meal => {
-        const date = new Date(meal.timestamp || meal.date).toISOString().split('T')[0];
+      // Sort meals by chronological time (oldest first) - now using local storage with accurate timestamps
+      const sortedMeals = meals.sort((a, b) => {
+        // Use timestamp for accurate chronological sorting
+        const timestampA = a.timestamp || 0;
+        const timestampB = b.timestamp || 0;
+        return timestampA - timestampB; // Oldest first
+      });
+      
+      sortedMeals.forEach(meal => {
+        // Use timestamp for accurate date/time extraction - match meal log format exactly
+        const mealDate = new Date(meal.timestamp);
+        
+        // Date format: match HomeScreen date display (short format)
+        const date = mealDate.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+        
+        // Time format: match formatMealTime function (12-hour format)
+        const time = mealDate.toLocaleTimeString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit',
+          hour12: true 
+        });
         const extended = meal.extendedMetrics || {};
-        csvContent += `${meal.id},${meal.name || ''},${meal.calories || 0},${meal.protein || 0},${meal.carbs || 0},${meal.fat || 0},${date},${meal.timestamp || ''},${extended.processedPercent || ''},${extended.fiber || ''},${extended.ultraProcessedPercent || ''},${extended.caffeine || ''},${extended.freshProduce || ''},${extended.processedCalories || ''},${extended.ultraProcessedCalories || ''}\n`;
+        csvContent += `${meal.name || ''},${meal.calories || 0},${meal.protein || 0},${meal.carbs || 0},${meal.fat || 0},${date},${time},${extended.processedPercent || ''},${extended.fiber || ''},${extended.ultraProcessedPercent || ''},${extended.caffeine || ''},${extended.freshProduce || ''},${extended.processedCalories || ''},${extended.ultraProcessedCalories || ''}\n`;
       });
     }
     

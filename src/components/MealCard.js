@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Swipeable } from 'react-native-gesture-handler';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
 
 const MealCard = ({ meal, onPress, onDelete, onSave, onEdit }) => {
@@ -19,32 +18,6 @@ const MealCard = ({ meal, onPress, onDelete, onSave, onEdit }) => {
     return num ? num.toLocaleString() : '0';
   };
 
-  const renderRightActions = (progress, dragX) => {
-    const trans = dragX.interpolate({
-      inputRange: [-100, 0],
-      outputRange: [0, 100],
-      extrapolate: 'clamp',
-    });
-
-    return (
-      <TouchableOpacity
-        style={styles.deleteAction}
-        onPress={() => onDelete && onDelete(meal)}
-      >
-        <Animated.View
-          style={[
-            styles.deleteActionContent,
-            {
-              transform: [{ translateX: trans }],
-            },
-          ]}
-        >
-          <Ionicons name="trash-outline" size={24} color={Colors.textInverse} />
-          <Text style={styles.deleteActionText}>Delete</Text>
-        </Animated.View>
-      </TouchableOpacity>
-    );
-  };
 
   const cardContent = (
     <TouchableOpacity style={styles.card} onPress={handlePress} activeOpacity={0.7}>
@@ -154,19 +127,6 @@ const MealCard = ({ meal, onPress, onDelete, onSave, onEdit }) => {
       )}
     </TouchableOpacity>
   );
-
-  // Only allow swipe-to-delete if onDelete is provided
-  if (onDelete) {
-    return (
-      <Swipeable
-        renderRightActions={renderRightActions}
-        overshootRight={false}
-        friction={2}
-      >
-        {cardContent}
-      </Swipeable>
-    );
-  }
 
   return cardContent;
 };
@@ -304,27 +264,6 @@ const styles = StyleSheet.create({
   },
   deleteButtonText: {
     color: Colors.error,
-  },
-  deleteAction: {
-    backgroundColor: Colors.error,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    borderRadius: BorderRadius.base,
-    marginLeft: Spacing.sm,
-    overflow: 'hidden',
-  },
-  deleteActionContent: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.xl,
-    height: '100%',
-  },
-  deleteActionText: {
-    color: Colors.textInverse,
-    fontSize: Typography.xs,
-    fontWeight: '600',
-    marginTop: Spacing.xs,
-    letterSpacing: Typography.letterSpacingNormal,
   },
 });
 

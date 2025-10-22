@@ -108,6 +108,25 @@ class HybridStorageService {
   }
 
   /**
+   * Get meals from local storage only (for backup/export with accurate timestamps)
+   */
+  static async getMealsFromLocal() {
+    try {
+      const localMeals = await StorageService.getMeals();
+      console.log('✅ Meals loaded from local storage for backup:', localMeals.map(m => ({ 
+        id: m.id, 
+        name: m.name, 
+        timestamp: m.timestamp,
+        date: m.date 
+      })));
+      return localMeals;
+    } catch (error) {
+      console.error('Error getting meals from local storage:', error);
+      return [];
+    }
+  }
+
+  /**
    * Get meals by date with hybrid storage
    */
   static async getMealsByDate(date) {

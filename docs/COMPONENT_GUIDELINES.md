@@ -360,9 +360,12 @@ const styles = StyleSheet.create({
 - Avoid unnecessary re-renders with proper state management
 
 ### Memory Management
-- Clean up subscriptions and timers
-- Avoid memory leaks in useEffect
-- Proper component unmounting
+- **CRITICAL**: Clean up subscriptions and timers
+- **CRITICAL**: Avoid memory leaks in useEffect
+- **CRITICAL**: Proper component unmounting
+- **Image processing**: Always clear image URIs and base64 data after use
+- **State cleanup**: Clear all state variables after completing operations
+- **Memory monitoring**: Use Xcode Memory Report and Instruments to track memory usage
 
 ## Testing Guidelines
 
@@ -377,6 +380,78 @@ const styles = StyleSheet.create({
 - Verify data flow
 - Check error handling
 - Validate user experience
+
+## Memory Optimization Patterns
+
+### Image Processing Cleanup
+```javascript
+// ✅ CORRECT: Clear image data after processing
+const processImage = async (imageUri) => {
+  try {
+    const result = await processImageData(imageUri);
+    // Clear image references immediately after use
+    setImageUri(null);
+    setAdditionalImages([]);
+    return result;
+  } catch (error) {
+    // Always cleanup on error too
+    setImageUri(null);
+    setAdditionalImages([]);
+    throw error;
+  }
+};
+```
+
+### State Cleanup After Operations
+```javascript
+// ✅ CORRECT: Clear all related state after completing operations
+const saveMeal = async () => {
+  try {
+    await HybridStorageService.saveMeal(meal);
+    
+    // CRITICAL: Clear all state after successful save
+    setImageUri(null);
+    setAdditionalImages([]);
+    setFoodDescription('');
+    setConversation([]);
+    setCurrentMacros(null);
+    setCurrentExtendedMetrics(null);
+    
+    navigation.navigate('Home');
+  } catch (error) {
+    console.error('Error saving meal:', error);
+  }
+};
+```
+
+### Component Unmount Cleanup
+```javascript
+// ✅ CORRECT: Cleanup on component unmount
+useEffect(() => {
+  return () => {
+    // Clear all state to prevent memory leaks
+    setImageUri(null);
+    setAdditionalImages([]);
+    setConversation([]);
+    setCurrentMacros(null);
+    setCurrentExtendedMetrics(null);
+  };
+}, []);
+```
+
+### Memory Monitoring
+```javascript
+// ✅ CORRECT: Add memory monitoring in development
+useEffect(() => {
+  if (__DEV__) {
+    console.log('Memory usage after operation:', {
+      imageUri: imageUri ? 'present' : 'null',
+      additionalImages: additionalImages.length,
+      conversationLength: conversation.length
+    });
+  }
+}, [imageUri, additionalImages, conversation]);
+```
 
 ## Common Anti-Patterns to Avoid
 
@@ -394,3 +469,9 @@ const styles = StyleSheet.create({
 - ❌ Don't create unnecessary re-renders
 - ❌ Don't ignore memory leaks
 - ❌ Don't use inefficient list rendering
+
+### Memory Management
+- ❌ Don't keep image URIs in state after processing
+- ❌ Don't accumulate conversation data without limits
+- ❌ Don't forget to cleanup on component unmount
+- ❌ Don't ignore memory warnings in development

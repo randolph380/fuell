@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as DocumentPicker from 'expo-document-picker';
 import React, { useEffect, useState } from 'react';
 import {
     Alert,
@@ -10,7 +9,6 @@ import {
     View
 } from 'react-native';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
-import HybridStorageService from '../services/hybridStorage';
 import SimpleBackup from '../services/simpleBackup';
 
 export default function SimpleBackupScreen({ navigation }) {
@@ -83,152 +81,8 @@ export default function SimpleBackupScreen({ navigation }) {
     }
   };
 
-  const handleImportBackup = async () => {
-    setIsLoading(true);
-    try {
-      // Open document picker to select backup file (JSON or CSV)
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/json', 'text/csv', 'application/csv'],
-        copyToCacheDirectory: true,
-      });
 
-      if (result.canceled) {
-        setIsLoading(false);
-        return;
-      }
 
-      if (!result.assets || result.assets.length === 0) {
-        throw new Error('No file selected');
-      }
-
-      const fileUri = result.assets[0].uri;
-      
-      // Confirm import action
-      Alert.alert(
-        '⚠️ Import Backup',
-        'This will replace ALL your current data with the backup data. This action cannot be undone.\n\nAre you sure you want to continue?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Import', 
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                await SimpleBackup.importFromFile(fileUri);
-                Alert.alert(
-                  'Import Successful',
-                  'Your backup has been imported successfully! All your data has been restored.',
-                  [
-                    { 
-                      text: 'OK', 
-                      onPress: () => {
-                        loadStats(); // Refresh stats to show imported data
-                      }
-                    }
-                  ]
-                );
-              } catch (error) {
-                console.error('Import error:', error);
-                Alert.alert('Import Failed', `Failed to import backup: ${error.message}`);
-              } finally {
-                setIsLoading(false);
-              }
-            }
-          }
-        ]
-      );
-    } catch (error) {
-      console.error('File picker error:', error);
-      Alert.alert('Error', 'Failed to select backup file. Please try again.');
-      setIsLoading(false);
-    }
-  };
-
-  const handleClearAllData = () => {
-    Alert.alert(
-      '⚠️ Clear All Data',
-      'This will permanently delete ALL your data:\n\n• All meals and meal history\n• All saved meal templates\n• All daily macro records\n• All user preferences\n\nThis action cannot be undone. Are you sure you want to continue?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Clear All Data', 
-          style: 'destructive',
-          onPress: async () => {
-            setIsLoading(true);
-            try {
-              await HybridStorageService.clearAllData();
-              Alert.alert(
-                'Data Cleared',
-                'All your data has been permanently deleted. You can now test importing a backup.',
-                [
-                  { 
-                    text: 'OK', 
-                    onPress: () => {
-                      loadStats(); // Refresh stats to show 0
-                    }
-                  }
-                ]
-              );
-            } catch (error) {
-              console.error('Clear data error:', error);
-              Alert.alert('Error', 'Failed to clear data. Please try again.');
-            } finally {
-              setIsLoading(false);
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const handleResetDatabase = () => {
-    Alert.alert(
-      '🗄️ Reset Server Database',
-      'This will clear ALL data from the server database:\n\n• All user accounts\n• All meals from all users\n• All saved meals from all users\n• All targets and preferences\n\nThis affects ALL users, not just you. Are you sure?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Reset Database', 
-          style: 'destructive',
-          onPress: async () => {
-            setIsLoading(true);
-            try {
-              const response = await fetch('https://fuell-app.onrender.com/api/database/reset', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-              });
-              
-              const result = await response.json();
-              
-              if (response.ok) {
-                Alert.alert(
-                  'Database Reset',
-                  `Server database has been reset:\n\n• Cleared ${result.cleared_meals} meals\n• Cleared ${result.cleared_users} users\n\nAll data is now fresh!`,
-                  [
-                    { 
-                      text: 'OK', 
-                      onPress: () => {
-                        loadStats(); // Refresh stats
-                      }
-                    }
-                  ]
-                );
-              } else {
-                Alert.alert('Reset Failed', result.message || 'Failed to reset database');
-              }
-            } catch (error) {
-              console.error('Database reset error:', error);
-              Alert.alert('Error', 'Failed to reset database. Please try again.');
-            } finally {
-              setIsLoading(false);
-            }
-          }
-        }
-      ]
-    );
-  };
 
   return (
     <ScrollView style={styles.container}>
@@ -294,76 +148,8 @@ export default function SimpleBackupScreen({ navigation }) {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.actionButton, styles.secondaryButton]}
-          onPress={handleImportBackup}
-          disabled={isLoading}
-        >
-          <View style={styles.buttonContent}>
-            <Ionicons name="cloud-download-outline" size={20} color={Colors.accent} />
-            <View style={styles.buttonTextContainer}>
-              <Text style={[styles.buttonTitle, styles.secondaryButtonTitle]}>
-                Import Backup
-              </Text>
-              <Text style={[styles.buttonSubtitle, styles.secondaryButtonSubtitle]}>
-                Restore from JSON backup file
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={Colors.accent} />
-          </View>
-        </TouchableOpacity>
       </View>
 
-      {/* Danger Zone */}
-      <View style={styles.dangerSection}>
-        <Text style={styles.sectionTitle}>Danger Zone</Text>
-        
-        <TouchableOpacity
-          style={[styles.actionButton, styles.dangerButton]}
-          onPress={handleClearAllData}
-          disabled={isLoading}
-        >
-          <View style={styles.buttonContent}>
-            <Ionicons 
-              name={isLoading ? "hourglass-outline" : "trash-outline"} 
-              size={20} 
-              color={Colors.textInverse} 
-            />
-            <View style={styles.buttonTextContainer}>
-              <Text style={styles.buttonTitle}>
-                {isLoading ? 'Clearing Data...' : 'Clear All Data'}
-              </Text>
-              <Text style={styles.buttonSubtitle}>
-                Permanently delete all your data
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={Colors.textInverse} />
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionButton, styles.dangerButton]}
-          onPress={handleResetDatabase}
-          disabled={isLoading}
-        >
-          <View style={styles.buttonContent}>
-            <Ionicons 
-              name={isLoading ? "hourglass-outline" : "server-outline"} 
-              size={20} 
-              color={Colors.textInverse} 
-            />
-            <View style={styles.buttonTextContainer}>
-              <Text style={styles.buttonTitle}>
-                {isLoading ? 'Resetting Database...' : 'Reset Server Database'}
-              </Text>
-              <Text style={styles.buttonSubtitle}>
-                Clear ALL data from server (affects all users)
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={Colors.textInverse} />
-          </View>
-        </TouchableOpacity>
-      </View>
 
       {/* Information Card */}
       <View style={styles.infoCard}>

@@ -125,12 +125,6 @@ export default function HamburgerMenu({ navigation }) {
       screen: 'SavedMeals',
     },
     {
-      id: 'server-test',
-      label: 'Server Test',
-      icon: 'cloud-outline',
-      screen: 'ServerTest',
-    },
-    {
       id: 'backup',
       label: 'Backup & Restore',
       icon: 'cloud-upload-outline',

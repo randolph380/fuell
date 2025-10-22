@@ -142,7 +142,9 @@ class ServerStorageService {
         protein: parseFloat(serverMeal.protein) || 0,
         carbs: parseFloat(serverMeal.carbs) || 0,
         fat: parseFloat(serverMeal.fat) || 0,
-        timestamp: new Date(serverMeal.created_at).getTime(),
+        // PROBLEM: Server only stores date string, loses original timestamp
+        // We need to reconstruct timestamp from date + some time logic
+        timestamp: new Date(serverMeal.date).getTime(),
         date: serverMeal.date,
         extendedMetrics: {
           processedCalories: parseFloat(serverMeal.processed_calories) || 0,

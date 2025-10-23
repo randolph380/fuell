@@ -318,7 +318,7 @@ const HomeScreen = ({ navigation, route }) => {
           </Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.savedMealsButton} onPress={() => navigation.navigate('SavedMeals')}>
+        <TouchableOpacity style={styles.savedMealsButton} onPress={() => navigation.navigate('SavedMeals', { targetDate: currentDate.toISOString() })}>
           <Ionicons name="bookmark" size={20} color={Colors.primary} />
           <Text style={styles.savedMealsText}>Saved Meals</Text>
         </TouchableOpacity>

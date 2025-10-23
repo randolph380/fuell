@@ -16,8 +16,11 @@ import {
 import MealCard from '../components/MealCard';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
 import HybridStorageService from '../services/hybridStorage';
+import DateHelpers from '../utils/dateHelpers';
 
-const SavedMealsScreen = ({ navigation }) => {
+const SavedMealsScreen = ({ navigation, route }) => {
+  // Extract targetDate from route params (defaults to today)
+  const targetDate = route.params?.targetDate ? new Date(route.params.targetDate) : new Date();
   const [savedMeals, setSavedMeals] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [expandedMealId, setExpandedMealId] = useState(null);
@@ -106,6 +109,9 @@ const SavedMealsScreen = ({ navigation }) => {
         extendedMetrics: savedMeal.extendedMetrics
       });
       
+      // Use context-aware timestamp based on target date
+      const mealDate = DateHelpers.getMealTimestamp(targetDate);
+      
       const meal = {
         id: Date.now().toString(),
         name: savedMeal.name,
@@ -113,8 +119,8 @@ const SavedMealsScreen = ({ navigation }) => {
         protein: savedMeal.protein,
         carbs: savedMeal.carbs,
         fat: savedMeal.fat,
-        timestamp: new Date().getTime(),
-        date: new Date().toDateString(),
+        timestamp: mealDate.getTime(),
+        date: mealDate.toDateString(),
         extendedMetrics: savedMeal.extendedMetrics || null
       };
 
@@ -128,8 +134,8 @@ const SavedMealsScreen = ({ navigation }) => {
       Alert.alert('Success', 'Meal logged successfully! 🎉');
       setExpandedMealId(null); // Collapse after logging
       
-      // Navigate back to Home screen after logging
-      navigation.navigate('Home');
+      // Navigate back to Home screen after logging with target date
+      navigation.navigate('Home', { targetDate: targetDate.toISOString() });
     } catch (error) {
       console.error('Error logging saved meal:', error);
       Alert.alert('Error', 'Failed to log meal');

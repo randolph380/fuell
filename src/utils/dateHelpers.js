@@ -230,6 +230,32 @@ class DateHelpers {
     const daysSinceTarget = (currentDay - dayOfWeek + 7) % 7;
     return this.subtractDays(dateObj, daysSinceTarget);
   }
+
+  // Get appropriate timestamp for meal based on target date
+  static getMealTimestamp(targetDate) {
+    const now = new Date();
+    const target = new Date(targetDate);
+    const today = new Date();
+    
+    // Normalize dates to midnight for comparison (ignore time)
+    today.setHours(0, 0, 0, 0);
+    target.setHours(0, 0, 0, 0);
+    
+    const mealDate = new Date(targetDate);
+    
+    if (target < today) {
+      // Past day: 11:59 PM (end of that day)
+      mealDate.setHours(23, 59, 59, 999);
+    } else if (target > today) {
+      // Future day: 12:00 AM (start of that day for planning)
+      mealDate.setHours(0, 0, 0, 0);
+    } else {
+      // Today: current time (actual logging time)
+      mealDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+    }
+    
+    return mealDate;
+  }
 }
 
 export default DateHelpers;

@@ -20,6 +20,7 @@ import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants
 import ClaudeAPI from '../services/api';
 import HybridStorageService from '../services/hybridStorage';
 import { getDefaultExtendedMetrics } from '../utils/extendedMetrics';
+import DateHelpers from '../utils/dateHelpers';
 
 const CameraScreen = ({ navigation, route }) => {
   const [imageUri, setImageUri] = useState(null);
@@ -558,12 +559,7 @@ const CameraScreen = ({ navigation, route }) => {
       });
 
       // Create meal object
-      const now = new Date();
-      const mealDate = new Date(targetDate);
-      mealDate.setHours(now.getHours());
-      mealDate.setMinutes(now.getMinutes());
-      mealDate.setSeconds(now.getSeconds());
-      mealDate.setMilliseconds(now.getMilliseconds());
+      const mealDate = DateHelpers.getMealTimestamp(targetDate);
       
       const meal = {
         id: Date.now().toString(),
@@ -611,16 +607,8 @@ const CameraScreen = ({ navigation, route }) => {
       let mealName = mealTitle || 'Meal';
       console.log('DEBUG - Using meal title for logging:', mealName);
 
-      // Use the current time for the timestamp, but keep the date from targetDate
-      // This ensures the meal logs with the correct time NOW, but on the selected date
-      const now = new Date();
-      const mealDate = new Date(targetDate);
-      
-      // Set the time to NOW but keep the date from targetDate
-      mealDate.setHours(now.getHours());
-      mealDate.setMinutes(now.getMinutes());
-      mealDate.setSeconds(now.getSeconds());
-      mealDate.setMilliseconds(now.getMilliseconds());
+      // Use context-aware timestamp based on target date
+      const mealDate = DateHelpers.getMealTimestamp(targetDate);
       
       const meal = {
         id: Date.now().toString(),

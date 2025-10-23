@@ -127,6 +127,9 @@ const SavedMealsScreen = ({ navigation }) => {
       await HybridStorageService.saveMeal(meal);
       Alert.alert('Success', 'Meal logged successfully! 🎉');
       setExpandedMealId(null); // Collapse after logging
+      
+      // Navigate back to Home screen after logging
+      navigation.navigate('Home');
     } catch (error) {
       console.error('Error logging saved meal:', error);
       Alert.alert('Error', 'Failed to log meal');

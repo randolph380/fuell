@@ -1,5 +1,19 @@
 # Changes Made - Fuel V1 Production Polish
 
+## Latest Bug Fix: Saved Meals Navigation Issue
+
+### **Problem Fixed**
+- After logging a saved meal, app showed yesterday's data when returning to Home screen
+- Required manual forward/back/forward navigation to see correct date
+
+### **Solution**
+- Added `navigation.navigate('Home')` to `logSavedMeal` function
+- Ensures HomeScreen refreshes and displays correct date data
+- Matches behavior of CameraScreen's logMeal function
+
+### **Files Modified**
+- `src/screens/SavedMealsScreen.js` - Added navigation after logging saved meals
+
 ## Latest Update: Major Prompt Engineering Improvements (Post-V1)
 
 ### **Enhanced AI Accuracy System**

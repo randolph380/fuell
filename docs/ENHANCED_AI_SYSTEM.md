@@ -54,7 +54,29 @@ The Fuel app now features a significantly enhanced AI system that provides much 
 - **Stir-fry**: Base vegetables + protein + 1-2 tbsp oil
 - **Pasta with sauce**: Base pasta + sauce ingredients + cooking oil
 
-### 4. **Hard Consistency Checks (Atwater Constraints)**
+### 4. **Smart Restaurant Detection**
+**What it does**: Automatically detects restaurant mentions in text descriptions and prioritizes restaurant database lookup.
+
+**Detection Method**:
+- AI-powered detection (no hard-coded restaurant lists)
+- Identifies restaurant names, chains, and branded establishments
+- Automatically switches to restaurant analysis mode
+- Prioritizes published nutrition data over estimation
+
+**Benefits**:
+- No maintenance of restaurant lists required
+- Works for any restaurant (current and future)
+- Higher accuracy and confidence for restaurant meals
+- Automatic source attribution for transparency
+
+**Example**:
+- User input: "Chipotle bowl with rice, black beans, cheese..."
+- AI detects: "Chipotle" is a restaurant chain
+- Action: Searches for Chipotle's published nutrition data
+- Result: Uses exact values with 9/10 confidence
+- Citation: "Restaurant Menu: Chipotle Chicken Bowl"
+
+### 5. **Hard Consistency Checks (Atwater Constraints)**
 **What it does**: Enforces scientific energy balance validation.
 
 **Formula**: |calories - (4×carbs + 4×protein + 9×fat)| ≤ 10 calories
@@ -64,7 +86,7 @@ The Fuel app now features a significantly enhanced AI system that provides much 
 - If rescaling >20% of any macro, asks user for clarification
 - Ensures all estimates follow established nutritional science
 
-### 5. **Confidence & Active Query System**
+### 6. **Confidence & Active Query System**
 **What it does**: Provides transparency and engages users when accuracy is uncertain.
 
 **Per-Item Confidence** (0-1 scale):

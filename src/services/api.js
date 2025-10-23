@@ -481,6 +481,8 @@ The user has provided text alongside the images. This text may contain valuable 
 - Cooking methods or preparation details - important for calorie calculations
 - Additional context about ingredients or portions
 
+**RESTAURANT DETECTION:** Does this description mention a restaurant, chain, or branded food establishment? If YES, prioritize restaurant database lookup with published nutrition data (high confidence 0.9+). If NO, proceed with standard analysis.
+
 Analyze the images AND incorporate the user's text information into your estimate. If the user provides a specific weight, use it for your calculations rather than trying to visually estimate.
 
 ${initialPrompt}`;
@@ -497,7 +499,15 @@ ${initialPrompt}`;
         }
       } else {
         // TEXT ONLY - no image
-        textContent = `${initialPrompt}\n\n⚠️ NO IMAGES PROVIDED - User text description only: "${foodDescription}"\n\nIMPORTANT: Respond as if analyzing a text description. Do NOT use visual language like "appears", "visible", "looks like", "seems to be". Use definitive language: "This is...", "This contains...", "Based on this description..."`;
+        textContent = `${initialPrompt}
+
+⚠️ NO IMAGES PROVIDED - User text description only: "${foodDescription}"
+
+**RESTAURANT DETECTION:** Does this description mention a restaurant, chain, or branded food establishment (e.g., Chipotle, McDonald's, Subway, etc.)? 
+- If YES: Prioritize searching for this restaurant's published nutrition data. Use exact published values with high confidence (0.9+). Cite as "Restaurant Menu: [Restaurant Name] [Dish Name]".
+- If NO: Proceed with standard food database matching (USDA FDC, Open Food Facts).
+
+IMPORTANT: Respond as if analyzing a text description. Do NOT use visual language like "appears", "visible", "looks like", "seems to be". Use definitive language: "This is...", "This contains...", "Based on this description..."`;
       }
       
       messageContent.push({

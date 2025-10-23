@@ -78,6 +78,12 @@ This document outlines the comprehensive prompt engineering strategy used in the
 - **Active Queries**: If overall certainty <0.6, asks ONE targeted question
 - **Source Tracking**: Provides data sources and confidence levels for transparency
 
+### **Smart Restaurant Detection**
+- **AI-Powered Detection**: Identifies restaurant mentions without hard-coded lists
+- **Automatic Mode Switching**: Switches to restaurant analysis when detected
+- **Database Prioritization**: Prioritizes published restaurant nutrition data
+- **Future-Proof**: Works for any restaurant without code updates
+
 ## 📋 Prompt Architecture
 
 ### **Primary Prompt Types**

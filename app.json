@@ -11,6 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fuell.app",
+      "displayName": "Nutre",
       "infoPlist": {
         "NSCameraUsageDescription": "Nutre needs camera access to photograph your meals for macro analysis.",
         "NSPhotoLibraryUsageDescription": "Nutre needs photo library access to select food images for macro analysis."

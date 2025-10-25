@@ -74,6 +74,14 @@ export default function HomeScreen() {
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
       </ThemedView>
+      <ThemedView style={styles.stepContainer}>
+        <Link href="/privacy-policy">
+          <ThemedText type="subtitle">Privacy Policy</ThemedText>
+        </Link>
+        <ThemedText>
+          View our privacy policy to understand how we handle your data.
+        </ThemedText>
+      </ThemedView>
     </ParallaxScrollView>
   );
 }

@@ -1141,10 +1141,10 @@ const CameraScreen = ({ navigation, route }) => {
                     <TextInput
                       style={styles.macroEditorInput}
                       value={(editedMacros?.calories ?? currentMacros.calories).toString()}
-                      onChangeText={(text) => setEditedMacros({
-                        ...editedMacros,
+                      onChangeText={(text) => setEditedMacros(prev => ({
+                        ...(prev || {}),
                         calories: parseInt(text) || 0
-                      })}
+                      }))}
                       keyboardType="numeric"
                       selectTextOnFocus
                       returnKeyType="done"
@@ -1158,10 +1158,10 @@ const CameraScreen = ({ navigation, route }) => {
                     <TextInput
                       style={styles.macroEditorInput}
                       value={(editedMacros?.protein ?? currentMacros.protein).toString()}
-                      onChangeText={(text) => setEditedMacros({
-                        ...editedMacros,
+                      onChangeText={(text) => setEditedMacros(prev => ({
+                        ...(prev || {}),
                         protein: parseInt(text) || 0
-                      })}
+                      }))}
                       keyboardType="numeric"
                       selectTextOnFocus
                       returnKeyType="done"
@@ -1175,10 +1175,10 @@ const CameraScreen = ({ navigation, route }) => {
                     <TextInput
                       style={styles.macroEditorInput}
                       value={(editedMacros?.carbs ?? currentMacros.carbs).toString()}
-                      onChangeText={(text) => setEditedMacros({
-                        ...editedMacros,
+                      onChangeText={(text) => setEditedMacros(prev => ({
+                        ...(prev || {}),
                         carbs: parseInt(text) || 0
-                      })}
+                      }))}
                       keyboardType="numeric"
                       selectTextOnFocus
                       returnKeyType="done"
@@ -1192,10 +1192,10 @@ const CameraScreen = ({ navigation, route }) => {
                     <TextInput
                       style={styles.macroEditorInput}
                       value={(editedMacros?.fat ?? currentMacros.fat).toString()}
-                      onChangeText={(text) => setEditedMacros({
-                        ...editedMacros,
+                      onChangeText={(text) => setEditedMacros(prev => ({
+                        ...(prev || {}),
                         fat: parseInt(text) || 0
-                      })}
+                      }))}
                       keyboardType="numeric"
                       selectTextOnFocus
                       returnKeyType="done"
@@ -1216,10 +1216,10 @@ const CameraScreen = ({ navigation, route }) => {
                         <TextInput
                           style={styles.macroEditorInput}
                           value={(editedExtendedMetrics?.fiber ?? currentExtendedMetrics.fiber).toString()}
-                          onChangeText={(text) => setEditedExtendedMetrics({
-                            ...editedExtendedMetrics,
+                          onChangeText={(text) => setEditedExtendedMetrics(prev => ({
+                            ...(prev || {}),
                             fiber: parseFloat(text) || 0
-                          })}
+                          }))}
                           keyboardType="numeric"
                           selectTextOnFocus
                           returnKeyType="done"
@@ -1235,10 +1235,10 @@ const CameraScreen = ({ navigation, route }) => {
                         <TextInput
                           style={styles.macroEditorInput}
                           value={(editedExtendedMetrics?.caffeine ?? currentExtendedMetrics.caffeine).toString()}
-                          onChangeText={(text) => setEditedExtendedMetrics({
-                            ...editedExtendedMetrics,
+                          onChangeText={(text) => setEditedExtendedMetrics(prev => ({
+                            ...(prev || {}),
                             caffeine: parseFloat(text) || 0
-                          })}
+                          }))}
                           keyboardType="numeric"
                           selectTextOnFocus
                           returnKeyType="done"
@@ -1254,10 +1254,10 @@ const CameraScreen = ({ navigation, route }) => {
                         <TextInput
                           style={styles.macroEditorInput}
                           value={(editedExtendedMetrics?.freshProduce ?? currentExtendedMetrics.freshProduce).toString()}
-                          onChangeText={(text) => setEditedExtendedMetrics({
-                            ...editedExtendedMetrics,
+                          onChangeText={(text) => setEditedExtendedMetrics(prev => ({
+                            ...(prev || {}),
                             freshProduce: parseFloat(text) || 0
-                          })}
+                          }))}
                           keyboardType="numeric"
                           selectTextOnFocus
                           returnKeyType="done"
@@ -1273,10 +1273,10 @@ const CameraScreen = ({ navigation, route }) => {
                         <TextInput
                           style={styles.macroEditorInput}
                           value={(editedExtendedMetrics?.processedPercent ?? currentExtendedMetrics.processedPercent).toString()}
-                          onChangeText={(text) => setEditedExtendedMetrics({
-                            ...editedExtendedMetrics,
+                          onChangeText={(text) => setEditedExtendedMetrics(prev => ({
+                            ...(prev || {}),
                             processedPercent: parseFloat(text) || 0
-                          })}
+                          }))}
                           keyboardType="numeric"
                           selectTextOnFocus
                           returnKeyType="done"
@@ -1292,10 +1292,10 @@ const CameraScreen = ({ navigation, route }) => {
                         <TextInput
                           style={styles.macroEditorInput}
                           value={(editedExtendedMetrics?.ultraProcessedPercent ?? currentExtendedMetrics.ultraProcessedPercent).toString()}
-                          onChangeText={(text) => setEditedExtendedMetrics({
-                            ...editedExtendedMetrics,
+                          onChangeText={(text) => setEditedExtendedMetrics(prev => ({
+                            ...(prev || {}),
                             ultraProcessedPercent: parseFloat(text) || 0
-                          })}
+                          }))}
                           keyboardType="numeric"
                           selectTextOnFocus
                           returnKeyType="done"

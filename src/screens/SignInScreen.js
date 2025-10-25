@@ -137,7 +137,7 @@ const SignInScreen = () => {
         {/* Header */}
         <View style={styles.header}>
           <Ionicons name="flash" size={72} color="#ffffff" style={styles.logo} />
-          <Text style={styles.title}>Fuell</Text>
+          <Text style={styles.title}>Nutre</Text>
           <Text style={styles.subtitle}>Intelligent Nutrition Tracking</Text>
         </View>
 

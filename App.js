@@ -39,11 +39,11 @@ function AppNavigator() {
           name="Home" 
           component={HomeScreen}
           options={{ 
-            title: 'Fuell',
+            title: 'Nutre',
             headerLeft: null, // Remove back button
             headerTitle: () => (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={{ color: Colors.textInverse, fontSize: 17, fontWeight: '600', letterSpacing: -0.4 }}>Fuell</Text>
+                <Text style={{ color: Colors.textInverse, fontSize: 17, fontWeight: '600', letterSpacing: -0.4 }}>Nutre</Text>
                 <Ionicons name="flash" size={16} color={Colors.textInverse} style={{ marginLeft: 6 }} />
               </View>
             )

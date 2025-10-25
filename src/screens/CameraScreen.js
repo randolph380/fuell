@@ -1087,7 +1087,11 @@ const CameraScreen = ({ navigation, route }) => {
 
             {/* Action Buttons */}
             <View style={styles.actionButtons}>
-              <TouchableOpacity style={styles.editButton} onPress={() => setShowMacroEditor(true)}>
+              <TouchableOpacity style={styles.editButton} onPress={() => {
+                setEditedMacros(currentMacros);  // Initialize with current values
+                setEditedExtendedMetrics(currentExtendedMetrics);  // Initialize with current values
+                setShowMacroEditor(true);
+              }}>
                 <Text style={styles.editButtonText}>Edit macros</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.logButton} onPress={logMeal}>
@@ -1326,8 +1330,8 @@ const CameraScreen = ({ navigation, route }) => {
                     onPress={() => {
                       Keyboard.dismiss();
                       setShowMacroEditor(false);
-                      setEditedMacros(null);
-                      setEditedExtendedMetrics(null);
+                      setEditedMacros(null);  // Reset to null for next time
+                      setEditedExtendedMetrics(null);  // Reset to null for next time
                       setPortionSize('1');
                     }}
                   >
@@ -1362,8 +1366,8 @@ const CameraScreen = ({ navigation, route }) => {
                       }
                       
                       setShowMacroEditor(false);
-                      setEditedMacros(null);
-                      setEditedExtendedMetrics(null);
+                      setEditedMacros(null);  // Reset to null for next time
+                      setEditedExtendedMetrics(null);  // Reset to null for next time
                       setPortionSize('1');
                     }}
                   >

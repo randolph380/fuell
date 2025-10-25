@@ -1,7 +1,6 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Alert,
     Keyboard,
@@ -19,10 +18,10 @@ import DateNavigator from '../components/DateNavigator';
 import MacroDisplay from '../components/MacroDisplay';
 import MealCard from '../components/MealCard';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '../constants/colors';
+import { useDateChangeDetection } from '../hooks/useDateChangeDetection';
 import HybridStorageService from '../services/hybridStorage';
 import DateHelpers from '../utils/dateHelpers';
 import { calculateAggregatedProcessed, calculateAggregatedUltraProcessed } from '../utils/extendedMetrics';
-import { useDateChangeDetection } from '../hooks/useDateChangeDetection';
 
 const HomeScreen = ({ navigation, route }) => {
   const { signOut } = useAuth();
@@ -47,17 +46,33 @@ const HomeScreen = ({ navigation, route }) => {
   const [editingMealId, setEditingMealId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
   const [portionSize, setPortionSize] = useState('1');
+  const [debugLogs, setDebugLogs] = useState([]);
+
+  const addDebugLog = (message, data = null) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = `[${timestamp}] ${message}`;
+    console.log(logEntry, data || '');
+    setDebugLogs(prev => [...prev.slice(-10), logEntry]); // Keep last 10 logs
+  };
 
   // Automatically detect and handle date changes
   useDateChangeDetection((newToday) => {
     // Only auto-update if there's no specific target date from route params
     if (!route.params?.targetDate) {
-      console.log('DEBUG - Date change detected, updating to today:', newToday.toDateString());
+      addDebugLog('🕐 Date change detected, updating to today', {
+        newToday: newToday.toDateString(),
+        hasRouteParams: !!route.params?.targetDate
+      });
       setCurrentDate(newToday);
     }
   });
 
   useEffect(() => {
+    addDebugLog('📊 CurrentDate changed, loading meals', {
+      currentDate: currentDate.toDateString(),
+      userId: user?.id
+    });
+    
     // Wait for user to be loaded before loading meals
     if (user?.id) {
       loadMeals();
@@ -66,26 +81,40 @@ const HomeScreen = ({ navigation, route }) => {
 
   // Handle route params changes (when returning from CameraScreen with target date)
   useEffect(() => {
+    addDebugLog('🔄 Route params effect triggered', {
+      hasTargetDate: !!route.params?.targetDate,
+      targetDate: route.params?.targetDate,
+      currentDateBefore: currentDate.toDateString()
+    });
+    
     if (route.params?.targetDate) {
       const newDate = new Date(route.params.targetDate);
-      console.log('DEBUG - Route params changed, setting date to:', newDate.toDateString());
+      addDebugLog('📅 Setting date from route params', {
+        from: currentDate.toDateString(),
+        to: newDate.toDateString()
+      });
       setCurrentDate(newDate);
+    } else {
+      // When no targetDate is provided (e.g., back button), reset to today
+      addDebugLog('🏠 No targetDate in route params, resetting to today', {
+        from: currentDate.toDateString(),
+        to: new Date().toDateString()
+      });
+      setCurrentDate(new Date());
     }
   }, [route.params?.targetDate]);
 
-  // Reload meals when screen comes into focus (e.g., after logging a meal)
-  useFocusEffect(
-    useCallback(() => {
-      console.log('DEBUG - useFocusEffect triggered, currentDate:', currentDate.toDateString());
-      if (user?.id) {
-        loadMeals();
-      }
-    }, [user?.id]) // Remove currentDate dependency to ensure it always runs on focus
-  );
+  // Note: Removed useFocusEffect as it was causing race conditions with stale closure values
+  // The useEffect with [currentDate, user?.id] dependency already handles loading meals correctly
 
 
   const loadMeals = async () => {
     try {
+      addDebugLog('🍽️ loadMeals called', {
+        currentDate: currentDate.toDateString(),
+        userId: user?.id
+      });
+      
       // Ensure user ID is set in storage before loading meals
       if (user?.id) {
         await HybridStorageService.setUserId(user.id);
@@ -93,8 +122,11 @@ const HomeScreen = ({ navigation, route }) => {
       
       const dateMeals = await HybridStorageService.getMealsByDate(currentDate);
       
-      // Debug: Log meal names
-      console.log('DEBUG - Loaded meals:', dateMeals.map(m => ({ name: m.name, id: m.id })));
+      addDebugLog('📋 Meals loaded from storage', {
+        date: currentDate.toDateString(),
+        mealCount: dateMeals.length,
+        mealNames: dateMeals.map(m => m.name)
+      });
       
       // Sort meals by timestamp - most recent first
       const sortedMeals = dateMeals.sort((a, b) => b.timestamp - a.timestamp);
@@ -109,6 +141,12 @@ const HomeScreen = ({ navigation, route }) => {
       }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
       
       setDailyMacros(totals);
+      
+      addDebugLog('✅ Meals and macros updated', {
+        date: currentDate.toDateString(),
+        mealCount: sortedMeals.length,
+        totalCalories: totals.calories
+      });
       
       // Calculate processed food percentage for the day
       const processedData = calculateAggregatedProcessed(dateMeals);

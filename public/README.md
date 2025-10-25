@@ -48,3 +48,4 @@ The privacy policy is automatically accessible through:
 - Direct HTML file: `/privacy-policy.html`
 - React Native route: `/privacy-policy` (uses WebView on mobile)
 - App navigation: Link in the home screen
+

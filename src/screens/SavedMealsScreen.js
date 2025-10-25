@@ -73,28 +73,37 @@ const SavedMealsScreen = ({ navigation, route }) => {
   const deleteSavedMeal = async (mealId) => {
     console.log('🗑️ deleteSavedMeal function called with mealId:', mealId);
     
-    // Use browser confirm for web compatibility
-    const confirmed = window.confirm('Are you sure you want to delete this saved meal?');
-    
-    if (confirmed) {
-      try {
-        console.log('🗑️ User confirmed deletion, deleting saved meal from UI:', mealId);
-        const success = await HybridStorageService.deleteSavedMeal(mealId);
-        console.log('🗑️ Delete result:', success);
-        
-        if (success) {
-          console.log('🗑️ Refreshing saved meals list...');
-          await loadSavedMeals();
-          console.log('🗑️ Saved meals list refreshed');
-        } else {
-          console.error('❌ Delete failed');
+    Alert.alert(
+      'Delete Saved Meal',
+      'Are you sure you want to delete this saved meal?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              console.log('🗑️ User confirmed deletion, deleting saved meal from UI:', mealId);
+              const success = await HybridStorageService.deleteSavedMeal(mealId);
+              console.log('🗑️ Delete result:', success);
+              
+              if (success) {
+                console.log('🗑️ Refreshing saved meals list...');
+                await loadSavedMeals();
+                console.log('🗑️ Saved meals list refreshed');
+                Alert.alert('Success', 'Saved meal deleted successfully!');
+              } else {
+                console.error('❌ Delete failed');
+                Alert.alert('Error', 'Failed to delete saved meal. Please try again.');
+              }
+            } catch (error) {
+              console.error('❌ Error deleting saved meal:', error);
+              Alert.alert('Error', 'Failed to delete saved meal. Please try again.');
+            }
+          }
         }
-      } catch (error) {
-        console.error('❌ Error deleting saved meal:', error);
-      }
-    } else {
-      console.log('🗑️ User cancelled deletion');
-    }
+      ]
+    );
   };
 
 
